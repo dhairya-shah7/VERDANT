@@ -1,0 +1,6 @@
+file 'C:/Users/Dhairya/Desktop/AWS/athena-alexa-plus/video_build/scene1_intro.mp4'
+file 'C:/Users/Dhairya/Desktop/AWS/athena-alexa-plus/video_build/scene2_architecture.mp4'
+file 'C:/Users/Dhairya/Desktop/AWS/athena-alexa-plus/video_build/scene3_everyday_demo.mp4'
+file 'C:/Users/Dhairya/Desktop/AWS/athena-alexa-plus/video_build/scene4_consequence_sentinel.mp4'
+file 'C:/Users/Dhairya/Desktop/AWS/athena-alexa-plus/video_build/scene5_mcp_benchmarks.mp4'
+file 'C:/Users/Dhairya/Desktop/AWS/athena-alexa-plus/video_build/scene6_conclusion.mp4'
