@@ -73,6 +73,9 @@ def is_trusted_origin(origin: Optional[str], host: Optional[str]) -> bool:
 # Enterprise Security Headers & Rate Limiting Middleware
 @app.middleware("http")
 async def security_middleware(request: Request, call_next):
+    if request.scope.get("type") == "websocket":
+        return await call_next(request)
+
     client_ip = request.client.host if request.client else "127.0.0.1"
     path = request.url.path
     method = request.method
@@ -125,6 +128,18 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
+@app.get("/api/snapshot")
+def dummy_snapshot():
+    return {"status": "IDLE"}
+
+@app.websocket("/ws/telemetry")
+async def dummy_ws(websocket: Request):
+    try:
+        await websocket.accept()
+        await websocket.send_text(json.dumps({"status": "CONNECTED"}))
+    except Exception:
+        pass
 
 if os.path.exists(FRONTEND_DIR):
     app.mount("/frontend", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
