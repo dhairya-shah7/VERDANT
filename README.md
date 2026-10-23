@@ -4,7 +4,7 @@
 ### The Consequence-Aware Alexa+ Companion
 **Real-Time Intelligence with Sub-Millisecond Consequence Prevention**
 
-[![Build & Tests](https://img.shields.io/badge/Test%20Suite-11%2F11%20Passed-emerald.svg)](backend/test_suite.py)
+[![Build & Tests](https://img.shields.io/badge/Test%20Suite-14%2F14%20Passed-emerald.svg)](backend/test_suite.py)
 [![Runtime](https://img.shields.io/badge/VERDE%20Kernel-2.1ms%20%7C%200.00010J-cyan.svg)](athena_core/athena_sentinel.verde)
 [![Omniscience](https://img.shields.io/badge/LPU%20Intelligence-Sub--300ms%20Universal%20Knowledge-blue.svg)](backend/graph_salience_engine.py)
 [![Protocol](https://img.shields.io/badge/MCP-2.0%20Streamable%20JSON--RPC-purple.svg)](backend/mcp_server.py)
@@ -103,7 +103,7 @@ VERDANT/
 │   ├── verde_bridge.py             # Subprocess bridge to VERDE native runtime
 │   ├── everyday_service.py         # Dynamic weather geocoding, news briefings, music tasks
 │   ├── mcp_server.py               # JSON-RPC 2.0 Model Context Protocol server
-│   └── test_suite.py               # 11-part automated integration & unit test suite
+│   └── test_suite.py               # 14-part automated integration, security & unit test suite
 ├── frontend/
 │   ├── index.html                  # Echo Show 15 Smart Display HUD (Voice IN / Audio OUT)
 │   └── verdant-logo.png            # Smart display branding emblem

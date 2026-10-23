@@ -103,3 +103,29 @@ async def test_safe_mitigation_execution():
     res = execute_safe_mitigation(req)
     assert res["status"] == "SUCCESS"
     assert "Capability[SystemExecute]" in res["verified_capability"]
+
+@pytest.mark.asyncio
+async def test_xss_injection_sanitization():
+    """Verify that malicious script tags in utterances are neutralized."""
+    req = VoiceQueryRequest(utterance="<script>alert('pwned')</script>What is one plus one")
+    res = await process_alexa_utterance(req)
+    assert res["route"] == "EVERYDAY_QUERY"
+    speech = res["speech_output"].lower()
+    assert "2" in speech or "two" in speech
+    assert "<script>" not in res["speech_output"]
+
+@pytest.mark.asyncio
+async def test_invalid_plan_id_rejected():
+    """Verify that path traversal and injection in plan IDs are strictly rejected."""
+    req = ExecutePlanRequest(plan_id="malicious/../../etc/passwd", action_type="MITIGATION")
+    res = execute_safe_mitigation(req)
+    assert res["status"] == "REJECTED"
+    assert "Security Alert" in res["error"]
+
+@pytest.mark.asyncio
+async def test_empty_utterance_handling():
+    """Verify that empty or whitespace-only utterances return a clean error without crashing."""
+    req = VoiceQueryRequest(utterance="   ")
+    res = await process_alexa_utterance(req)
+    assert res["sub_type"] == "ERROR"
+    assert "valid question" in res["speech_output"]

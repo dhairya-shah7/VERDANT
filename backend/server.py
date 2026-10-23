@@ -1,14 +1,15 @@
 import uvicorn
 import sys
 import os
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-from typing import Optional, Dict, Any
+import re
 import json
 import time
+from typing import Optional, Dict, Any, List
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -24,11 +25,104 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 WEBSITE_DIR = os.path.join(BASE_DIR, "website")
 
+# Security Configuration
+VERDANT_SECRET_KEY = os.getenv("VERDANT_SECRET_KEY", "verdant_ambient_alexa_plus_2026_secure_key")
+RATE_LIMIT_STORE: Dict[str, List[tuple]] = {}
+
+def is_rate_limit_allowed(ip: str, path: str, max_requests: int = 50, window_seconds: int = 60) -> bool:
+    """Sliding-window IP rate limiter to mitigate DDoS, spam, and brute force."""
+    now = time.time()
+    cutoff = now - window_seconds
+    records = RATE_LIMIT_STORE.get(ip, [])
+    valid_records = [r for r in records if r[0] > cutoff]
+    
+    limit = 30 if "/api/ask" in path else max_requests
+    if len(valid_records) >= limit:
+        RATE_LIMIT_STORE[ip] = valid_records
+        return False
+        
+    valid_records.append((now, path))
+    RATE_LIMIT_STORE[ip] = valid_records
+    return True
+
+def sanitize_input(text: str) -> str:
+    """Strict input sanitization against XSS, null-byte injections, and command tampering."""
+    if not text:
+        return ""
+    cleaned = text.replace("\x00", "").strip()
+    cleaned = cleaned[:1000]
+    cleaned = re.sub(r'<\s*script[^>]*>.*?<\s*/\s*script\s*>', '', cleaned, flags=re.I | re.S)
+    cleaned = re.sub(r'javascript\s*:', '', cleaned, flags=re.I)
+    cleaned = re.sub(r'on\w+\s*=', '', cleaned, flags=re.I)
+    return cleaned.strip()
+
+def is_trusted_origin(origin: Optional[str], host: Optional[str]) -> bool:
+    """Origin validation to block cross-site request forgery and external hijacking."""
+    if not origin or origin == "null":
+        return True
+    origin_lower = origin.lower()
+    if any(h in origin_lower for h in ["localhost", "127.0.0.1"]):
+        return True
+    if host and host.lower() in origin_lower:
+        return True
+    render_host = os.getenv("RENDER_EXTERNAL_HOSTNAME", "")
+    if render_host and render_host.lower() in origin_lower:
+        return True
+    return False
+
+# Enterprise Security Headers & Rate Limiting Middleware
+@app.middleware("http")
+async def security_middleware(request: Request, call_next):
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    path = request.url.path
+    method = request.method
+
+    # 1. IP Rate Limiting Guard
+    if path.startswith("/api/"):
+        if not is_rate_limit_allowed(client_ip, path):
+            return JSONResponse(
+                status_code=429,
+                content={"error": "Too Many Requests", "detail": "Security throttle: Rate limit exceeded. Try again shortly."},
+                headers={"Retry-After": "30"}
+            )
+
+    # 2. Origin & Cross-Site Attack Guard on State-Mutating POST APIs
+    if method == "POST" and path.startswith("/api/"):
+        origin = request.headers.get("origin")
+        host = request.headers.get("host")
+        if origin and not is_trusted_origin(origin, host):
+            api_key = request.headers.get("x-verdant-key") or request.headers.get("authorization", "").replace("Bearer ", "")
+            if api_key != VERDANT_SECRET_KEY:
+                return JSONResponse(
+                    status_code=403,
+                    content={"error": "Access Denied", "detail": "Untrusted origin or missing authorization key."}
+                )
+
+    response = await call_next(request)
+
+    # 3. OWASP Production Security Headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "microphone=(self), geolocation=(), camera=()"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: http: data: blob:; "
+        "frame-ancestors 'self';"
+    )
+    return response
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+    ],
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -114,8 +208,19 @@ def get_topology_state():
 
 @app.post("/api/ask")
 async def process_alexa_utterance(req: VoiceQueryRequest):
+    # Security Validation & Strict Input Sanitization
+    sanitized_text = sanitize_input(req.utterance)
+    if not sanitized_text:
+        return {
+            "route": "EVERYDAY_QUERY",
+            "sub_type": "ERROR",
+            "speech_output": "I did not receive a valid question or command. Please speak clearly.",
+            "display_data": {"error": "Invalid or empty utterance"},
+            "telemetry": {"latency_ms": 0.1, "energy_joules": 0.0, "engine": "SecuritySanitizer"}
+        }
+
     t_start = time.perf_counter()
-    classified = alexa_brain.classify_and_extract(req.utterance)
+    classified = alexa_brain.classify_and_extract(sanitized_text)
     route = classified["route"]
 
     # 1. EVERYDAY CONSUMER ROUTE (Universal Omniscience, Real-Time News, Research & Tasks)
@@ -188,6 +293,14 @@ async def process_alexa_utterance(req: VoiceQueryRequest):
 
 @app.post("/api/execute")
 def execute_safe_mitigation(req: ExecutePlanRequest):
+    # Security Validation on Plan ID
+    if not re.match(r'^[a-zA-Z0-9_\-]{1,64}$', req.plan_id):
+        return {
+            "status": "REJECTED",
+            "error": "Security Alert: Invalid plan_id format.",
+            "verified_capability": "NONE"
+        }
+
     return {
         "status": "SUCCESS",
         "plan_id": req.plan_id,
