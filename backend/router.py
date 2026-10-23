@@ -1,6 +1,9 @@
 import os
 import re
-import boto3
+try:
+    import boto3
+except ImportError:
+    boto3 = None
 from typing import Dict, Any, Tuple
 
 class HybridAlexaBrain:
@@ -13,7 +16,7 @@ class HybridAlexaBrain:
         # Optional AWS Bedrock integration for live LLM reasoning when credentials exist
         self.bedrock_available = False
         try:
-            if os.getenv("AWS_ACCESS_KEY_ID") or os.path.exists(os.path.expanduser("~/.aws/credentials")):
+            if boto3 and (os.getenv("AWS_ACCESS_KEY_ID") or os.path.exists(os.path.expanduser("~/.aws/credentials"))):
                 self.bedrock = boto3.client("bedrock-runtime", region_name=os.getenv("AWS_REGION", "us-east-1"))
                 self.bedrock_available = True
         except Exception:
