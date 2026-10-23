@@ -38,6 +38,36 @@ if os.path.exists(FRONTEND_DIR):
 if os.path.exists(WEBSITE_DIR):
     app.mount("/site", StaticFiles(directory=WEBSITE_DIR, html=True), name="website")
 
+@app.get("/verdant-logo.png")
+def get_logo():
+    path = os.path.join(WEBSITE_DIR, "verdant-logo.png")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="image/png")
+    return {"error": "Logo not found"}
+
+@app.get("/verdant_demo.mp4")
+def get_demo_video():
+    path = os.path.join(WEBSITE_DIR, "verdant_demo.mp4")
+    if not os.path.exists(path):
+        path = os.path.join(BASE_DIR, "verdant_prototype_demo.mp4")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="video/mp4")
+    return {"error": "Video not found"}
+
+@app.get("/verdant-banner-3x2.png")
+def get_banner():
+    path = os.path.join(WEBSITE_DIR, "verdant-banner-3x2.png")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="image/png")
+    return {"error": "Banner not found"}
+
+@app.get("/verdant-banner-3x2.jpg")
+def get_banner_jpg():
+    path = os.path.join(WEBSITE_DIR, "verdant-banner-3x2.jpg")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="image/jpeg")
+    return {"error": "Banner not found"}
+
 verde_bridge = VerdeCausalEngineBridge()
 everyday_service = EverydayKnowledgeService()
 alexa_brain = HybridAlexaBrain()

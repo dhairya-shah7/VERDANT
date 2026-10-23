@@ -20,10 +20,15 @@
           colors: {
             verde: {
               50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              300: '#6ee7b7',
               400: '#34d399',
               500: '#10b981',
               600: '#059669',
               700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
             },
             alexa: {
               blue: '#00a8e1',
@@ -36,41 +41,55 @@
   </script>
   <style>
     .glow-emerald {
-      box-shadow: 0 0 50px -10px rgba(16, 185, 129, 0.25);
+      box-shadow: 0 10px 40px -10px rgba(16, 185, 129, 0.18);
     }
-    .glow-cyan {
-      box-shadow: 0 0 50px -10px rgba(6, 182, 212, 0.25);
-    }
-    .grid-bg {
-      background-size: 40px 40px;
+    .grid-bg-light {
+      background-size: 32px 32px;
       background-image: 
-        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
     }
   </style>
 </head>
-<body class="bg-[#070b14] text-slate-100 min-h-screen font-sans selection:bg-verde-500 selection:text-black">
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans selection:bg-verde-500 selection:text-white">
+
+  <!-- TOP ANNOUNCEMENT BANNER -->
+  <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-verde-600 text-white text-xs py-2 px-4 text-center font-medium shadow-sm">
+    <span class="inline-flex items-center gap-2">
+      <span class="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-bold uppercase tracking-wider">Hackathon Project</span>
+      <span>Amazon Developer Hackathon 2026 — Alexa+ Track & AWS Builder Challenge</span>
+      <span class="hidden sm:inline opacity-75">•</span>
+      <span class="hidden sm:inline font-semibold">Built by Dhairya & Manasvi</span>
+    </span>
+  </div>
 
   <!-- NAVBAR -->
-  <header class="border-b border-slate-800/80 bg-[#070b14]/80 backdrop-blur-xl sticky top-0 z-50">
+  <header class="border-b border-slate-200/90 bg-white/90 backdrop-blur-xl sticky top-0 z-50 transition-all">
     <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <img src="verdant-logo.png" alt="VERDANT Logo" class="w-11 h-11 rounded-2xl object-cover shadow-lg shadow-verde-500/25 border border-verde-500/30">
+        <img src="/verdant-logo.png" onerror="this.onerror=null; this.src='/site/verdant-logo.png';" alt="VERDANT Logo" class="w-11 h-11 rounded-2xl object-cover shadow-md shadow-emerald-500/20 border border-slate-200">
         <div>
-          <span class="text-xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-verde-400">VERDANT</span>
-          <span class="text-[10px] font-mono px-2 py-0.5 ml-2 rounded-full bg-verde-500/10 text-verde-400 border border-verde-500/20 font-medium">ALEXA+ 2026</span>
+          <div class="flex items-center gap-2">
+            <span class="text-xl font-extrabold tracking-tight text-slate-900">VERDANT</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">ALEXA+ 2026</span>
+          </div>
+          <p class="text-[11px] text-slate-500 font-medium">By <strong class="text-slate-800">Dhairya</strong> & <strong class="text-slate-800">Manasvi</strong></p>
         </div>
       </div>
 
-      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-        <a href="#features" class="hover:text-verde-400 transition-colors">Features</a>
-        <a href="#simulator" class="hover:text-verde-400 transition-colors">Live Web Simulator</a>
-        <a href="#benchmarks" class="hover:text-verde-400 transition-colors">Zero-Token Benchmarks</a>
-        <a href="#downloads" class="hover:text-verde-400 transition-colors">Download .EXE & Electron</a>
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+        <a href="#demo-video" class="hover:text-emerald-600 transition-colors">Video Demo</a>
+        <a href="#features" class="hover:text-emerald-600 transition-colors">Features</a>
+        <a href="#simulator" class="hover:text-emerald-600 transition-colors">Live Web Simulator</a>
+        <a href="#benchmarks" class="hover:text-emerald-600 transition-colors">Zero-Token Benchmarks</a>
+        <a href="#downloads" class="hover:text-emerald-600 transition-colors">Downloads & SDK</a>
       </nav>
 
-      <div class="flex items-center gap-4">
-        <a href="/frontend/index.html" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-verde-500 hover:bg-verde-400 text-slate-950 transition-all shadow-md shadow-verde-500/20 hover:scale-[1.02]">
+      <div class="flex items-center gap-3">
+        <a href="https://github.com/dhairya-shah7/VERDANT" target="_blank" class="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 transition-all">
+          <i class="fa-brands fa-github text-sm"></i> GitHub
+        </a>
+        <a href="/app" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-600/20 hover:scale-[1.02]">
           <i class="fa-solid fa-play"></i> Open Echo Show 15
         </a>
       </div>
@@ -78,61 +97,61 @@
   </header>
 
   <!-- HERO SECTION -->
-  <section class="relative pt-20 pb-28 overflow-hidden grid-bg">
-    <!-- Ambient gradients -->
-    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-verde-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-    <div class="absolute top-1/3 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[300px] bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+  <section class="relative pt-16 pb-24 overflow-hidden grid-bg-light">
+    <!-- Ambient light glow -->
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-emerald-100/60 rounded-full blur-[140px] pointer-events-none"></div>
+    <div class="absolute top-1/3 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[350px] bg-cyan-100/50 rounded-full blur-[120px] pointer-events-none"></div>
 
     <div class="max-w-7xl mx-auto px-6 relative z-10 text-center">
       
-      <!-- Hackathon Badge -->
-      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-900/90 border border-slate-700/80 text-xs font-mono text-slate-300 mb-8 backdrop-blur-md">
-        <span class="w-2 h-2 rounded-full bg-verde-400 animate-pulse"></span>
-        <span>Amazon Developer Hackathon 2026</span>
-        <span class="text-slate-600">•</span>
-        <span class="text-verde-400 font-semibold">Alexa+ Track & AWS Builder Challenge</span>
+      <!-- Creators & Hackathon Badge -->
+      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white border border-slate-200/90 text-xs font-mono text-slate-700 mb-8 shadow-sm">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>Built by <strong class="text-slate-900 font-semibold">Dhairya & Manasvi</strong></span>
+        <span class="text-slate-300">•</span>
+        <span class="text-emerald-700 font-medium">Amazon Developer Hackathon 2026</span>
       </div>
 
       <!-- Main Headline -->
-      <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white max-w-5xl mx-auto leading-[1.1]">
-        Alexa+, Verified: Ambient Intelligence with <span class="bg-clip-text text-transparent bg-gradient-to-r from-verde-400 via-emerald-300 to-cyan-400">Sub-Millisecond Consequence Prevention</span>
+      <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 max-w-5xl mx-auto leading-[1.12]">
+        Alexa+, Verified: Ambient Intelligence with <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600">Sub-Millisecond Consequence Prevention</span>
       </h1>
 
       <!-- Elevator Pitch -->
-      <p class="text-lg sm:text-xl text-slate-400 max-w-3xl mx-auto mt-6 leading-relaxed font-light">
-        Conventional voice AI blindly executes cloud shutdowns and burns thousands of tokens on basic math. <strong class="text-white font-medium">VERDANT</strong> introduces a zero-token dynamic graph salience engine for everyday queries and a compiled <strong class="text-verde-400 font-medium">2.1ms VERDE causal kernel</strong> that intercepts catastrophic cloud and schedule disasters.
+      <p class="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto mt-6 leading-relaxed font-normal">
+        Conventional voice AI blindly executes cloud shutdowns and burns thousands of tokens on basic math. <strong class="text-slate-900 font-semibold">VERDANT</strong> introduces a zero-token dynamic graph salience engine for everyday queries and a compiled <strong class="text-emerald-700 font-semibold">2.1ms VERDE causal kernel</strong> that intercepts catastrophic cloud and schedule disasters.
       </p>
 
       <!-- CTA Buttons -->
       <div class="flex flex-wrap items-center justify-center gap-4 mt-10">
-        <a href="/frontend/index.html" class="inline-flex items-center gap-3 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-verde-500 to-emerald-400 text-slate-950 font-bold text-sm shadow-xl shadow-verde-500/25 hover:shadow-verde-500/40 hover:scale-[1.03] transition-all">
+        <a href="/app" class="inline-flex items-center gap-3 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-sm shadow-xl shadow-emerald-600/25 hover:shadow-emerald-600/35 hover:scale-[1.03] transition-all">
           <i class="fa-solid fa-tv"></i> Launch Live Web Companion
         </a>
-        <a href="#downloads" class="inline-flex items-center gap-3 px-7 py-3.5 rounded-2xl bg-slate-900 border border-slate-700 hover:border-slate-600 text-white font-semibold text-sm hover:bg-slate-800 transition-all">
-          <i class="fa-brands fa-windows text-cyan-400"></i> Download Standalone .EXE
+        <a href="#demo-video" class="inline-flex items-center gap-3 px-7 py-3.5 rounded-2xl bg-white border border-slate-300 hover:border-slate-400 text-slate-800 font-semibold text-sm hover:bg-slate-50 transition-all shadow-sm">
+          <i class="fa-solid fa-circle-play text-emerald-600"></i> Watch 2m 33s Demo
         </a>
-        <a href="https://github.com/Dhairya/verdant-alexa-plus" target="_blank" class="inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 text-slate-300 hover:text-white font-mono text-xs hover:bg-slate-800 transition-all">
-          <i class="fa-brands fa-github text-base"></i> View Source
+        <a href="https://github.com/dhairya-shah7/VERDANT" target="_blank" class="inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:text-slate-900 font-mono text-xs hover:bg-slate-50 transition-all shadow-sm">
+          <i class="fa-brands fa-github text-base text-slate-900"></i> View GitHub Source
         </a>
       </div>
 
-      <!-- Key Metrics Badges -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-16 pt-10 border-t border-slate-800/80">
-        <div class="p-4 rounded-2xl bg-slate-900/40 border border-slate-800">
-          <div class="text-3xl font-extrabold text-verde-400 font-mono">2.1 ms</div>
-          <div class="text-xs text-slate-400 mt-1">Causal Rollout Latency</div>
+      <!-- Key Metrics Badges (White Theme Cards) -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-16 pt-10 border-t border-slate-200">
+        <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+          <div class="text-3xl font-extrabold text-emerald-600 font-mono">2.1 ms</div>
+          <div class="text-xs text-slate-500 font-medium mt-1">Causal Rollout Latency</div>
         </div>
-        <div class="p-4 rounded-2xl bg-slate-900/40 border border-slate-800">
-          <div class="text-3xl font-extrabold text-cyan-400 font-mono">0.00010 J</div>
-          <div class="text-xs text-slate-400 mt-1">Hardware Energy Footprint</div>
+        <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+          <div class="text-3xl font-extrabold text-cyan-600 font-mono">0.00010 J</div>
+          <div class="text-xs text-slate-500 font-medium mt-1">Hardware Energy Footprint</div>
         </div>
-        <div class="p-4 rounded-2xl bg-slate-900/40 border border-slate-800">
-          <div class="text-3xl font-extrabold text-white font-mono">0 Tokens</div>
-          <div class="text-xs text-slate-400 mt-1">LLM Token Burn (100% Private)</div>
+        <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+          <div class="text-3xl font-extrabold text-slate-900 font-mono">0 Tokens</div>
+          <div class="text-xs text-slate-500 font-medium mt-1">LLM Token Burn (100% Private)</div>
         </div>
-        <div class="p-4 rounded-2xl bg-slate-900/40 border border-slate-800">
-          <div class="text-3xl font-extrabold text-emerald-400 font-mono">MCP 2.0</div>
-          <div class="text-xs text-slate-400 mt-1">JSON-RPC Streamable Protocol</div>
+        <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+          <div class="text-3xl font-extrabold text-teal-600 font-mono">MCP 2.0</div>
+          <div class="text-xs text-slate-500 font-medium mt-1">JSON-RPC Streamable Protocol</div>
         </div>
       </div>
 
@@ -140,18 +159,21 @@
   </section>
 
   <!-- PROTOTYPE DEMO VIDEO SECTION -->
-  <section id="demo-video" class="py-20 bg-slate-950 border-t border-slate-800/80">
+  <section id="demo-video" class="py-20 bg-white border-y border-slate-200">
     <div class="max-w-6xl mx-auto px-6 text-center">
-      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-verde-500/10 border border-verde-500/20 text-xs font-mono text-verde-400 mb-4">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-mono text-emerald-700 mb-4 font-semibold">
         <i class="fa-solid fa-film"></i> Official Devpost Submission Video • 2m 33s
       </div>
-      <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-4">Complete Product Implementation Demo</h2>
-      <p class="text-slate-400 max-w-2xl mx-auto text-sm mb-10 font-light">
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3">Complete Product Implementation Demo</h2>
+      <p class="text-slate-600 max-w-2xl mx-auto text-sm mb-10 font-normal">
         A full walkthrough of the zero-token dynamic graph salience engine, sub-millisecond VERDE causal sentinel, live Echo Show 15 HUD, and Model Context Protocol (MCP 2.0).
       </p>
 
-      <div class="rounded-3xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden max-w-4xl mx-auto glow-emerald">
-        <video controls poster="verdant-banner-3x2.png" class="w-full aspect-video rounded-3xl bg-black">
+      <!-- Video Player Frame -->
+      <div class="rounded-3xl border border-slate-300 bg-slate-900 shadow-2xl overflow-hidden max-w-4xl mx-auto glow-emerald p-1.5">
+        <video controls poster="/verdant-banner-3x2.png" preload="metadata" playsinline class="w-full aspect-video rounded-2xl bg-black">
+          <source src="/verdant_demo.mp4" type="video/mp4">
+          <source src="/site/verdant_demo.mp4" type="video/mp4">
           <source src="verdant_demo.mp4" type="video/mp4">
           Your browser does not support the video tag.
         </video>
@@ -160,34 +182,34 @@
   </section>
 
   <!-- LIVE INTERACTIVE WEB SIMULATOR EMBED -->
-  <section id="simulator" class="py-20 bg-slate-950/60 border-y border-slate-800/80">
+  <section id="simulator" class="py-20 bg-slate-50 border-b border-slate-200">
     <div class="max-w-7xl mx-auto px-6">
       
       <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
         <div>
-          <div class="text-xs font-mono text-verde-400 uppercase tracking-widest mb-2">Simulated Echo Show 15 Smart Display</div>
-          <h2 class="text-3xl font-bold text-white">Experience VERDANT In Your Browser</h2>
+          <div class="text-xs font-mono text-emerald-700 font-semibold uppercase tracking-widest mb-1">Simulated Echo Show 15 Smart Display</div>
+          <h2 class="text-3xl font-bold text-slate-900">Experience VERDANT In Your Browser</h2>
         </div>
         <div class="flex items-center gap-3">
-          <span class="inline-flex items-center gap-2 text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Live Backend Connected (127.0.0.1:8000)
+          <span class="inline-flex items-center gap-2 text-xs font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Live Backend Online
           </span>
-          <a href="/frontend/index.html" target="_blank" class="text-xs font-semibold text-slate-300 hover:text-white underline">Open Fullscreen <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></a>
+          <a href="/app" target="_blank" class="text-xs font-semibold text-emerald-700 hover:text-emerald-800 underline">Open Fullscreen <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></a>
         </div>
       </div>
 
       <!-- Simulator Iframe Frame -->
-      <div class="rounded-3xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden glow-emerald">
-        <div class="h-10 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between">
+      <div class="rounded-3xl border border-slate-300 bg-white shadow-xl overflow-hidden">
+        <div class="h-10 bg-slate-100 border-b border-slate-200 px-4 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-rose-500/80"></div>
-            <div class="w-3 h-3 rounded-full bg-amber-500/80"></div>
-            <div class="w-3 h-3 rounded-full bg-emerald-500/80"></div>
+            <div class="w-3 h-3 rounded-full bg-rose-400"></div>
+            <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+            <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
           </div>
-          <div class="text-xs font-mono text-slate-400">Echo Show 15 Landscape Simulator (1360 x 860)</div>
-          <div class="text-xs font-mono text-slate-500">Audio In/Out Ready</div>
+          <div class="text-xs font-mono text-slate-500 font-medium">Echo Show 15 Landscape Simulator (1360 x 860)</div>
+          <div class="text-xs font-mono text-emerald-600 font-semibold">Audio & Speech In/Out Active</div>
         </div>
-        <iframe src="/frontend/index.html" class="w-full h-[760px] border-0" title="VERDANT Echo Show 15 Simulator"></iframe>
+        <iframe src="/app" class="w-full h-[760px] border-0" title="VERDANT Echo Show 15 Simulator"></iframe>
       </div>
 
     </div>
@@ -196,114 +218,114 @@
   <!-- 3 CORE PILLARS SECTION -->
   <section id="features" class="py-24 max-w-7xl mx-auto px-6">
     <div class="text-center max-w-3xl mx-auto mb-16">
-      <div class="text-xs font-mono text-verde-400 uppercase tracking-widest mb-2">Cognitive Architecture</div>
-      <h2 class="text-3xl sm:text-4xl font-extrabold text-white">The Three Pillars of VERDANT</h2>
-      <p class="text-slate-400 mt-4 font-light">Engineered to dismantle the fragility, high cost, and latency of conventional ReAct LLM wrappers.</p>
+      <div class="text-xs font-mono text-emerald-700 uppercase tracking-widest mb-2 font-semibold">Cognitive Architecture</div>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900">The Three Pillars of VERDANT</h2>
+      <p class="text-slate-600 mt-4 font-normal">Engineered to dismantle the fragility, high cost, and latency of conventional ReAct LLM wrappers.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       
       <!-- Pillar 1 -->
-      <div class="p-8 rounded-3xl bg-slate-900/50 border border-slate-800 hover:border-verde-500/40 transition-all group">
-        <div class="w-12 h-12 rounded-2xl bg-verde-500/10 border border-verde-500/20 text-verde-400 flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">
+      <div class="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-emerald-300 transition-all group">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-brain"></i>
         </div>
-        <h3 class="text-xl font-bold text-white mb-3">Zero-Token Graph Salience</h3>
-        <p class="text-sm text-slate-400 leading-relaxed mb-4">
-          Uses SymPy for deterministic 2ms arithmetic and dynamic open epistemic ingestion + TextRank sentence centrality. Delivers articulate, unscripted answers without burning a single LLM token.
+        <h3 class="text-xl font-bold text-slate-900 mb-3">Zero-Token Graph Salience</h3>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">
+          Uses SymPy for deterministic 2ms arithmetic and dynamic open epistemic ingestion with TextRank sentence centrality. Delivers articulate, unscripted answers without burning a single LLM token.
         </p>
-        <div class="font-mono text-xs text-verde-400 bg-verde-500/5 border border-verde-500/10 p-3 rounded-xl">
-          ✓ SymPy Invariant Logic<br>
-          ✓ TextRank Centrality Extraction<br>
-          ✓ 100% Privacy & Zero API Cost
+        <div class="font-mono text-xs text-emerald-800 bg-emerald-50/80 border border-emerald-200 p-3.5 rounded-xl space-y-1">
+          <div>✓ SymPy Invariant Logic</div>
+          <div>✓ TextRank Centrality Extraction</div>
+          <div>✓ 100% Privacy & Zero API Cost</div>
         </div>
       </div>
 
       <!-- Pillar 2 -->
-      <div class="p-8 rounded-3xl bg-slate-900/50 border border-slate-800 hover:border-cyan-500/40 transition-all group">
-        <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">
+      <div class="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-cyan-300 transition-all group">
+        <div class="w-12 h-12 rounded-2xl bg-cyan-50 border border-cyan-200 text-cyan-600 flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-shield-halved"></i>
         </div>
-        <h3 class="text-xl font-bold text-white mb-3">2.1ms Causal Consequence Kernel</h3>
-        <p class="text-sm text-slate-400 leading-relaxed mb-4">
+        <h3 class="text-xl font-bold text-slate-900 mb-3">2.1ms Causal Consequence Kernel</h3>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">
           Powered by the native compiled VERDE systems runtime. Intercepts risky requests before execution, forks live system state in memory, and evaluates full downstream blast radiuses in native machine code.
         </p>
-        <div class="font-mono text-xs text-cyan-400 bg-cyan-500/5 border border-cyan-500/10 p-3 rounded-xl">
-          ✓ verde.exe Compiled Engine<br>
-          ✓ 0.00010 Joules Energy Footprint<br>
-          ✓ Capability[SystemExecute] Tokens
+        <div class="font-mono text-xs text-cyan-800 bg-cyan-50/80 border border-cyan-200 p-3.5 rounded-xl space-y-1">
+          <div>✓ verde.exe Compiled Engine</div>
+          <div>✓ 0.00010 Joules Energy Footprint</div>
+          <div>✓ Capability[SystemExecute] Tokens</div>
         </div>
       </div>
 
       <!-- Pillar 3 -->
-      <div class="p-8 rounded-3xl bg-slate-900/50 border border-slate-800 hover:border-emerald-500/40 transition-all group">
-        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">
+      <div class="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-teal-300 transition-all group">
+        <div class="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-200 text-teal-600 flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-network-wired"></i>
         </div>
-        <h3 class="text-xl font-bold text-white mb-3">Model Context Protocol 2.0</h3>
-        <p class="text-sm text-slate-400 leading-relaxed mb-4">
+        <h3 class="text-xl font-bold text-slate-900 mb-3">Model Context Protocol 2.0</h3>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">
           Self-hosted streamable JSON-RPC 2.0 MCP server. Exposes topological discovery, pre-flight consequence rollouts, and safe mitigation execution directly to Claude Desktop, Alexa+, and autonomous agents.
         </p>
-        <div class="font-mono text-xs text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl">
-          ✓ athena_get_state<br>
-          ✓ athena_simulate_causal_rollout<br>
-          ✓ athena_execute_verified_action
+        <div class="font-mono text-xs text-teal-800 bg-teal-50/80 border border-teal-200 p-3.5 rounded-xl space-y-1">
+          <div>✓ athena_get_state</div>
+          <div>✓ athena_simulate_causal_rollout</div>
+          <div>✓ athena_execute_verified_action</div>
         </div>
       </div>
 
     </div>
   </section>
 
-  <!-- BENCHMARKS MATRIX -->
-  <section id="benchmarks" class="py-24 bg-slate-950/80 border-t border-slate-800/80">
+  <!-- BENCHMARKS MATRIX (Light Theme) -->
+  <section id="benchmarks" class="py-24 bg-white border-t border-slate-200">
     <div class="max-w-6xl mx-auto px-6">
       
       <div class="text-center max-w-3xl mx-auto mb-16">
-        <div class="text-xs font-mono text-verde-400 uppercase tracking-widest mb-2">Performance Profiling</div>
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">VERDANT vs 70B ReAct Agent</h2>
-        <p class="text-slate-400 mt-4 font-light">Why deterministic systems intelligence outperforms brute-force prompt chains.</p>
+        <div class="text-xs font-mono text-emerald-700 uppercase tracking-widest mb-2 font-semibold">Performance Profiling</div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900">VERDANT vs 70B ReAct Agent</h2>
+        <p class="text-slate-600 mt-4 font-normal">Why deterministic systems intelligence outperforms brute-force prompt chains.</p>
       </div>
 
-      <div class="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900/40">
+      <div class="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="border-b border-slate-800 bg-slate-900/80 text-xs font-mono uppercase text-slate-400">
-              <th class="p-5 font-semibold">Evaluation Metric</th>
-              <th class="p-5 font-semibold text-rose-400">Conventional LLM Voice Agent (ReAct)</th>
-              <th class="p-5 font-semibold text-verde-400 bg-verde-500/5 border-l border-r border-verde-500/20">VERDANT + VERDE Kernel</th>
-              <th class="p-5 font-semibold text-slate-300">Factor Improvement</th>
+            <tr class="border-b border-slate-200 bg-slate-50 text-xs font-mono uppercase text-slate-600">
+              <th class="p-5 font-bold">Evaluation Metric</th>
+              <th class="p-5 font-bold text-rose-600">Conventional LLM Voice Agent (ReAct)</th>
+              <th class="p-5 font-bold text-emerald-800 bg-emerald-50/80 border-l border-r border-emerald-200">VERDANT + VERDE Kernel</th>
+              <th class="p-5 font-bold text-slate-700">Factor Improvement</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800 text-sm font-light">
-            <tr>
-              <td class="p-5 font-medium text-white">Consequence Simulation Latency</td>
-              <td class="p-5 text-slate-400 font-mono">12,400 ms (multi-turn tool calls)</td>
-              <td class="p-5 text-verde-400 font-mono font-bold bg-verde-500/5 border-l border-r border-verde-500/20">2.1 ms (compiled runtime)</td>
-              <td class="p-5 text-emerald-400 font-bold font-mono">5,900x Faster</td>
+          <tbody class="divide-y divide-slate-100 text-sm font-normal">
+            <tr class="hover:bg-slate-50/50">
+              <td class="p-5 font-semibold text-slate-900">Consequence Simulation Latency</td>
+              <td class="p-5 text-slate-600 font-mono">12,400 ms (multi-turn tool calls)</td>
+              <td class="p-5 text-emerald-700 font-mono font-bold bg-emerald-50/50 border-l border-r border-emerald-200">2.1 ms (compiled runtime)</td>
+              <td class="p-5 text-emerald-600 font-bold font-mono">5,900x Faster</td>
             </tr>
-            <tr>
-              <td class="p-5 font-medium text-white">Energy Consumption</td>
-              <td class="p-5 text-slate-400 font-mono">~85.2 Joules (GPU cloud inference)</td>
-              <td class="p-5 text-verde-400 font-mono font-bold bg-verde-500/5 border-l border-r border-verde-500/20">0.00010 Joules (C11 native loop)</td>
-              <td class="p-5 text-emerald-400 font-bold font-mono">99.99% Less Energy</td>
+            <tr class="hover:bg-slate-50/50">
+              <td class="p-5 font-semibold text-slate-900">Energy Consumption</td>
+              <td class="p-5 text-slate-600 font-mono">~85.2 Joules (GPU cloud inference)</td>
+              <td class="p-5 text-emerald-700 font-mono font-bold bg-emerald-50/50 border-l border-r border-emerald-200">0.00010 Joules (C11 native loop)</td>
+              <td class="p-5 text-emerald-600 font-bold font-mono">99.99% Less Energy</td>
             </tr>
-            <tr>
-              <td class="p-5 font-medium text-white">LLM Token Burn (Per Action)</td>
-              <td class="p-5 text-slate-400 font-mono">3,800 – 4,500 Tokens</td>
-              <td class="p-5 text-verde-400 font-mono font-bold bg-verde-500/5 border-l border-r border-verde-500/20">0 Tokens (Pure Epistemic Graph)</td>
-              <td class="p-5 text-emerald-400 font-bold font-mono">Infinite (0 cost)</td>
+            <tr class="hover:bg-slate-50/50">
+              <td class="p-5 font-semibold text-slate-900">LLM Token Burn (Per Action)</td>
+              <td class="p-5 text-slate-600 font-mono">3,800 – 4,500 Tokens</td>
+              <td class="p-5 text-emerald-700 font-mono font-bold bg-emerald-50/50 border-l border-r border-emerald-200">0 Tokens (Pure Epistemic Graph)</td>
+              <td class="p-5 text-emerald-600 font-bold font-mono">Infinite (0 cost)</td>
             </tr>
-            <tr>
-              <td class="p-5 font-medium text-white">Disaster Prevention Guarantees</td>
-              <td class="p-5 text-slate-400">Heuristic / Probabilistic (Hallucinatory)</td>
-              <td class="p-5 text-verde-400 font-bold bg-verde-500/5 border-l border-r border-verde-500/20">100% Invariant State Machine</td>
-              <td class="p-5 text-emerald-400 font-bold font-mono">Deterministic</td>
+            <tr class="hover:bg-slate-50/50">
+              <td class="p-5 font-semibold text-slate-900">Disaster Prevention Guarantees</td>
+              <td class="p-5 text-slate-600">Heuristic / Probabilistic (Hallucinatory)</td>
+              <td class="p-5 text-emerald-700 font-bold bg-emerald-50/50 border-l border-r border-emerald-200">100% Invariant State Machine</td>
+              <td class="p-5 text-emerald-600 font-bold font-mono">Deterministic</td>
             </tr>
-            <tr>
-              <td class="p-5 font-medium text-white">User Privacy & Air-Gap Viability</td>
-              <td class="p-5 text-slate-400">All prompt queries sent to external cloud</td>
-              <td class="p-5 text-verde-400 font-bold bg-verde-500/5 border-l border-r border-verde-500/20">Runs 100% on local hardware</td>
-              <td class="p-5 text-emerald-400 font-bold font-mono">Zero Leakage</td>
+            <tr class="hover:bg-slate-50/50">
+              <td class="p-5 font-semibold text-slate-900">User Privacy & Air-Gap Viability</td>
+              <td class="p-5 text-slate-600">All prompt queries sent to external cloud</td>
+              <td class="p-5 text-emerald-700 font-bold bg-emerald-50/50 border-l border-r border-emerald-200">Runs 100% on local hardware</td>
+              <td class="p-5 text-emerald-600 font-bold font-mono">Zero Leakage</td>
             </tr>
           </tbody>
         </table>
@@ -315,82 +337,82 @@
   <!-- 3 DEPLOYMENT OPTIONS / DOWNLOADS -->
   <section id="downloads" class="py-24 max-w-7xl mx-auto px-6">
     <div class="text-center max-w-3xl mx-auto mb-16">
-      <div class="text-xs font-mono text-verde-400 uppercase tracking-widest mb-2">Submission & Distribution</div>
-      <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Choose How You Run VERDANT</h2>
-      <p class="text-slate-400 mt-4 font-light">Whether you are a hackathon judge evaluating in a browser, a user running the standalone desktop app, or a developer extending the codebase.</p>
+      <div class="text-xs font-mono text-emerald-700 uppercase tracking-widest mb-2 font-semibold">Submission & Distribution</div>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900">Choose How You Run VERDANT</h2>
+      <p class="text-slate-600 mt-4 font-normal">Whether you are a hackathon judge evaluating in a browser, a user running the standalone desktop app, or a developer extending the codebase.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       
       <!-- Option 1: Web Simulator -->
-      <div class="p-8 rounded-3xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between">
+      <div class="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md flex flex-col justify-between">
         <div>
           <div class="flex items-center justify-between mb-4">
-            <span class="text-xs font-mono px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Zero Install</span>
-            <i class="fa-solid fa-globe text-cyan-400 text-xl"></i>
+            <span class="text-xs font-mono px-3 py-1 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 font-semibold">Zero Install</span>
+            <i class="fa-solid fa-globe text-cyan-600 text-xl"></i>
           </div>
-          <h3 class="text-2xl font-bold text-white mb-2">Web Application</h3>
-          <p class="text-slate-400 text-sm mb-6">
+          <h3 class="text-2xl font-bold text-slate-900 mb-2">Web Application</h3>
+          <p class="text-slate-600 text-sm mb-6">
             Instant browser access to the Echo Show 15 Smart Display companion. Supports live speech recognition and text-to-speech audio synthesis.
           </p>
-          <ul class="text-xs text-slate-300 font-mono space-y-2 mb-8">
-            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-verde-400"></i> No installation required</li>
-            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-verde-400"></i> Works on Chrome, Edge & Safari</li>
-            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-verde-400"></i> Full Web Speech API integration</li>
+          <ul class="text-xs text-slate-600 font-mono space-y-2 mb-8">
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-600"></i> No installation required</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-600"></i> Works on Chrome, Edge & Safari</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-600"></i> Full Web Speech API integration</li>
           </ul>
         </div>
-        <a href="/frontend/index.html" class="w-full text-center py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm transition-all border border-slate-700">
+        <a href="/app" class="w-full text-center py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-all shadow-md">
           Open in Browser
         </a>
       </div>
 
       <!-- Option 2: Standalone .EXE -->
-      <div class="p-8 rounded-3xl bg-slate-900/90 border-2 border-verde-500/80 shadow-xl shadow-verde-500/10 flex flex-col justify-between relative">
-        <div class="absolute -top-3.5 right-6 px-3 py-1 rounded-full bg-verde-500 text-slate-950 font-bold text-[10px] tracking-wider uppercase">
+      <div class="p-8 rounded-3xl bg-white border-2 border-emerald-500 shadow-xl shadow-emerald-500/10 flex flex-col justify-between relative">
+        <div class="absolute -top-3.5 right-6 px-3 py-1 rounded-full bg-emerald-600 text-white font-bold text-[10px] tracking-wider uppercase">
           Pre-Packaged
         </div>
         <div>
           <div class="flex items-center justify-between mb-4">
-            <span class="text-xs font-mono px-3 py-1 rounded-full bg-verde-500/10 text-verde-400 border border-verde-500/20">Windows x64</span>
-            <i class="fa-brands fa-windows text-verde-400 text-xl"></i>
+            <span class="text-xs font-mono px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">Windows x64</span>
+            <i class="fa-brands fa-windows text-emerald-600 text-xl"></i>
           </div>
-          <h3 class="text-2xl font-bold text-white mb-2">Standalone .EXE</h3>
-          <p class="text-slate-400 text-sm mb-6">
-            Packaged Windows binary located in <code class="text-verde-400">dist/VERDANT-win32-x64/VERDANT.exe</code>. Runs in a dedicated Echo Show 15 smart companion window.
+          <h3 class="text-2xl font-bold text-slate-900 mb-2">Standalone .EXE</h3>
+          <p class="text-slate-600 text-sm mb-6">
+            Packaged Windows binary located in <code class="text-emerald-700 bg-emerald-50 px-1 rounded">dist/VERDANT-win32-x64/VERDANT.exe</code>. Runs in a dedicated Echo Show 15 smart companion window.
           </p>
-          <ul class="text-xs text-slate-300 font-mono space-y-2 mb-8">
-            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-verde-400"></i> Standalone native window</li>
-            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-verde-400"></i> No Node.js required to launch</li>
-            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-verde-400"></i> One-click launch via start.bat</li>
+          <ul class="text-xs text-slate-600 font-mono space-y-2 mb-8">
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-600"></i> Standalone native window</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-600"></i> No Node.js required to launch</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-600"></i> One-click launch via start.bat</li>
           </ul>
         </div>
         <div class="space-y-2">
-          <div class="text-[11px] font-mono text-center text-slate-400">Path: <span class="text-verde-400">dist\VERDANT-win32-x64\VERDANT.exe</span></div>
-          <button onclick="alert('The executable is ready inside your local directory at: dist\\VERDANT-win32-x64\\VERDANT.exe. Double click it to run!')" class="w-full text-center py-3.5 rounded-xl bg-verde-500 hover:bg-verde-400 text-slate-950 font-bold text-sm transition-all shadow-lg shadow-verde-500/20">
+          <div class="text-[11px] font-mono text-center text-slate-500">Path: <span class="text-emerald-700 font-semibold">dist\VERDANT-win32-x64\VERDANT.exe</span></div>
+          <button onclick="alert('The executable is ready inside your local directory at: dist\\VERDANT-win32-x64\\VERDANT.exe. Double click it to run!')" class="w-full text-center py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-600/20">
             <i class="fa-solid fa-folder-open mr-2"></i> Launch Standalone EXE
           </button>
         </div>
       </div>
 
       <!-- Option 3: Developer / Electron -->
-      <div class="p-8 rounded-3xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between">
+      <div class="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md flex flex-col justify-between">
         <div>
           <div class="flex items-center justify-between mb-4">
-            <span class="text-xs font-mono px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Developer SDK</span>
-            <i class="fa-brands fa-node-js text-emerald-400 text-xl"></i>
+            <span class="text-xs font-mono px-3 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200 font-semibold">Developer SDK</span>
+            <i class="fa-brands fa-node-js text-teal-600 text-xl"></i>
           </div>
-          <h3 class="text-2xl font-bold text-white mb-2">Electron & MCP Server</h3>
-          <p class="text-slate-400 text-sm mb-6">
+          <h3 class="text-2xl font-bold text-slate-900 mb-2">Electron & MCP Server</h3>
+          <p class="text-slate-600 text-sm mb-6">
             Full source repository with live hot-reloading for the Electron companion and self-hosted Model Context Protocol JSON-RPC server.
           </p>
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-xs text-slate-300 mb-6 space-y-1">
-            <div class="text-slate-500"># Start both server and companion</div>
-            <div class="text-verde-400">npm start</div>
-            <div class="text-slate-500 mt-2"># Rebuild standalone .exe</div>
+          <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 font-mono text-xs text-slate-200 mb-6 space-y-1">
+            <div class="text-slate-400"># Start both server and companion</div>
+            <div class="text-emerald-400">npm start</div>
+            <div class="text-slate-400 mt-2"># Rebuild standalone .exe</div>
             <div class="text-cyan-400">npm run build:exe</div>
           </div>
         </div>
-        <a href="https://github.com/Dhairya/verdant-alexa-plus" target="_blank" class="w-full text-center py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm transition-all border border-slate-700 font-mono text-xs">
+        <a href="https://github.com/dhairya-shah7/VERDANT" target="_blank" class="w-full text-center py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-sm transition-all border border-slate-300 font-mono text-xs">
           <i class="fa-brands fa-github mr-2"></i> GitHub Repository
         </a>
       </div>
@@ -398,19 +420,46 @@
     </div>
   </section>
 
+  <!-- CREATORS SPOTLIGHT -->
+  <section class="py-16 bg-slate-100 border-t border-slate-200">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border border-slate-200 text-xs font-mono text-emerald-700 font-semibold mb-4">
+        Project Authors
+      </div>
+      <h3 class="text-2xl font-bold text-slate-900 mb-2">Engineered & Designed with Pride</h3>
+      <p class="text-slate-600 text-sm max-w-xl mx-auto mb-8">
+        VERDANT was built from the ground up for the Amazon Developer Hackathon 2026.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-6">
+        <div class="flex items-center gap-3 px-6 py-3.5 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm">D</div>
+          <div class="text-left">
+            <div class="font-bold text-slate-900 text-sm">Dhairya Shah</div>
+            <div class="text-xs text-slate-500">Systems Architecture & VERDE Kernel</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 px-6 py-3.5 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div class="w-10 h-10 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-sm">M</div>
+          <div class="text-left">
+            <div class="font-bold text-slate-900 text-sm">Manasvi</div>
+            <div class="text-xs text-slate-500">Echo Show UX & Graph-Salience Synthesis</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- FOOTER -->
-  <footer class="border-t border-slate-800/80 bg-slate-950 py-12">
+  <footer class="border-t border-slate-200 bg-white py-12">
     <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-xl bg-verde-500 flex items-center justify-center text-slate-950 font-bold">
-          <i class="fa-solid fa-leaf text-sm"></i>
-        </div>
-        <span class="text-sm font-bold text-white">VERDANT for Alexa+</span>
-        <span class="text-xs text-slate-500 font-mono">• Amazon Developer Hackathon 2026</span>
+        <img src="/verdant-logo.png" onerror="this.onerror=null; this.src='/site/verdant-logo.png';" alt="VERDANT Logo" class="w-8 h-8 rounded-xl object-cover border border-slate-200">
+        <span class="text-sm font-bold text-slate-900">VERDANT for Alexa+</span>
+        <span class="text-xs text-slate-400 font-mono">• Amazon Developer Hackathon 2026</span>
       </div>
 
-      <div class="text-xs text-slate-400 text-center md:text-right">
-        Built by Dhairya • Powered by VERDE Causal Kernel & Graph Salience • Apache-2.0 License
+      <div class="text-xs text-slate-600 text-center md:text-right">
+        Built by <strong class="text-slate-900 font-semibold">Dhairya & Manasvi</strong> • Powered by VERDE Causal Kernel & Graph Salience • Apache-2.0 License
       </div>
     </div>
   </footer>
