@@ -118,29 +118,12 @@ async def process_alexa_utterance(req: VoiceQueryRequest):
     classified = alexa_brain.classify_and_extract(req.utterance)
     route = classified["route"]
 
-    # 1. EVERYDAY CONSUMER ROUTE (Multi-Line Detailed Synthesis OR Direct Task Execution)
+    # 1. EVERYDAY CONSUMER ROUTE (Universal Omniscience, Real-Time News, Research & Tasks)
     if route == "EVERYDAY_QUERY":
         sub_type = classified.get("sub_type", "KNOWLEDGE")
-        
-        # News Briefing
-        if sub_type == "NEWS":
-            data = await everyday_service.get_live_news_dynamic()
-            speech = f"Here is your live technology briefing: {data['headline']}. {data['items'][0]['title']}. Additionally, {data['items'][1]['title']}."
-            elapsed = (time.perf_counter() - t_start) * 1000.0
-            return {
-                "route": "EVERYDAY_QUERY",
-                "sub_type": "NEWS",
-                "speech_output": speech,
-                "display_data": data,
-                "telemetry": {
-                    "latency_ms": round(elapsed, 2),
-                    "energy_joules": 0.00002,
-                    "engine": "DynamicNewsHarvester"
-                }
-            }
 
-        # Live Weather
-        elif sub_type == "WEATHER":
+        # Live Weather (Global Dynamic Geocoding via Open-Meteo)
+        if sub_type == "WEATHER":
             city = classified.get("city", "Seattle")
             data = await everyday_service.get_live_weather_dynamic(city)
             speech = f"In {data['city']}, it is currently {data['temperature_c']} degrees Celsius and {data['condition']}. Wind speeds are currently {data['wind_kmh']} kilometers per hour. {data['forecast']}"
@@ -157,21 +140,20 @@ async def process_alexa_utterance(req: VoiceQueryRequest):
                 }
             }
 
-        # Universal Knowledge, Reasoning, Math & Actions (Pure Local Graph-Salience & Symbolic Engine)
-        else:
-            resolved = await salience_engine.solve_knowledge_or_task(req.utterance)
-            elapsed = (time.perf_counter() - t_start) * 1000.0
-            return {
-                "route": "EVERYDAY_QUERY",
-                "sub_type": resolved.get("kind", "DETAILED_KNOWLEDGE"),
-                "speech_output": resolved["speech_output"],
-                "display_data": resolved["display_data"],
-                "telemetry": {
-                    "latency_ms": round(elapsed, 2),
-                    "energy_joules": resolved["telemetry"]["energy_joules"],
-                    "engine": resolved["telemetry"]["engine"]
-                }
+        # Universal Knowledge, Real-Time News, ArXiv Research, Symbolic Math & Direct Tasks
+        resolved = await salience_engine.solve_knowledge_or_task(req.utterance)
+        elapsed = (time.perf_counter() - t_start) * 1000.0
+        return {
+            "route": "EVERYDAY_QUERY",
+            "sub_type": resolved.get("kind", "DETAILED_KNOWLEDGE"),
+            "speech_output": resolved["speech_output"],
+            "display_data": resolved["display_data"],
+            "telemetry": {
+                "latency_ms": round(elapsed, 2),
+                "energy_joules": resolved["telemetry"]["energy_joules"],
+                "engine": resolved["telemetry"]["engine"]
             }
+        }
 
     # 2. CONSEQUENTIAL SENTINEL ROUTE (VERDE Native Systems Causal Engine)
     else:

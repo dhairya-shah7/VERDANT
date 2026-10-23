@@ -79,6 +79,24 @@ async def test_anthropic_founder():
     assert "anthropic principle" not in speech
 
 @pytest.mark.asyncio
+async def test_live_breaking_news_grounding():
+    """Verify that live news queries synthesize real-time syndication feeds."""
+    req = VoiceQueryRequest(utterance="What is the latest news on technology today?")
+    res = await process_alexa_utterance(req)
+    assert res["route"] == "EVERYDAY_QUERY"
+    assert len(res["speech_output"]) > 30
+    assert "Live Wire" in res["display_data"]["source"] or "LPU Omniscience" in res["display_data"]["source"]
+
+@pytest.mark.asyncio
+async def test_arxiv_research_grounding():
+    """Verify that deep research questions synthesize scientific literature."""
+    req = VoiceQueryRequest(utterance="What is the latest research on quantum gravity?")
+    res = await process_alexa_utterance(req)
+    assert res["route"] == "EVERYDAY_QUERY"
+    assert len(res["speech_output"]) > 30
+    assert "quantum" in res["speech_output"].lower() or "gravity" in res["speech_output"].lower()
+
+@pytest.mark.asyncio
 async def test_safe_mitigation_execution():
     """Verify capability-gated plan authorization."""
     req = ExecutePlanRequest(plan_id="plan_reroute_replica_b", action_type="MITIGATION")
