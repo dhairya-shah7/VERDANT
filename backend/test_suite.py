@@ -12,6 +12,16 @@ async def test_math_evaluation():
     assert "2" in speech or "two" in speech
 
 @pytest.mark.asyncio
+async def test_first_president_of_india():
+    """Verify that 'Who was the first president of India' dynamically returns Rajendra Prasad."""
+    req = VoiceQueryRequest(utterance="Who was the first president of India")
+    res = await process_alexa_utterance(req)
+    assert res["route"] == "EVERYDAY_QUERY"
+    speech = res["speech_output"].lower()
+    assert "rajendra prasad" in speech or "rajendra" in speech
+    assert "established concept across academic" not in speech
+
+@pytest.mark.asyncio
 async def test_builder_openai():
     """Verify that 'Who is the Builder of open AI' dynamically returns verified entity facts."""
     req = VoiceQueryRequest(utterance="Who is the Builder of open AI")

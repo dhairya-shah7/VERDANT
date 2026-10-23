@@ -36,7 +36,7 @@ class GraphSalienceEngine:
     """
     def __init__(self):
         self.headers = {
-            "User-Agent": "VERDANT-AlexaPlus-Engine/2.0 (amazon-hackathon-2026@amazon.com)"
+            "User-Agent": "VERDANT-AlexaPlus/3.0 (https://github.com/dhairya-shah7/VERDANT; contact@verdant.ai)"
         }
 
     def solve_math(self, query: str) -> Optional[Dict[str, Any]]:
@@ -133,86 +133,151 @@ class GraphSalienceEngine:
     def dynamic_knowledge_lookup(self, query: str) -> Dict[str, Any]:
         """
         Dynamically extracts and synthesizes live factual knowledge on the fly
-        without any hardcoded templates or static dictionaries.
+        using multi-tier candidate search, sentence centrality, and exact semantic matching.
         """
         t0 = time.perf_counter()
 
-        # Clean query to identify semantic target
         clean_target = re.sub(
-            r'^(who (is|was)( the| a)?|what (is|are)( the| a)?|tell me about|explain|who built|who founded)\s+',
+            r'^(who (is|was|were|are)|what (is|was|are|were)|tell me about|how is|explain|where is|which is|name the)\s+(the\s+|a\s+|an\s+)?',
             '',
             query,
             flags=re.I
         ).strip(" ?.!\"'")
 
         builder_match = re.search(r'(?:builder|founder|creator) of\s+(.+)', clean_target, flags=re.I)
-        search_term = builder_match.group(1).strip() if builder_match else clean_target
-        if not search_term:
-            search_term = query.strip(" ?.!\"'")
+        entity_term = builder_match.group(1).strip() if builder_match else clean_target
+        if not entity_term:
+            entity_term = query.strip(" ?.!\"'")
 
-        encoded = urllib.parse.quote(search_term)
+        candidates = []
 
+        # 1. Exact phrase search (Highest precision: finds role holders like "first president of India" -> Rajendra Prasad)
         try:
-            # 1. Dynamic OpenSearch resolution
-            search_url = f"https://en.wikipedia.org/w/api.php?action=opensearch&search={encoded}&limit=3&namespace=0&format=json"
-            req = urllib.request.Request(search_url, headers=self.headers)
-            with urllib.request.urlopen(req, timeout=3.5) as resp:
-                data = json.loads(resp.read().decode('utf-8'))
-                titles = data[1] if len(data) > 1 and data[1] else []
+            url1 = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=%22{urllib.parse.quote(entity_term)}%22&format=json&utf8=1&srlimit=4"
+            req1 = urllib.request.Request(url1, headers=self.headers)
+            with urllib.request.urlopen(req1, timeout=3.5) as r:
+                d = json.loads(r.read().decode('utf-8'))
+                for item in d.get('query', {}).get('search', []):
+                    candidates.append(item['title'])
+        except Exception:
+            pass
 
-            canonical_title = titles[0] if titles else search_term
+        # 2. OpenSearch prefix search (Finds exact primary entity articles like "Quantum computing", "OpenAI")
+        try:
+            url2 = f"https://en.wikipedia.org/w/api.php?action=opensearch&search={urllib.parse.quote(entity_term)}&limit=4&namespace=0&format=json"
+            req2 = urllib.request.Request(url2, headers=self.headers)
+            with urllib.request.urlopen(req2, timeout=3.5) as r:
+                d = json.loads(r.read().decode('utf-8'))
+                if len(d) > 1 and d[1]:
+                    candidates.extend(d[1])
+        except Exception:
+            pass
 
-            # 2. Fetch live raw summary
-            sum_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(canonical_title)}"
-            req2 = urllib.request.Request(sum_url, headers=self.headers)
-            with urllib.request.urlopen(req2, timeout=3.5) as resp2:
-                summary_data = json.loads(resp2.read().decode('utf-8'))
-                raw_extract = summary_data.get('extract', '')
-                title = summary_data.get('title', canonical_title)
+        # 3. Fulltext search fallback
+        if len(candidates) < 3:
+            try:
+                url3 = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={urllib.parse.quote(entity_term)}&format=json&utf8=1&srlimit=4"
+                req3 = urllib.request.Request(url3, headers=self.headers)
+                with urllib.request.urlopen(req3, timeout=3.5) as r:
+                    d = json.loads(r.read().decode('utf-8'))
+                    for item in d.get('query', {}).get('search', []):
+                        if item['title'] not in candidates:
+                            candidates.append(item['title'])
+            except Exception:
+                pass
 
-            # 3. Dynamic Graph Salience Synthesis
-            if raw_extract:
-                distilled = self.extract_salience_sentences(raw_extract, max_sentences=3)
-            else:
-                distilled = f"{title} is a verified topic in global technical and academic repositories."
+        seen = set()
+        unique_candidates = [c for c in candidates if not (c in seen or seen.add(c))]
 
-            elapsed = (time.perf_counter() - t0) * 1000.0
+        stop_words = {'who', 'was', 'is', 'the', 'a', 'an', 'of', 'in', 'on', 'at', 'to', 'for', 'about', 'what', 'are'}
+        query_words = [w for w in re.findall(r'\b[a-zA-Z0-9]+\b', query.lower()) if w not in stop_words]
+        term_lower = entity_term.lower()
+        term_compact = term_lower.replace(" ", "")
 
-            return {
-                "kind": "DYNAMIC_GRAPH_SALYSIS",
-                "title": title,
-                "speech_output": distilled,
-                "display_data": {
-                    "title": title,
-                    "extract": distilled,
-                    "source": f"Dynamic Epistemic Graph • {title}",
-                    "depth": "Autonomous Sentence-Rank Centrality"
-                },
-                "telemetry": {
-                    "latency_ms": round(elapsed, 2),
-                    "energy_joules": 0.00002,
-                    "engine": "VERDANT-GraphSalience"
-                }
+        scored_sentences = []
+        best_title = entity_term.title()
+
+        for title in unique_candidates[:4]:
+            title_lower = title.lower()
+            title_compact = title_lower.replace(" ", "")
+
+            try:
+                sum_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(title)}"
+                req_s = urllib.request.Request(sum_url, headers=self.headers)
+                with urllib.request.urlopen(req_s, timeout=3.5) as r_s:
+                    s_data = json.loads(r_s.read().decode('utf-8'))
+                    extract = s_data.get('extract', '')
+                    if not extract:
+                        continue
+
+                    sentences = re.split(r'(?<=[.!?])\s+', extract)
+                    for i, sent in enumerate(sentences):
+                        sent_lower = sent.lower()
+
+                        # Discard disambiguation / meta sentences
+                        if any(bad in sent_lower for bad in ['may refer to', 'is a list of', 'timeline of', 'for other uses']):
+                            continue
+
+                        score = 0
+                        # Overlap with query words
+                        overlap = sum(1 for kw in query_words if kw in sent_lower)
+                        score += overlap * 2.5
+
+                        # Exact concept phrase match in sentence
+                        if term_lower in sent_lower:
+                            score += 25.0
+
+                        # Exact title match
+                        if title_compact == term_compact:
+                            score += 35.0
+                        elif title_lower == term_lower:
+                            score += 30.0
+
+                        # Definitional markers
+                        if any(cue in sent_lower for cue in ['was the', 'is the', 'served as', 'was an', 'is a', 'founded by', 'developed by', 'created by']):
+                            score += 4.0
+
+                        # Prefer first sentence in an article
+                        if i == 0:
+                            score += 5.0
+
+                        # Build natural response: companion sentence if short
+                        companion = sent
+                        if i + 1 < len(sentences) and len(companion.split()) < 35:
+                            companion += ' ' + sentences[i+1]
+
+                        scored_sentences.append((score, companion, title, extract))
+            except Exception:
+                continue
+
+        if scored_sentences:
+            scored_sentences.sort(key=lambda x: x[0], reverse=True)
+            best_match = scored_sentences[0]
+            distilled_speech = best_match[1]
+            best_title = best_match[2]
+        else:
+            # Clean, non-robotic fallback
+            distilled_speech = f"I explored dynamic epistemic knowledge for '{entity_term.title()}', but no verified encyclopedic summary could be retrieved at this time."
+            best_title = entity_term.title()
+
+        elapsed = (time.perf_counter() - t0) * 1000.0
+
+        return {
+            "kind": "DYNAMIC_GRAPH_SALYSIS",
+            "title": best_title,
+            "speech_output": distilled_speech,
+            "display_data": {
+                "title": best_title,
+                "extract": distilled_speech,
+                "source": f"Dynamic Epistemic Graph • {best_title}",
+                "depth": "Autonomous Sentence-Rank Centrality"
+            },
+            "telemetry": {
+                "latency_ms": round(elapsed, 2),
+                "energy_joules": 0.00002,
+                "engine": "VERDANT-GraphSalience"
             }
-
-        except Exception as e:
-            elapsed = (time.perf_counter() - t0) * 1000.0
-            return {
-                "kind": "DYNAMIC_GRAPH_SALYSIS",
-                "title": search_term.title(),
-                "speech_output": f"Here is what I found regarding {search_term.title()}: it is an established concept across academic and technical repositories.",
-                "display_data": {
-                    "title": search_term.title(),
-                    "extract": f"Dynamic lookup notice: {str(e)}",
-                    "source": "Epistemic Resolver",
-                    "depth": "Autonomous Extraction"
-                },
-                "telemetry": {
-                    "latency_ms": round(elapsed, 2),
-                    "energy_joules": 0.00001,
-                    "engine": "GraphSalienceFallback"
-                }
-            }
+        }
 
     async def solve_knowledge_or_task(self, query: str) -> Dict[str, Any]:
         t0 = time.perf_counter()
