@@ -1,0 +1,46 @@
+{
+  "topology_version": "2.4.0",
+  "entities": [
+    {
+      "id": "db_primary_eu",
+      "name": "EU Production Database (RDS Aurora Multi-AZ)",
+      "category": "cloud_infrastructure",
+      "status": "HEALTHY",
+      "active_connections": 450,
+      "sla_threshold": "99.99%",
+      "dependents": ["checkout_worker_01", "billing_stream_eu", "inventory_cache"]
+    },
+    {
+      "id": "api_gateway_us",
+      "name": "US-East Regional Edge Gateway",
+      "category": "cloud_infrastructure",
+      "status": "HEALTHY",
+      "active_connections": 1280,
+      "sla_threshold": "99.95%",
+      "dependents": ["mobile_ingress_queue", "auth_token_validator"]
+    },
+    {
+      "id": "release_v2_signoff",
+      "name": "Release v2.4 VP Engineering Gate Review",
+      "category": "schedule_commitment",
+      "time_window": "15:30 - 16:30 UTC",
+      "status": "MANDATORY",
+      "stakeholders": ["VP Eng", "Lead Architect", "Security Lead"],
+      "blocks": ["production_canary_deployment"]
+    },
+    {
+      "id": "family_dinner_anniversary",
+      "name": "Anniversary Dinner & Evening Offline",
+      "category": "personal_life",
+      "time_window": "19:00 - 22:00 UTC",
+      "status": "HARD_BLOCK",
+      "dependents": ["home_automation_dnd_mode"]
+    }
+  ],
+  "homeostatic_envelope": {
+    "max_allowed_transaction_drop": 0,
+    "max_acceptable_downtime_sec": 10,
+    "max_temporal_overlap_minutes": 0,
+    "energy_budget_joules": 0.05
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "verdant-alexa-companion",
+  "version": "1.0.0",
+  "description": "VERDANT: Consequence-Aware Alexa+ Smart Display Companion (Echo Show 15)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:exe": "electron-packager . \"VERDANT\" --platform=win32 --arch=x64 --out=dist --overwrite"
+  },
+  "keywords": [
+    "alexa-plus",
+    "echo-show",
+    "mcp",
+    "verde",
+    "systems-safety",
+    "amazon-hackathon"
+  ],
+  "author": "Dhairya",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^45.0.0"
+  }
+}

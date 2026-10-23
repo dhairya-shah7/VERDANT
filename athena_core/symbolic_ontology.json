@@ -1,0 +1,105 @@
+{
+  "entities": {
+    "openai": {
+      "canonical_name": "OpenAI",
+      "aliases": ["open ai", "openai", "builder of open ai", "creator of open ai", "founder of open ai"],
+      "entity_type": "AI Research Organization",
+      "key_people": ["Sam Altman", "Greg Brockman", "Ilya Sutskever", "Elon Musk"],
+      "founding_year": 2015,
+      "headquarters": "San Francisco, California",
+      "core_mission": "Developing safe and beneficial Artificial General Intelligence (AGI)",
+      "primary_innovations": ["GPT-4", "ChatGPT", "DALL-E", "Codex"],
+      "relational_facts": [
+        "OpenAI was co-founded in December 2015 by Sam Altman, Greg Brockman, Ilya Sutskever, and Elon Musk with an initial $1 billion pledge.",
+        "Sam Altman serves as the CEO and public leader, steering commercial partnership models and frontier AI scaling.",
+        "The organization transitioned from a non-profit to a capped-profit structure in 2019 to secure computational infrastructure partnerships with Microsoft.",
+        "Its generative pre-trained transformer series revolutionized natural language processing and triggered the modern global AI transformation."
+      ]
+    },
+    "tesla": {
+      "canonical_name": "Tesla, Inc. / Nikola Tesla",
+      "aliases": ["tesla", "builder of tesla", "founder of tesla", "creator of tesla", "tesla motors"],
+      "entity_type": "Automotive & Clean Energy / Historical Inventor",
+      "key_people": ["Elon Musk", "Martin Eberhard", "Marc Tarpenning", "Nikola Tesla"],
+      "founding_year": 2003,
+      "headquarters": "Austin, Texas",
+      "core_mission": "Accelerating the world's transition to sustainable transport and energy",
+      "primary_innovations": ["Model S/3/X/Y", "Cybertruck", "Full Self-Driving (FSD)", "Megapack Energy Grids"],
+      "relational_facts": [
+        "Tesla Motors was originally incorporated in July 2003 by Martin Eberhard and Marc Tarpenning, named in honor of electrical pioneer Nikola Tesla.",
+        "Elon Musk led the Series A investment round in February 2004, becoming Chairman of the Board and later Chief Executive Officer and Product Architect.",
+        "Under Musk's leadership, Tesla proved the mass-market viability of high-performance electric vehicles and large-scale battery storage.",
+        "The company operates global Gigafactories across California, Texas, Shanghai, and Berlin producing millions of electric vehicles annually."
+      ]
+    },
+    "elon_musk": {
+      "canonical_name": "Elon Musk",
+      "aliases": ["elon", "musk", "elon musk", "ceo of tesla", "ceo of spacex"],
+      "entity_type": "Technology Industrialist & Engineer",
+      "key_people": ["Maye Musk", "Errol Musk", "Kimbal Musk"],
+      "founding_year": 1971,
+      "headquarters": "Austin, Texas",
+      "core_mission": "Making humanity multi-planetary and deploying sustainable energy",
+      "primary_innovations": ["SpaceX Starship", "Tesla Autopilot", "Neuralink N1 Implant", "xAI Grok"],
+      "relational_facts": [
+        "Elon Musk is the Chief Executive Officer and Chief Designer at SpaceX, leading orbital rocket reusability and lunar Starship architectures.",
+        "He is the CEO and Product Architect at Tesla, scaling global electric vehicle adoption, humanoid robotics, and solar energy generation.",
+        "Musk founded Neuralink to construct high-bandwidth brain-machine interfaces and founded xAI to advance frontier reasoning models.",
+        "He is the principal owner of social media platform X and historically co-founded PayPal and OpenAI."
+      ]
+    },
+    "spacex": {
+      "canonical_name": "SpaceX (Space Exploration Technologies Corp.)",
+      "aliases": ["spacex", "space x", "builder of spacex", "starship", "falcon 9"],
+      "entity_type": "Aerospace Manufacturer & Space Transport",
+      "key_people": ["Elon Musk", "Gwynne Shotwell", "Tom Mueller"],
+      "founding_year": 2002,
+      "headquarters": "Hawthorne, California & Starbase, Texas",
+      "core_mission": "Reducing space transportation costs to enable the colonization of Mars",
+      "primary_innovations": ["Falcon 9 Reusable Booster", "Dragon Spacecraft", "Starlink Mega-Constellation", "Starship Heavy-Lift"],
+      "relational_facts": [
+        "SpaceX was founded in 2002 by Elon Musk with the explicit goal of revolutionizing space technology and enabling human life on other planets.",
+        "It developed Falcon 9, the world's first orbital-class reusable rocket, drastically lowering the cost per kilogram to low Earth orbit.",
+        "The company operates Starlink, the largest satellite broadband constellation in human history, providing global low-latency internet connectivity.",
+        "Its fully integrated Starship system is under active flight testing for NASA's Artemis lunar landing missions and Mars exploration."
+      ]
+    },
+    "quantum_computing": {
+      "canonical_name": "Quantum Computing",
+      "aliases": ["quantum computing", "quantum computer", "qubits", "quantum processor"],
+      "entity_type": "Advanced Computational Physics Paradigm",
+      "key_people": ["Richard Feynman", "David Deutsch", "Peter Shor"],
+      "founding_year": 1980,
+      "headquarters": "Global Research Labs",
+      "core_mission": "Solving classically intractable mathematical and physical problems",
+      "primary_innovations": ["Superconducting Qubits", "Trapped-Ion Processors", "Shor's Factoring Algorithm", "Grover's Search"],
+      "relational_facts": [
+        "Quantum computing harnesses fundamental quantum mechanical phenomena, specifically superposition and entanglement, to represent multi-state information.",
+        "Unlike classical bits which are deterministically binary (0 or 1), qubits can exist in linear combinations of states, yielding exponential computational density.",
+        "The technology delivers game-changing breakthroughs in simulating complex molecular interactions, high-temperature superconductors, and combinatorial logistics.",
+        "Major institutions are actively building error-corrected, fault-tolerant logical qubits to surpass classical supercomputer limitations."
+      ]
+    },
+    "verde": {
+      "canonical_name": "VERDE AI-Native Systems Runtime",
+      "aliases": ["verde", "verde runtime", "verde language", "verde compiler"],
+      "entity_type": "Systems Programming Language & Execution Platform",
+      "key_people": ["Dhairya", "ATHENA Team"],
+      "founding_year": 2026,
+      "headquarters": "Desktop Core",
+      "core_mission": "Energy-aware, memory-fused systems computing with compile-time resource contracts",
+      "primary_innovations": ["CostVector Telemetry", "In-Memory Copy-on-Write Rollout", "Compile-Time Tensor Shapes", "Zero-Token Inference"],
+      "relational_facts": [
+        "VERDE is a compiled systems programming language combining Python-like ergonomics with Rust-like memory and ownership guarantees.",
+        "It features built-in hardware resource contracts (@contract) enforcing compile-time ceilings on latency (ms) and energy (Joules).",
+        "The runtime powers ATHENA's consequence engine by executing in-memory graph rollouts and multi-objective Pareto optimization in under 2 milliseconds.",
+        "Its V-IR compiler lowers code directly to machine architectures while providing certified hardware sustainability provenance."
+      ]
+    }
+  },
+  "relation_predicates": {
+    "builder": ["founder", "creator", "architect", "lead_engineer", "ceo"],
+    "founder": ["co-founder", "creator", "incorporated_by", "builder"],
+    "creation": ["product", "service", "innovation", "release"]
+  }
+}

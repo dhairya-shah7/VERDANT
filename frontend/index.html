@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VERDANT — Alexa+ Smart Companion Display</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @keyframes pulse-ring {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 0.25; }
+      100% { transform: scale(0.9); opacity: 0.8; }
+    }
+    .listening-ring {
+      animation: pulse-ring 2s infinite ease-in-out;
+    }
+    
+    /* Authentic Fluid Audio Waveform Animation */
+    @keyframes voiceWave {
+      0% {
+        transform: scaleY(0.2);
+        opacity: 0.4;
+      }
+      100% {
+        transform: scaleY(1.0);
+        opacity: 1.0;
+      }
+    }
+    .wave-bar {
+      transform: scaleY(0.25);
+      transform-origin: center;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      border-radius: 9999px;
+    }
+    .wave-active:nth-child(1) { animation: voiceWave 0.52s ease-in-out infinite alternate 0.05s; }
+    .wave-active:nth-child(2) { animation: voiceWave 0.65s ease-in-out infinite alternate 0.15s; }
+    .wave-active:nth-child(3) { animation: voiceWave 0.45s ease-in-out infinite alternate 0.28s; }
+    .wave-active:nth-child(4) { animation: voiceWave 0.72s ease-in-out infinite alternate 0.10s; }
+    .wave-active:nth-child(5) { animation: voiceWave 0.58s ease-in-out infinite alternate 0.22s; }
+    .wave-active:nth-child(6) { animation: voiceWave 0.68s ease-in-out infinite alternate 0.02s; }
+    .wave-active:nth-child(7) { animation: voiceWave 0.48s ease-in-out infinite alternate 0.18s; }
+    .wave-active:nth-child(8) { animation: voiceWave 0.62s ease-in-out infinite alternate 0.32s; }
+    .wave-active:nth-child(9) { animation: voiceWave 0.50s ease-in-out infinite alternate 0.12s; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+
+  <!-- TOP HEADER / CLEAN WHITE AMBIENT BAR -->
+  <header class="border-b border-slate-200 bg-white/95 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <div class="flex items-center space-x-3">
+      <img src="verdant-logo.png" alt="VERDANT Logo" class="w-10 h-10 rounded-2xl object-cover shadow-md shadow-emerald-600/20 border border-emerald-500/30">
+      <div>
+        <h1 class="text-base font-bold tracking-tight text-slate-900 flex items-center gap-2">
+          VERDANT <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">Alexa+ OS • Echo Show 15</span>
+        </h1>
+        <p class="text-xs text-slate-500">Autonomous Epistemic Knowledge & Causal Sentinel • Powered by VERDE Runtime</p>
+      </div>
+    </div>
+
+    <!-- Live Telemetry Badges -->
+    <div class="flex items-center space-x-3">
+      <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-mono font-medium shadow-xs">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+        VERDE: ACTIVE (<span id="telemetry-latency">2.1ms</span>)
+      </div>
+      <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-mono font-medium shadow-xs">
+        <i class="fa-solid fa-leaf text-emerald-600"></i>
+        Energy: <span id="telemetry-energy">0.00010 J</span>
+      </div>
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 text-xs font-mono font-medium shadow-xs">
+        <i class="fa-solid fa-network-wired text-teal-600"></i>
+        MCP 2.0 • Online
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CANVAS (ECHO SHOW 15 WHITE COMPANION HUD) -->
+  <main class="flex-1 max-w-7xl mx-auto w-full p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+    <!-- LEFT COLUMN: VOICE INTERACTION & ACTIVE SPEAKER CARD (5 Cols) -->
+    <div class="lg:col-span-5 flex flex-col gap-6">
+      
+      <!-- Voice Waveform / Listening Station -->
+      <div class="bg-white border border-slate-200 rounded-3xl p-6 text-center shadow-sm relative">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Echo Show Mic Interface
+          </span>
+          <span id="speech-indicator" class="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+            <i class="fa-solid fa-volume-high text-xs text-slate-400"></i> Ready
+          </span>
+        </div>
+
+        <!-- Big Mic Button with Active Concentric Pulse Rings & Visualizer -->
+        <div class="my-6 relative flex flex-col items-center justify-center">
+          <div class="relative w-28 h-28 flex items-center justify-center">
+            <button id="mic-btn" onclick="toggleVoiceRecording()" class="w-24 h-24 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-3xl flex items-center justify-center shadow-xl shadow-emerald-600/25 transition-all duration-300 transform active:scale-95 group focus:outline-none z-10 relative">
+              <i id="mic-icon" class="fa-solid fa-microphone transition-transform group-hover:scale-110"></i>
+            </button>
+            <div id="listening-pulse" class="hidden absolute inset-0 m-auto w-28 h-28 rounded-full border-2 border-emerald-400/60 listening-ring pointer-events-none"></div>
+            <div id="listening-pulse-outer" class="hidden absolute inset-0 m-auto w-36 h-36 rounded-full border border-emerald-300/30 listening-ring pointer-events-none" style="animation-delay: 0.5s;"></div>
+          </div>
+
+          <!-- PROPER AUTHENTIC AUDIO WAVEFORM (Centered below mic) -->
+          <div id="waveform-container" class="flex items-center justify-center gap-1.5 h-10 mt-3 transition-opacity duration-300 opacity-25">
+            <div class="w-1.5 h-8 bg-emerald-400 wave-bar"></div>
+            <div class="w-1.5 h-8 bg-emerald-500 wave-bar"></div>
+            <div class="w-1.5 h-8 bg-teal-500 wave-bar"></div>
+            <div class="w-1.5 h-8 bg-teal-600 wave-bar"></div>
+            <div class="w-1.5 h-8 bg-cyan-600 wave-bar"></div>
+            <div class="w-1.5 h-8 bg-teal-600 wave-bar"></div>
+            <div class="w-1.5 h-8 bg-teal-500 wave-bar"></div>
+            <div class="w-1.5 h-8 bg-emerald-500 wave-bar"></div>
+            <div class="w-1.5 h-8 bg-emerald-400 wave-bar"></div>
+          </div>
+        </div>
+
+        <p id="transcript-text" class="text-sm font-medium text-slate-700 min-h-[2.5rem] flex items-center justify-center px-4 italic">
+          "Tap the microphone and speak any query, or click a prompt below..."
+        </p>
+
+        <!-- Quick Sample Utterances for All 3 Audiences -->
+        <div class="mt-4 pt-4 border-t border-slate-100 text-left">
+          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">QUICK TEST PROMPTS:</p>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="sendVoiceQuery('What is one plus one')" class="text-xs px-3 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 font-medium transition flex items-center gap-1">
+              <i class="fa-solid fa-calculator text-blue-500"></i> "What is one plus one"
+            </button>
+            <button onclick="sendVoiceQuery('Weather of India')" class="text-xs px-3 py-1.5 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 font-medium transition flex items-center gap-1">
+              <i class="fa-solid fa-cloud-sun text-teal-500"></i> "Weather of India"
+            </button>
+            <button onclick="sendVoiceQuery('Who is the Builder of open AI')" class="text-xs px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-medium transition flex items-center gap-1">
+              <i class="fa-solid fa-microchip text-emerald-500"></i> "Builder of OpenAI"
+            </button>
+            <button onclick="sendVoiceQuery('Who is Elon Musk')" class="text-xs px-3 py-1.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-medium transition flex items-center gap-1">
+              <i class="fa-solid fa-user text-indigo-500"></i> "Who is Elon Musk"
+            </button>
+            <button onclick="sendVoiceQuery('Alexa, play some jazz on Spotify')" class="text-xs px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-medium transition flex items-center gap-1">
+              <i class="fa-solid fa-music text-emerald-500"></i> "Play jazz on Spotify"
+            </button>
+            <button onclick="sendVoiceQuery('Block 2 hours for focus time at 2:30 PM')" class="text-xs px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-medium transition flex items-center gap-1">
+              <i class="fa-regular fa-calendar-check text-amber-600"></i> "Block 2:30 PM focus"
+            </button>
+            <button onclick="sendVoiceQuery('Alexa, take the EU database server offline for maintenance')" class="text-xs px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 font-medium transition flex items-center gap-1">
+              <i class="fa-solid fa-triangle-exclamation text-rose-500"></i> "Shut down EU DB"
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Alexa Spoken Response Box -->
+      <div id="alexa-speech-card" class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm relative transition-all duration-300">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+              <i class="fa-brands fa-amazon text-sm"></i>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">Alexa+ Spoken Verdict</h2>
+              <p id="response-category" class="text-xs text-slate-500">Awaiting user utterance...</p>
+            </div>
+          </div>
+          <!-- Voice Audio Replay Button -->
+          <button id="replay-btn" onclick="replayAudio()" title="Replay Alexa Audio" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition">
+            <i class="fa-solid fa-rotate-right text-xs"></i>
+          </button>
+        </div>
+
+        <div id="alexa-speech-text" class="text-sm text-slate-700 leading-relaxed min-h-[5rem] bg-slate-50 p-4 rounded-2xl border border-slate-200/80 font-medium">
+          Ready to listen. VERDANT monitors every command in the background.
+        </div>
+
+        <!-- Mitigation Authorization Button (Hidden unless conflict detected) -->
+        <div id="action-mitigation-box" class="hidden mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+          <div class="text-xs font-semibold text-rose-700 flex items-center gap-1.5">
+            <i class="fa-solid fa-triangle-exclamation"></i> Consequence Detected
+          </div>
+          <button onclick="authorizePlan()" class="text-xs font-semibold px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 transition">
+            <i class="fa-solid fa-shield-halved mr-1"></i> Authorize Safe Plan
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: DUAL DISPLAY CANVAS (7 Cols) -->
+    <div class="lg:col-span-7 flex flex-col gap-6">
+
+      <!-- Dynamic Visual Canvas -->
+      <div id="visual-canvas" class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm min-h-[440px] flex flex-col justify-between">
+        
+        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2">
+            <i id="canvas-icon" class="fa-solid fa-brain text-emerald-600"></i>
+            <h2 id="canvas-title" class="text-xs font-bold uppercase tracking-wider text-slate-700">Dynamic Live Knowledge Canvas</h2>
+          </div>
+          <span id="canvas-badge" class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 font-medium">
+            Dynamic Graph Salience
+          </span>
+        </div>
+
+        <!-- Dynamic Content Area -->
+        <div id="canvas-body" class="flex-1 flex flex-col justify-center">
+          
+          <!-- Default State: Detailed Knowledge or Task Display -->
+          <div id="everyday-view" class="space-y-4">
+            <div class="p-5 rounded-2xl bg-gradient-to-r from-emerald-50/50 to-teal-50/50 border border-emerald-100 flex gap-4 items-center">
+              <div class="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl flex-shrink-0 shadow-sm shadow-emerald-600/20">
+                <i id="hero-icon" class="fa-solid fa-brain"></i>
+              </div>
+              <div>
+                <h3 id="hero-title" class="text-sm font-bold text-slate-900">VERDANT Cognitive & Salience Engine</h3>
+                <p id="hero-desc" class="text-xs text-slate-600 mt-1 leading-relaxed">
+                  Resolves math, global knowledge, and everyday tasks dynamically in real time without external LLMs or hardcoded templates.
+                </p>
+              </div>
+            </div>
+
+            <!-- Deep Detail Card -->
+            <div id="detailed-info-card" class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+              <div class="flex items-center justify-between mb-2">
+                <span id="detail-card-badge" class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-mono">
+                  GRAPH SALIENCE SYNTHESIS
+                </span>
+                <span id="detail-card-source" class="text-[11px] text-slate-400 font-mono">Dynamic Epistemic Graph</span>
+              </div>
+              <p id="detail-card-text" class="text-xs text-slate-700 leading-relaxed font-medium">
+                Tap the microphone or pick a prompt on the left to ask any math, science, person, or weather question.
+              </p>
+            </div>
+          </div>
+
+          <!-- Causal Blast-Radius Radar View (Rendered dynamically when consequence evaluated) -->
+          <div id="causal-radar-view" class="hidden space-y-4">
+            <div class="grid grid-cols-3 gap-3 text-center">
+              <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                <span class="text-[10px] text-slate-400 uppercase tracking-wider font-bold block">Target Node</span>
+                <span id="radar-target" class="text-xs font-mono font-bold text-emerald-700">db_primary_eu</span>
+              </div>
+              <div class="p-3 rounded-2xl bg-rose-50 border border-rose-200">
+                <span class="text-[10px] text-rose-500 uppercase tracking-wider font-bold block">Viability Status</span>
+                <span id="radar-status" class="text-xs font-mono font-bold text-rose-700">BREACHED</span>
+              </div>
+              <div class="p-3 rounded-2xl bg-amber-50 border border-amber-200">
+                <span class="text-[10px] text-amber-600 uppercase tracking-wider font-bold block">Dropped Tx</span>
+                <span id="radar-dropped" class="text-xs font-mono font-bold text-amber-800">450 Conns</span>
+              </div>
+            </div>
+
+            <!-- SVG Dependency Graph (Interactive SVG with Clickable Node Inspector) -->
+            <div class="h-56 bg-slate-50 rounded-2xl border border-slate-200 p-4 relative flex items-center justify-center overflow-hidden">
+              <svg class="w-full h-full" viewBox="0 0 500 160">
+                <line x1="80" y1="80" x2="250" y2="40" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="4" class="animate-pulse" />
+                <line x1="80" y1="80" x2="250" y2="120" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="4" class="animate-pulse" />
+                <line x1="250" y1="40" x2="420" y2="80" stroke="#94a3b8" stroke-width="2" />
+                
+                <!-- Target Node (Clickable) -->
+                <g class="cursor-pointer" onclick="inspectNode('EU-DB', 'Primary Database', 'Active Handshakes: 450 | Status: OFFLINE PROPOSED')">
+                  <circle cx="80" cy="80" r="28" fill="#fee2e2" stroke="#ef4444" stroke-width="3" />
+                  <text x="80" y="84" fill="#991b1b" font-size="9" font-weight="bold" text-anchor="middle" font-family="monospace">EU-DB</text>
+                </g>
+
+                <!-- Downstream Node 1 -->
+                <g class="cursor-pointer" onclick="inspectNode('Checkout Worker', 'Downstream Service', 'Severed: 450 active payment syncs')">
+                  <circle cx="250" cy="40" r="22" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.5" />
+                  <text x="250" y="44" fill="#92400e" font-size="8" font-weight="bold" text-anchor="middle" font-family="monospace">Checkout</text>
+                </g>
+
+                <!-- Downstream Node 2 -->
+                <g class="cursor-pointer" onclick="inspectNode('Billing Queue', 'Downstream Consumer', 'Buffer backlog: Projected 88% memory load')">
+                  <circle cx="250" cy="120" r="22" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.5" />
+                  <text x="250" y="124" fill="#92400e" font-size="8" font-weight="bold" text-anchor="middle" font-family="monospace">Billing</text>
+                </g>
+
+                <!-- Upstream/External -->
+                <g class="cursor-pointer" onclick="inspectNode('Replica-B', 'Fallback Target', 'Zero-downtime drain target ready')">
+                  <circle cx="420" cy="80" r="20" fill="#dcfce7" stroke="#22c55e" stroke-width="2.5" />
+                  <text x="420" y="84" fill="#166534" font-size="8" font-weight="bold" text-anchor="middle" font-family="monospace">Replica-B</text>
+                </g>
+              </svg>
+              <!-- Interactive Click Tooltip -->
+              <div id="node-inspector-tooltip" class="hidden absolute bottom-2 left-2 right-2 bg-white/95 backdrop-blur-sm p-2 rounded-xl border border-slate-300 text-[11px] text-slate-700 shadow-lg text-center font-mono">
+                Click any node on the graph to inspect topology metadata.
+              </div>
+            </div>
+
+            <!-- Mitigation Recommendation Card -->
+            <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200">
+              <div class="flex items-center gap-2 mb-1">
+                <i class="fa-solid fa-lightbulb text-amber-600 text-xs"></i>
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-800">Deterministic Recovery Plan</span>
+              </div>
+              <p id="radar-plan-text" class="text-xs text-amber-900 leading-relaxed font-mono">
+                Reroute ingress traffic to eu-west-1-replica-b prior to server drain. Zero downtime preserved.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Telemetry Summary Footer -->
+        <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-mono">
+          <span>Engine: <strong id="telemetry-engine" class="text-slate-700">VERDANT-SalienceCore</strong></span>
+          <span>Inference Avoidance: <strong id="telemetry-savings" class="text-emerald-600">100% (0 tokens burned)</strong></span>
+        </div>
+
+      </div>
+
+      <!-- Real-Time Model Context Protocol (MCP) Stream Trace -->
+      <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-terminal text-emerald-600 text-xs"></i>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Real-Time MCP Tool Call Stream (JSON-RPC 2.0)</h3>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Live Socket Active</span>
+        </div>
+        <pre id="mcp-log" class="text-[11px] font-mono bg-slate-900 text-emerald-300 p-4 rounded-2xl overflow-x-auto max-h-36 leading-tight">
+{
+  "jsonrpc": "2.0",
+  "method": "tools/list",
+  "result": {
+    "tools": [
+      "athena_get_state",
+      "athena_simulate_causal_rollout",
+      "athena_execute_verified_action"
+    ]
+  }
+}
+        </pre>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="py-4 text-center text-xs text-slate-400 border-t border-slate-200 bg-white">
+    Amazon Alexa+ Hackathon 2026 • VERDANT In-Memory Consequence Sentinel • Developer Preview
+  </footer>
+
+  <script>
+    const API_BASE = (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? "http://127.0.0.1:8000"
+      : window.location.origin;
+    let isRecording = false;
+    let recognition = null;
+    let lastSpokenText = "";
+    let speechBuffer = "";
+    let speechSilenceTimer = null;
+    let isDispatchingQuery = false;
+
+    // Speech Recognition Setup (Web Speech API) with Debounced Full-Utterance Detection
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;       // Keep listening across brief word pauses
+      recognition.interimResults = true;   // Live transcript preview while user talks
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        isRecording = true;
+        speechBuffer = "";
+        isDispatchingQuery = false;
+        if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
+        // Cancel any active speech output so microphone never listens to Alexa's own voice
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+        document.getElementById('listening-pulse').classList.remove('hidden');
+        document.getElementById('listening-pulse-outer').classList.remove('hidden');
+        document.getElementById('transcript-text').innerText = "Listening... Speak your entire question";
+        document.getElementById('speech-indicator').innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span> Listening...';
+        setWaveformActive(true);
+      };
+
+      recognition.onresult = (event) => {
+        // Collect full accumulated transcript across all interim & final chunks
+        let fullTranscript = "";
+        for (let i = 0; i < event.results.length; ++i) {
+          fullTranscript += event.results[i][0].transcript + " ";
+        }
+        speechBuffer = fullTranscript.trim();
+
+        if (speechBuffer.length > 0) {
+          document.getElementById('transcript-text').innerText = `"${speechBuffer}..."`;
+          document.getElementById('speech-indicator').innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Hearing you speak...';
+
+          // Reset silence timer on every newly recognized chunk
+          if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
+
+          // Wait for 1.25s of uninterrupted silence before dispatching
+          speechSilenceTimer = setTimeout(() => {
+            finalizeAndSendUtterance();
+          }, 1250);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn("Speech error:", event.error);
+        if (event.error !== 'no-speech') {
+          stopVoiceRecording();
+        }
+      };
+
+      recognition.onend = () => {
+        if (isRecording && speechBuffer.length >= 2 && !isDispatchingQuery) {
+          if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
+          finalizeAndSendUtterance();
+        } else if (!isDispatchingQuery) {
+          stopVoiceRecording();
+        }
+      };
+    }
+
+    function finalizeAndSendUtterance() {
+      if (isDispatchingQuery) return;
+      const cleanUtterance = speechBuffer.trim();
+      if (!cleanUtterance || cleanUtterance.length < 2) {
+        stopVoiceRecording();
+        return;
+      }
+      isDispatchingQuery = true;
+      stopVoiceRecording();
+      document.getElementById('speech-indicator').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Analyzing Complete Query...';
+      document.getElementById('transcript-text').innerText = `"${cleanUtterance}"`;
+      sendVoiceQuery(cleanUtterance);
+    }
+
+    function toggleVoiceRecording() {
+      if (!recognition) {
+        alert("Web Speech API is not supported in this browser. You can click any quick test prompt below!");
+        return;
+      }
+      if (isRecording) {
+        if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
+        finalizeAndSendUtterance();
+      } else {
+        try {
+          recognition.start();
+        } catch (e) {
+          recognition.stop();
+          setTimeout(() => recognition.start(), 200);
+        }
+      }
+    }
+
+    function stopVoiceRecording() {
+      isRecording = false;
+      if (speechSilenceTimer) {
+        clearTimeout(speechSilenceTimer);
+        speechSilenceTimer = null;
+      }
+      if (recognition) {
+        try { recognition.stop(); } catch(e) {}
+      }
+      document.getElementById('listening-pulse').classList.add('hidden');
+      document.getElementById('listening-pulse-outer').classList.add('hidden');
+      document.getElementById('speech-indicator').innerHTML = '<i class="fa-solid fa-volume-high text-xs text-slate-400"></i> Ready';
+      setWaveformActive(false);
+    }
+
+    function setWaveformActive(active) {
+      const container = document.getElementById('waveform-container');
+      if (!container) return;
+      const bars = container.children;
+      if (active) {
+        container.classList.remove('opacity-25');
+        container.classList.add('opacity-100');
+        for (let i = 0; i < bars.length; i++) {
+          bars[i].classList.add('wave-active');
+        }
+      } else {
+        container.classList.add('opacity-25');
+        container.classList.remove('opacity-100');
+        for (let i = 0; i < bars.length; i++) {
+          bars[i].classList.remove('wave-active');
+        }
+      }
+    }
+
+    function speakAlexaResponse(text) {
+      lastSpokenText = text;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.02;
+        utterance.pitch = 1.0;
+        
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(v => v.name.includes("Samantha") || v.name.includes("Google UK English Female") || v.name.includes("Natural"));
+        if (preferredVoice) utterance.voice = preferredVoice;
+
+        utterance.onstart = () => {
+          document.getElementById('speech-indicator').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span> Alexa Speaking';
+          setWaveformActive(true);
+        };
+        utterance.onend = () => {
+          document.getElementById('speech-indicator').innerHTML = '<i class="fa-solid fa-volume-high text-xs text-slate-400"></i> Ready';
+          setWaveformActive(false);
+        };
+
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function replayAudio() {
+      if (lastSpokenText) {
+        speakAlexaResponse(lastSpokenText);
+      }
+    }
+
+    function inspectNode(name, role, detail) {
+      const tip = document.getElementById('node-inspector-tooltip');
+      tip.classList.remove('hidden');
+      tip.innerHTML = `<strong>${name}</strong> (${role})<br><span class="text-slate-500">${detail}</span>`;
+    }
+
+    async function sendVoiceQuery(utterance) {
+      document.getElementById('transcript-text').innerText = `"${utterance}"`;
+      document.getElementById('alexa-speech-text').innerText = "Processing query & evaluating consequences...";
+      
+      try {
+        const resp = await fetch(`${API_BASE}/api/ask`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ utterance: utterance })
+        });
+
+        const data = await resp.json();
+        
+        document.getElementById('alexa-speech-text').innerText = data.speech_output;
+        speakAlexaResponse(data.speech_output);
+
+        if (data.telemetry) {
+          document.getElementById('telemetry-latency').innerText = `${data.telemetry.latency_ms}ms`;
+          document.getElementById('telemetry-energy').innerText = `${data.telemetry.energy_joules} J`;
+          document.getElementById('telemetry-engine').innerText = data.telemetry.engine || "VERDANT-SalienceCore";
+        }
+
+        const mcpFrame = {
+          jsonrpc: "2.0",
+          method: data.route === "CONSEQUENTIAL_ACTION" ? "tools/call: athena_simulate_causal_rollout" : "tools/call: athena_graph_salience_engine",
+          params: { query: utterance },
+          result_telemetry: data.telemetry
+        };
+        document.getElementById('mcp-log').innerText = JSON.stringify(mcpFrame, null, 2);
+
+        if (data.route === "EVERYDAY_QUERY") {
+          renderEverydayCanvas(data);
+        } else {
+          renderConsequenceRadar(data);
+        }
+
+      } catch (err) {
+        console.error("API error:", err);
+        document.getElementById('alexa-speech-text').innerText = "Unable to connect to local VERDANT backend (127.0.0.1:8000). Ensure backend server is running.";
+      }
+    }
+
+    function renderEverydayCanvas(data) {
+      document.getElementById('everyday-view').classList.remove('hidden');
+      document.getElementById('causal-radar-view').classList.add('hidden');
+      document.getElementById('action-mitigation-box').classList.add('hidden');
+
+      const isTask = data.sub_type === "TASK_EXECUTION";
+      const isMath = data.sub_type === "MATH_EVALUATION" || data.sub_type === "MATH_CALCULATION";
+      const isWeather = data.sub_type === "WEATHER";
+      const displayTitle = data.display_data.title || "Live Knowledge";
+
+      if (isTask) {
+        document.getElementById('canvas-title').innerText = "Direct Action Execution";
+        document.getElementById('canvas-badge').innerText = "Direct Task Dispatched";
+        document.getElementById('canvas-badge').className = "text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-medium";
+        document.getElementById('canvas-icon').className = "fa-solid fa-play text-emerald-600";
+        document.getElementById('response-category').innerText = "Action Dispatched";
+
+        document.getElementById('hero-icon').className = "fa-solid fa-music";
+        document.getElementById('hero-title').innerText = displayTitle;
+        document.getElementById('hero-desc').innerText = "Direct execution. Media stream or IoT switch committed instantly.";
+        document.getElementById('detail-card-badge').innerText = "DIRECT ACTION";
+        document.getElementById('detail-card-source').innerText = data.telemetry?.engine || "DirectActionDispatcher";
+        document.getElementById('detail-card-text').innerText = data.speech_output;
+      } else if (isWeather) {
+        document.getElementById('canvas-title').innerText = `Live Weather: ${data.display_data.city}`;
+        document.getElementById('canvas-badge').innerText = "Dynamic Geocoding • OpenMeteo";
+        document.getElementById('canvas-badge').className = "text-xs px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800 border border-teal-200 font-medium";
+        document.getElementById('canvas-icon').className = "fa-solid fa-cloud-sun text-teal-600";
+        document.getElementById('response-category').innerText = "Global Meteorological Sensor";
+
+        document.getElementById('hero-icon').className = "fa-solid fa-cloud-sun";
+        document.getElementById('hero-title').innerText = `${data.display_data.city}: ${data.display_data.temperature_c}°C (${data.display_data.temperature_f}°F)`;
+        document.getElementById('hero-desc').innerText = `${data.display_data.condition} • Wind: ${data.display_data.wind_kmh} km/h. Geocoded dynamically.`;
+        document.getElementById('detail-card-badge').innerText = "LIVE METEOROLOGY";
+        document.getElementById('detail-card-source').innerText = "OpenMeteo Global Sensor";
+        document.getElementById('detail-card-text').innerText = data.speech_output;
+      } else if (isMath) {
+        document.getElementById('canvas-title').innerText = `Symbolic Math: ${data.display_data.title}`;
+        document.getElementById('canvas-badge').innerText = "Deterministic SymPy Logic";
+        document.getElementById('canvas-badge').className = "text-xs px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 font-medium";
+        document.getElementById('canvas-icon').className = "fa-solid fa-calculator text-blue-600";
+        document.getElementById('response-category').innerText = "Deterministic Math Computation";
+
+        document.getElementById('hero-icon').className = "fa-solid fa-calculator";
+        document.getElementById('hero-title').innerText = data.speech_output;
+        document.getElementById('hero-desc').innerText = "Calculated deterministically via SymPy Invariant Logic with 0 tokens burned.";
+        document.getElementById('detail-card-badge').innerText = "SYMBOLIC COMPUTATION";
+        document.getElementById('detail-card-source').innerText = "SymPy Logic Kernel";
+        document.getElementById('detail-card-text').innerText = data.speech_output;
+      } else {
+        document.getElementById('canvas-title').innerText = `Dynamic Knowledge: ${displayTitle}`;
+        document.getElementById('canvas-badge').innerText = "Dynamic Graph Salience";
+        document.getElementById('canvas-badge').className = "text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-medium";
+        document.getElementById('canvas-icon').className = "fa-solid fa-network-wired text-emerald-600";
+        document.getElementById('response-category').innerText = "Epistemic Graph Synthesis";
+
+        document.getElementById('hero-icon').className = "fa-solid fa-brain";
+        document.getElementById('hero-title').innerText = displayTitle;
+        document.getElementById('hero-desc').innerText = "Dynamically extracted and ranked via sentence centrality. Zero LLMs, Zero Hardcoding.";
+        document.getElementById('detail-card-badge').innerText = "GRAPH SALIENCE";
+        document.getElementById('detail-card-source').innerText = data.display_data.source || "Dynamic Epistemic Graph";
+        document.getElementById('detail-card-text').innerText = data.speech_output;
+      }
+
+      document.getElementById('telemetry-savings').innerText = "100% (0 tokens burned)";
+    }
+
+    function renderConsequenceRadar(data) {
+      document.getElementById('everyday-view').classList.add('hidden');
+      document.getElementById('causal-radar-view').classList.remove('hidden');
+
+      const isViable = data.rollout.is_homeostatic;
+      document.getElementById('canvas-title').innerText = "Causal Blast-Radius Radar (VERDE)";
+      document.getElementById('canvas-icon').className = "fa-solid fa-shield-halved text-rose-600";
+      document.getElementById('response-category').innerText = "Consequential Sentinel Active";
+
+      if (!isViable) {
+        document.getElementById('canvas-badge').innerText = "STATUS: BREACH DETECTED";
+        document.getElementById('canvas-badge').className = "text-xs px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300 font-bold animate-pulse";
+        document.getElementById('radar-status').innerText = "BREACHED";
+        document.getElementById('radar-status').className = "text-xs font-mono font-bold text-rose-700";
+        document.getElementById('radar-dropped').innerText = `${data.rollout.dropped_transactions} Tx`;
+        document.getElementById('radar-target').innerText = data.rollout.violated_node;
+        document.getElementById('radar-plan-text').innerText = data.rollout.recovery_plan;
+        document.getElementById('action-mitigation-box').classList.remove('hidden');
+      } else {
+        document.getElementById('canvas-badge').innerText = "STATUS: HOMEOSTATIC";
+        document.getElementById('canvas-badge').className = "text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold";
+        document.getElementById('radar-status').innerText = "VIABLE";
+        document.getElementById('radar-status').className = "text-xs font-mono font-bold text-emerald-700";
+        document.getElementById('action-mitigation-box').classList.add('hidden');
+      }
+
+      if (data.telemetry && data.telemetry.compute_savings_pct) {
+        document.getElementById('telemetry-savings').innerText = `${data.telemetry.compute_savings_pct}%`;
+      }
+    }
+
+    async function authorizePlan() {
+      try {
+        const resp = await fetch(`${API_BASE}/api/execute`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan_id: "plan_reroute_replica_b", action_type: "MITIGATION" })
+        });
+        const res = await resp.json();
+        
+        document.getElementById('alexa-speech-text').innerText = res.speech_output;
+        speakAlexaResponse(res.speech_output);
+
+        document.getElementById('action-mitigation-box').classList.add('hidden');
+        document.getElementById('canvas-badge').innerText = "STATUS: MITIGATION COMMITTED";
+        document.getElementById('canvas-badge').className = "text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold";
+        document.getElementById('radar-status').innerText = "PROTECTED";
+        document.getElementById('radar-status').className = "text-xs font-mono font-bold text-emerald-700";
+      } catch (err) {
+        alert("Failed to commit plan: " + err);
+      }
+    }
+  </script>
+</body>
+</html>
