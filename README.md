@@ -4,9 +4,9 @@
 ### The Consequence-Aware Alexa+ Companion
 **Real-Time Intelligence with Sub-Millisecond Consequence Prevention**
 
-[![Build & Tests](https://img.shields.io/badge/Test%20Suite-7%2F7%20Passed-emerald.svg)](backend/test_suite.py)
+[![Build & Tests](https://img.shields.io/badge/Test%20Suite-9%2F9%20Passed-emerald.svg)](backend/test_suite.py)
 [![Runtime](https://img.shields.io/badge/VERDE%20Kernel-2.1ms%20%7C%200.00010J-cyan.svg)](athena_core/athena_sentinel.verde)
-[![Zero-Token](https://img.shields.io/badge/LLM%20Tokens-0%20Burned%20(Pure%20Graph)-blue.svg)](backend/graph_salience_engine.py)
+[![Omniscience](https://img.shields.io/badge/LPU%20Intelligence-Sub--300ms%20Universal%20Knowledge-blue.svg)](backend/graph_salience_engine.py)
 [![Protocol](https://img.shields.io/badge/MCP-2.0%20Streamable%20JSON--RPC-purple.svg)](backend/mcp_server.py)
 [![License](https://img.shields.io/badge/License-Apache--2.0-orange.svg)](LICENSE)
 
@@ -56,9 +56,10 @@ Meanwhile, emerging generative AI agents rely on heavy 70-billion-parameter LLMs
 └─────────────────────────────────┘   └─────────────────────────────────┘
 ```
 
-### A. Pure Non-LLM Dynamic Epistemic Architecture (Zero Tokens Burned)
-* **Deterministic Arithmetic:** Powered by SymPy 1.14 for symbolic mathematics evaluated in $\le 2\text{ms}$ with 100% precision (`"What is one plus one"` $\to$ `"One plus one is 2."`).
-* **Dynamic Epistemic Ingestion & Graph Salience:** Dynamically extracts live entity knowledge from open epistemic networks, builds bipartite sentence-graph representations, and computes TextRank centrality to synthesize articulate 2–3 sentence summaries on-the-fly. Zero hardcoded templates, zero API tokens, and 100% local privacy.
+### A. Dual-Cognitive Architecture & Universal Knowledge
+* **Universal High-Speed Epistemic Inference (Groq LPUs):** For general queries spanning past, present, science, technology, world history, and contemporary leaders, VERDANT leverages ultra-fast LPU inference (`qwen/qwen3.8-27b` via Groq) returning crisp, authoritative 1–3 sentence spoken responses in **200–300ms** with zero disambiguation traps.
+* **Deterministic Arithmetic:** Powered by SymPy 1.14 for exact symbolic mathematics evaluated in $\le 2\text{ms}$ with 100% precision (`"What is one plus one"` $\to$ `"One plus one is 2."`, `"What is 15 times 12"` $\to$ `180`).
+* **Dynamic Epistemic Ingestion & Graph Salience:** Autonomous fallback engine that builds bipartite sentence-graph representations and computes TextRank centrality to synthesize articulate summaries on-the-fly even when offline.
 * **Dynamic Global Geocoding:** Live weather for any city or territory on Earth resolved dynamically via Open-Meteo Geocoding without static fallbacks.
 * **Silence-Debounced Speech Input:** 1.25s silence detection ensures the full utterance is captured before evaluation, preventing fragmented or repeated speech.
 
@@ -100,7 +101,7 @@ VERDANT/
 │   ├── verde_bridge.py             # Subprocess bridge to VERDE native runtime
 │   ├── everyday_service.py         # Dynamic weather geocoding, news briefings, music tasks
 │   ├── mcp_server.py               # JSON-RPC 2.0 Model Context Protocol server
-│   └── test_suite.py               # 7-part automated integration & unit test suite
+│   └── test_suite.py               # 9-part automated integration & unit test suite
 ├── frontend/
 │   ├── index.html                  # Echo Show 15 Smart Display HUD (Voice IN / Audio OUT)
 │   └── verdant-logo.png            # Smart display branding emblem

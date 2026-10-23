@@ -69,6 +69,16 @@ async def test_consequential_eu_db_shutdown():
     assert res["telemetry"]["llm_tokens_burned"] == 0
 
 @pytest.mark.asyncio
+async def test_anthropic_founder():
+    """Verify that 'Who is the founder of anthropic' accurately returns Dario/Daniela Amodei."""
+    req = VoiceQueryRequest(utterance="Who is the founder of anthropic")
+    res = await process_alexa_utterance(req)
+    assert res["route"] == "EVERYDAY_QUERY"
+    speech = res["speech_output"].lower()
+    assert "amodei" in speech or "dario" in speech or "daniela" in speech
+    assert "anthropic principle" not in speech
+
+@pytest.mark.asyncio
 async def test_safe_mitigation_execution():
     """Verify capability-gated plan authorization."""
     req = ExecutePlanRequest(plan_id="plan_reroute_replica_b", action_type="MITIGATION")
