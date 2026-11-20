@@ -134,6 +134,66 @@ SCENARIOS = {
 def health_check():
     return {"status": "ok", "version": "2.0"}
 
+@app.get("/api/extension/download")
+def download_chrome_extension():
+    """
+    Packages verdant-chrome into a clean zip archive and streams it for 1-click download.
+    """
+    import io
+    import zipfile
+    from fastapi.responses import Response
+
+    ext_dir = os.path.join(BASE_DIR, "verdant-chrome")
+    if not os.path.exists(ext_dir):
+        raise HTTPException(status_code=404, detail="verdant-chrome directory not found")
+
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for root, dirs, files in os.walk(ext_dir):
+            for file in files:
+                file_path = os.path.join(root, file)
+                arcname = os.path.join("verdant-chrome", os.path.relpath(file_path, ext_dir))
+                zip_file.write(file_path, arcname)
+
+    zip_buffer.seek(0)
+    return Response(
+        content=zip_buffer.getvalue(),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": "attachment; filename=verdant-chrome-extension.zip"
+        }
+    )
+
+@app.get("/api/vscode/download")
+def download_vscode_extension():
+    """
+    Packages verdant-vscode into a clean zip archive for direct installation.
+    """
+    import io
+    import zipfile
+    from fastapi.responses import Response
+
+    ext_dir = os.path.join(BASE_DIR, "verdant-vscode")
+    if not os.path.exists(ext_dir):
+        raise HTTPException(status_code=404, detail="verdant-vscode directory not found")
+
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for root, dirs, files in os.walk(ext_dir):
+            for file in files:
+                file_path = os.path.join(root, file)
+                arcname = os.path.join("verdant-vscode", os.path.relpath(file_path, ext_dir))
+                zip_file.write(file_path, arcname)
+
+    zip_buffer.seek(0)
+    return Response(
+        content=zip_buffer.getvalue(),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": "attachment; filename=verdant-vscode-extension.zip"
+        }
+    )
+
 @app.get("/api/scenarios")
 def get_scenarios():
     return SCENARIOS

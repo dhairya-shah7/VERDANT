@@ -165,6 +165,14 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
         </a>
       </div>
 
+      <!-- 1-Click Extension Download in Sidebar -->
+      <div class="px-1 mt-2">
+        <a href="/api/extension/download" download class="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-primary text-on-primary hover:bg-primary/90 transition-all cursor-pointer font-bold text-xs shadow-sm">
+          <span class="material-symbols-outlined text-[18px]">extension</span>
+          <span>Download Chrome Ext</span>
+        </a>
+      </div>
+
     </div>
   </aside>
 
@@ -194,6 +202,22 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
             <p class="text-xs sm:text-sm md:text-base text-on-surface-variant max-w-3xl px-2 leading-relaxed">
               V.E.R.D.A.N.T. is the world's first thermodynamic, zero-waste autonomous debugging runtime. From live Chrome layout bugs to server exceptions, V.E.R.D.A.N.T. distills code ASTs, synthesizes in-tab live hot-patches, and dispatches verified Playwright PRs straight to VS Code.
             </p>
+
+            <!-- 1-Click Multi-Surface Toolchain Downloads & Actions -->
+            <div class="flex flex-wrap items-center justify-center gap-3 mt-4">
+              <a href="/api/extension/download" download class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-on-primary font-bold text-xs sm:text-sm shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                <span class="material-symbols-outlined text-[20px]">extension</span>
+                <span>Download Chrome Extension (.zip)</span>
+              </a>
+              <a href="/api/vscode/download" download class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold text-xs sm:text-sm border border-surface-container-high shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                <span class="material-symbols-outlined text-[20px]">terminal</span>
+                <span>Get VS Code Extension (.zip)</span>
+              </a>
+              <button onclick="navigateTab('pipeline', event)" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-secondary-fixed hover:bg-secondary-fixed/80 text-on-secondary-fixed-variant font-bold text-xs sm:text-sm shadow-sm transition-all hover:scale-105 cursor-pointer">
+                <span class="material-symbols-outlined text-[20px]">play_circle</span>
+                <span>Launch Triage Lab</span>
+              </button>
+            </div>
           </section>
 
           <!-- 3D Nature & Technology Visual Showcase Grid -->
