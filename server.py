@@ -115,6 +115,10 @@ SCENARIOS = {
     }
 }
 
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "version": "2.0"}
+
 @app.get("/api/scenarios")
 def get_scenarios():
     return SCENARIOS
@@ -1078,302 +1082,446 @@ CAPSULE_HTML = """<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>🌿 V.E.R.D.A.N.T. Capsule</title>
+  <title>🌿 V.E.R.D.A.N.T.</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      background: #06090F;
-      color: #F1F5F9;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      overflow-x: hidden;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #0a0e1a;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+      user-select: none;
+      -webkit-app-region: no-drag;
     }
-    .capsule-pill {
-      background: #0D111A;
-      border: 1.5px solid rgba(59, 130, 246, 0.5);
-      box-shadow: 0 0 25px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.02);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ── Drag region at very top ── */
+    #drag-bar {
+      width: 100%; height: 10px;
+      -webkit-app-region: drag;
+      cursor: move;
     }
-    .capsule-pill.deepthink {
-      border-color: rgba(168, 85, 247, 0.6);
-      box-shadow: 0 0 25px rgba(168, 85, 247, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.02);
+
+    /* ── Main pill ── */
+    #pill {
+      margin: 0 auto;
+      width: calc(100% - 16px);
+      max-width: 680px;
+      background: linear-gradient(135deg, #0d1120 0%, #0a0e1a 100%);
+      border: 1.5px solid rgba(59,130,246,0.45);
+      border-radius: 18px;
+      padding: 10px 14px 10px 14px;
+      box-shadow: 0 0 24px rgba(59,130,246,0.18), 0 2px 32px rgba(0,0,0,0.6);
+      transition: border-color 0.3s, box-shadow 0.3s;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-    .diff-add { color: #10B981; background: rgba(16, 185, 129, 0.08); }
-    .diff-rem { color: #EF4444; background: rgba(239, 68, 68, 0.08); }
+    #pill.deepthink {
+      border-color: rgba(168,85,247,0.55);
+      box-shadow: 0 0 24px rgba(168,85,247,0.22), 0 2px 32px rgba(0,0,0,0.6);
+    }
+
+    /* ── Top row ── */
+    .top-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo {
+      font-size: 15px;
+      white-space: nowrap;
+      color: #3b82f6;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+    }
+    #input-box {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 7px 12px;
+      color: #e2e8f0;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #input-box::placeholder { color: rgba(148,163,184,0.5); }
+    #input-box:focus { border-color: rgba(59,130,246,0.6); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 4px;
+      padding: 6px 11px;
+      border-radius: 9px;
+      border: none;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .btn-ask {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+    }
+    .btn-ask:hover { filter: brightness(1.15); transform: scale(1.03); }
+    .btn-ask:active { transform: scale(0.97); }
+    .btn-snap {
+      background: rgba(255,255,255,0.07);
+      color: #94a3b8;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .btn-snap:hover { background: rgba(255,255,255,0.12); color: #e2e8f0; }
+    .btn-mode {
+      background: rgba(255,255,255,0.05);
+      color: #64748b;
+      border: 1px solid rgba(255,255,255,0.06);
+      font-size: 11px;
+      padding: 5px 9px;
+    }
+    .btn-mode.active-normal  { color: #3b82f6; border-color: rgba(59,130,246,0.4); background: rgba(59,130,246,0.08); }
+    .btn-mode.active-deep    { color: #a855f7; border-color: rgba(168,85,247,0.4); background: rgba(168,85,247,0.08); }
+    .btn-close {
+      background: rgba(239,68,68,0.08);
+      color: #ef4444;
+      border: 1px solid rgba(239,68,68,0.15);
+      padding: 5px 8px;
+      font-size: 13px;
+    }
+    .btn-close:hover { background: rgba(239,68,68,0.18); }
+
+    /* ── Status bar ── */
+    #status-bar {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: #64748b;
+      padding: 0 2px;
+    }
+    .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #22c55e;
+      flex-shrink: 0;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+    }
+    #status-text { flex: 1; }
+    .eco-badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(34,197,94,0.1);
+      color: #22c55e;
+      border: 1px solid rgba(34,197,94,0.2);
+    }
+
+    /* ── Response drawer ── */
+    #response-drawer {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 300px;
+    }
+    #response-drawer.open { display: flex; }
+    #response-text {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #cbd5e1;
+      line-height: 1.6;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    #diff-block {
+      display: none;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      background: #0d1120;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 8px 10px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+    .diff-add { color: #4ade80; }
+    .diff-rem { color: #f87171; }
+    #apply-row { display: none; justify-content: flex-end; gap: 8px; }
+    .btn-apply {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff; font-size: 12px; padding: 6px 14px; border-radius: 8px;
+    }
+    .btn-apply:hover { filter: brightness(1.1); }
+    .btn-dismiss {
+      background: rgba(255,255,255,0.05); color: #64748b;
+      font-size: 12px; padding: 6px 10px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid rgba(59,130,246,0.3);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
-<body class="p-3 select-none flex flex-col items-center justify-start min-h-screen">
+<body>
+  <div id="drag-bar"></div>
 
-  <!-- THE FLOATING CAPSULE PILL -->
-  <div id="capsule-container" class="w-full max-w-[660px] capsule-pill rounded-2xl p-3">
-    
-    <!-- TOP ROW: Text Input -->
-    <div class="flex items-center gap-2 mb-2 px-1">
-      <input 
-        id="prompt-input" 
-        type="text" 
-        placeholder="| Ask anything... (e.g. 'Fix the checkout bug' or 'Explain error')"
-        class="w-full bg-transparent text-slate-100 placeholder-slate-500 text-sm focus:outline-none"
-        onkeydown="if(event.key === 'Enter') submitQuery();"
-      />
-      <div id="screen-badge" class="hidden text-xs bg-slate-800 text-sky-400 font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer" onclick="clearScreenBadge()">
-        <span id="screen-badge-title">📷 Snapped</span>
-        <span class="text-slate-400 hover:text-white">✕</span>
+  <div id="pill">
+
+    <!-- TOP ROW -->
+    <div class="top-row">
+      <span class="logo">🌿 VERDANT</span>
+
+      <input id="input-box" type="text"
+             placeholder="Describe defect, paste error, or ask for fix…"
+             autocomplete="off" spellcheck="false" />
+
+      <button class="btn btn-snap" id="btn-snap" onclick="doSnap()" title="Snap active window">📸</button>
+
+      <button class="btn btn-mode active-normal" id="btn-normal" onclick="setMode('normal')">⚡ Fast</button>
+      <button class="btn btn-mode" id="btn-deep" onclick="setMode('deepthink')">🧠 Deep</button>
+
+      <button class="btn btn-ask" id="btn-ask" onclick="doAsk()">▶ Ask</button>
+      <button class="btn btn-close" onclick="window.close()" title="Close">✕</button>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div id="status-bar">
+      <div class="dot" id="dot"></div>
+      <span id="status-text">Ready · Gemini live</span>
+      <span class="eco-badge" id="eco-badge">🌱 —</span>
+    </div>
+
+    <!-- RESPONSE DRAWER -->
+    <div id="response-drawer">
+      <div id="response-text"></div>
+      <div id="diff-block"></div>
+      <div id="apply-row">
+        <button class="btn btn-dismiss" onclick="dismiss()">Dismiss</button>
+        <button class="btn btn-apply" onclick="applyPatch()">▶ Apply Patch &amp; Run</button>
       </div>
     </div>
 
-    <!-- BOTTOM ROW: Controls -->
-    <div class="flex items-center justify-between pt-1 border-t border-slate-800/60">
-      
-      <!-- Left Controls: [+] [Normal] [DeepThink] -->
-      <div class="flex items-center gap-2">
-        <button onclick="snapScreen()" title="Snap Active Window" class="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold flex items-center justify-center text-sm transition">
-          +
-        </button>
-        <button id="btn-mode-normal" onclick="setMode('Normal')" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-white transition">
-          🌿 Normal ▾
-        </button>
-        <button id="btn-mode-deepthink" onclick="setMode('DeepThink')" class="text-xs font-semibold px-2.5 py-1 rounded-full text-slate-400 hover:text-slate-200 transition">
-          💡 DeepThink ▾
-        </button>
-      </div>
+  </div><!-- /pill -->
 
-      <!-- Right Controls: Status, [Voice], [➤] -->
-      <div class="flex items-center gap-2">
-        <span id="status-indicator" class="text-xs text-sky-400 hidden">Analyzing...</span>
-        
-        <button id="btn-voice" onclick="toggleVoice()" class="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1 transition">
-          🎙️ Voice
-        </button>
-        
-        <button id="btn-submit" onclick="submitQuery()" class="w-7 h-7 rounded-full bg-gradient-to-r from-violet-600 to-purple-500 hover:opacity-90 text-white font-bold flex items-center justify-center text-xs shadow-md transition">
-          ➤
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- SLIDE-OUT DIFF DRAWER (Initially Hidden) -->
-  <div id="diff-drawer" class="hidden w-full max-w-[660px] bg-[#0A0E17] border border-slate-800 rounded-xl mt-3 p-4 shadow-2xl">
-    
-    <div class="flex items-center justify-between mb-2">
-      <div class="flex items-center gap-2">
-        <h3 id="diff-title" class="text-sm font-bold text-white">Surgical Patch Preview</h3>
-        <span id="diff-confidence" class="text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded-full">Confidence: 98%</span>
-      </div>
-      <button onclick="closeDrawer()" class="text-slate-400 hover:text-white text-xs">✕ Dismiss</button>
-    </div>
-
-    <p id="diff-summary" class="text-xs text-slate-400 mb-3 leading-relaxed"></p>
-
-    <!-- Code Diff Box -->
-    <pre id="diff-code" class="bg-black/60 border border-slate-900 rounded-lg p-3 text-xs font-mono overflow-x-auto max-h-52 text-slate-300 leading-normal mb-3"></pre>
-
-    <!-- Actions -->
-    <div class="flex items-center gap-3">
-      <button id="btn-apply-patch" onclick="applyPatch()" class="text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow transition">
-        ▶ Apply Patch & Run Verification Proof
-      </button>
-      <button onclick="closeDrawer()" class="text-xs text-slate-400 hover:text-white px-2 py-1">
-        Dismiss
-      </button>
-    </div>
-
-  </div>
-
-  <!-- SCRIPT ENGINE -->
   <script>
-    let activeMode = "Normal";
-    let attachedScreenPath = null;
-    let latestDiagnosis = null;
-    let isRecordingVoice = false;
-    let mediaRecorder = null;
-    let audioChunks = [];
+    // ── State ──────────────────────────────────────────────────────────────
+    let mode = 'normal';
+    let lastDiagnosis = null;
+    let snapImagePath = null;
 
-    function setMode(mode) {
-      activeMode = mode;
-      const container = document.getElementById("capsule-container");
-      const btnNorm = document.getElementById("btn-mode-normal");
-      const btnDeep = document.getElementById("btn-mode-deepthink");
+    // ── On load: focus input ───────────────────────────────────────────────
+    window.addEventListener('load', () => {
+      document.getElementById('input-box').focus();
+      // Try to position top-center of screen
+      try {
+        const sw = window.screen.width;
+        window.moveTo(Math.round((sw - 700) / 2), 20);
+        window.resizeTo(700, 110);
+      } catch(e) {}
+    });
 
-      if (mode === "Normal") {
-        container.classList.remove("deepthink");
-        btnNorm.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-white transition";
-        btnDeep.className = "text-xs font-semibold px-2.5 py-1 rounded-full text-slate-400 hover:text-slate-200 transition";
+    // ── Enter key ──────────────────────────────────────────────────────────
+    document.getElementById('input-box').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doAsk(); }
+    });
+
+    // ── Mode ───────────────────────────────────────────────────────────────
+    function setMode(m) {
+      mode = m;
+      const pill = document.getElementById('pill');
+      const btnN = document.getElementById('btn-normal');
+      const btnD = document.getElementById('btn-deep');
+      if (m === 'deepthink') {
+        pill.classList.add('deepthink');
+        btnD.classList.add('active-deep');
+        btnD.classList.remove('active-normal');
+        btnN.classList.remove('active-normal');
       } else {
-        container.classList.add("deepthink");
-        btnDeep.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-purple-300 transition";
-        btnNorm.className = "text-xs font-semibold px-2.5 py-1 rounded-full text-slate-400 hover:text-slate-200 transition";
+        pill.classList.remove('deepthink');
+        btnN.classList.add('active-normal');
+        btnD.classList.remove('active-deep');
       }
     }
 
-    async function snapScreen() {
-      const status = document.getElementById("status-indicator");
-      status.innerText = "Snapping active window...";
-      status.classList.remove("hidden");
+    // ── Status helpers ─────────────────────────────────────────────────────
+    function setStatus(msg, color = '#64748b') {
+      document.getElementById('status-text').textContent = msg;
+      document.getElementById('status-text').style.color = color;
+    }
+    function setEco(text) {
+      document.getElementById('eco-badge').textContent = '🌱 ' + text;
+    }
+    function setBusy(busy) {
+      const btn = document.getElementById('btn-ask');
+      if (busy) {
+        btn.innerHTML = '<span class="spinner"></span>';
+        btn.disabled = true;
+      } else {
+        btn.innerHTML = '▶ Ask';
+        btn.disabled = false;
+      }
+      document.getElementById('dot').style.background = busy ? '#f59e0b' : '#22c55e';
+    }
 
+    // ── Snap ───────────────────────────────────────────────────────────────
+    async function doSnap() {
+      const btn = document.getElementById('btn-snap');
+      btn.textContent = '⏳';
       try {
-        const res = await fetch("/api/capsule/snap", { method: "POST" });
+        const res = await fetch('/api/capsule/snap', { method: 'POST' });
         const data = await res.json();
         if (data.success) {
-          attachedScreenPath = data.path;
-          const badge = document.getElementById("screen-badge");
-          const title = document.getElementById("screen-badge-title");
-          title.innerText = "📷 " + (data.title ? data.title.substring(0, 14) + ".." : "Screen");
-          badge.classList.remove("hidden");
-          status.innerText = "Attached: " + (data.title || "Window");
+          snapImagePath = data.path;
+          btn.textContent = '✅';
+          setStatus('Screen snapped · ' + (data.title || ''), '#22c55e');
         } else {
-          status.innerText = "Snap failed.";
+          btn.textContent = '📸';
+          setStatus('Snap: ' + data.error, '#f59e0b');
         }
-      } catch (e) {
-        status.innerText = "Snap error.";
+      } catch(e) {
+        btn.textContent = '📸';
+        setStatus('Snap failed: ' + e.message, '#ef4444');
       }
+      setTimeout(() => btn.textContent = '📸', 3000);
     }
 
-    function clearScreenBadge() {
-      attachedScreenPath = null;
-      document.getElementById("screen-badge").classList.add("hidden");
-      document.getElementById("status-indicator").classList.add("hidden");
-    }
-
-    async function submitQuery() {
-      const input = document.getElementById("prompt-input");
-      const prompt = input.value.trim();
-      const status = document.getElementById("status-indicator");
-      const submitBtn = document.getElementById("btn-submit");
-
-      if (!prompt && !attachedScreenPath) {
-        status.innerText = "Type prompt or click + to snap.";
-        status.classList.remove("hidden");
+    // ── Ask ────────────────────────────────────────────────────────────────
+    async function doAsk() {
+      const prompt = document.getElementById('input-box').value.trim();
+      if (!prompt) {
+        document.getElementById('input-box').focus();
         return;
       }
 
-      status.innerText = "Analyzing with Gemini...";
-      status.classList.remove("hidden");
-      submitBtn.disabled = true;
+      setBusy(true);
+      setStatus('Analyzing with Gemini…', '#3b82f6');
+      openDrawer();
+      document.getElementById('response-text').textContent = 'Thinking…';
+      document.getElementById('diff-block').style.display = 'none';
+      document.getElementById('apply-row').style.display = 'none';
 
       try {
-        const res = await fetch("/api/capsule/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const res = await fetch('/api/capsule/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            prompt: prompt,
-            mode: activeMode.toLowerCase(),
-            image_path: attachedScreenPath
+            prompt,
+            mode,
+            image_path: snapImagePath
           })
         });
-
         const data = await res.json();
-        submitBtn.disabled = false;
 
         if (data.success) {
-          latestDiagnosis = data.diagnosis;
-          status.innerText = "Path: " + data.action_type.toUpperCase();
+          lastDiagnosis = data.diagnosis;
+          const d = data.diagnosis;
 
-          if (data.action_type === "fix" && data.diff_preview) {
-            openDrawer(data);
-          } else {
-            input.value = data.spoken_summary;
-            closeDrawer();
+          // Format response
+          let txt = '';
+          if (d.path) txt += `[${d.path.toUpperCase()}]  `;
+          if (d.root_cause) txt += d.root_cause + '\n\n';
+          if (d.reasoning) txt += d.reasoning + '\n\n';
+          if (d.confidence) txt += `Confidence: ${(d.confidence * 100).toFixed(0)}%  ·  `;
+          if (d.eco_impact) txt += `Impact: ${d.eco_impact}`;
+          document.getElementById('response-text').textContent = txt.trim() || JSON.stringify(d, null, 2);
+
+          // Diff if fix path
+          if (d.patch && d.patch.diff) {
+            showDiff(d.patch.diff);
           }
+
+          // Eco badge
+          if (d.eco_impact) setEco(d.eco_impact);
+          if (data.eco) setEco(data.eco.co2 + 'g CO₂');
+
+          setStatus('Done · ' + (d.path || 'advise'), '#22c55e');
+          resizeToFit();
         } else {
-          status.innerText = "Error: " + (data.error || "Failed");
+          document.getElementById('response-text').textContent = '❌ ' + (data.error || 'Unknown error');
+          setStatus('Error', '#ef4444');
         }
-      } catch (err) {
-        submitBtn.disabled = false;
-        status.innerText = "Network error: " + err.message;
+      } catch(e) {
+        document.getElementById('response-text').textContent = '❌ Network error: ' + e.message;
+        setStatus('Network error', '#ef4444');
       }
+
+      setBusy(false);
     }
 
-    function openDrawer(data) {
-      const drawer = document.getElementById("diff-drawer");
-      const title = document.getElementById("diff-title");
-      const conf = document.getElementById("diff-confidence");
-      const summary = document.getElementById("diff-summary");
-      const code = document.getElementById("diff-code");
-
-      title.innerText = "Surgical Fix: " + (data.diagnosis.evidence?.suspect_file || "Source Code");
-      conf.innerText = "Confidence: " + Math.round((data.confidence || 0.95) * 100) + "%";
-      summary.innerText = data.spoken_summary;
-
-      // Colorize diff lines
-      const lines = (data.diff_preview || "").split("\\n");
-      code.innerHTML = lines.map(line => {
-        if (line.startsWith("+")) return `<div class="diff-add">${escapeHtml(line)}</div>`;
-        if (line.startsWith("-")) return `<div class="diff-rem">${escapeHtml(line)}</div>`;
-        return `<div>${escapeHtml(line)}</div>`;
-      }).join("");
-
-      drawer.classList.remove("hidden");
+    // ── Diff viewer ────────────────────────────────────────────────────────
+    function showDiff(diff) {
+      const el = document.getElementById('diff-block');
+      el.innerHTML = '';
+      diff.split('\n').forEach(line => {
+        const span = document.createElement('div');
+        if (line.startsWith('+')) span.className = 'diff-add';
+        else if (line.startsWith('-')) span.className = 'diff-rem';
+        span.textContent = line;
+        el.appendChild(span);
+      });
+      el.style.display = 'block';
+      document.getElementById('apply-row').style.display = 'flex';
+      resizeToFit();
     }
 
-    function closeDrawer() {
-      document.getElementById("diff-drawer").classList.add("hidden");
-    }
-
+    // ── Apply patch ────────────────────────────────────────────────────────
     async function applyPatch() {
-      if (!latestDiagnosis) return;
-      const btn = document.getElementById("btn-apply-patch");
-      btn.innerText = "Applying & Verifying Proof...";
-      btn.disabled = true;
-
+      if (!lastDiagnosis) return;
+      setStatus('Applying patch…', '#f59e0b');
       try {
-        const res = await fetch("/api/capsule/apply_patch", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ diagnosis: latestDiagnosis })
+        const res = await fetch('/api/capsule/apply_patch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ diagnosis: lastDiagnosis })
         });
         const data = await res.json();
-        btn.disabled = false;
-
         if (data.success) {
-          btn.innerText = "✔ Verified & Applied (" + (data.branch || "fix") + ")";
-          btn.className = "text-xs font-bold bg-blue-600 text-white px-3.5 py-1.5 rounded-lg";
-          setTimeout(closeDrawer, 2500);
+          setStatus('✅ Patch applied!', '#22c55e');
+          document.getElementById('apply-row').style.display = 'none';
         } else {
-          btn.innerText = "Verification Failed";
-          btn.className = "text-xs font-bold bg-rose-600 text-white px-3.5 py-1.5 rounded-lg";
-          alert(data.error || "Patch verification failed");
+          setStatus('Patch failed: ' + data.error, '#ef4444');
         }
-      } catch (e) {
-        btn.disabled = false;
-        btn.innerText = "Error applying patch";
+      } catch(e) {
+        setStatus('Patch error: ' + e.message, '#ef4444');
       }
     }
 
-    function escapeHtml(str) {
-      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    // ── Drawer helpers ─────────────────────────────────────────────────────
+    function openDrawer() {
+      document.getElementById('response-drawer').classList.add('open');
+      resizeToFit();
     }
-
-    async function toggleVoice() {
-      const voiceBtn = document.getElementById("btn-voice");
-      if (!isRecordingVoice) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          mediaRecorder = new MediaRecorder(stream);
-          audioChunks = [];
-          mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-          mediaRecorder.onstop = () => {
-            document.getElementById("status-indicator").innerText = "Voice recorded.";
-            submitQuery();
-          };
-          mediaRecorder.start();
-          isRecordingVoice = true;
-          voiceBtn.innerText = "🔴 Stop";
-          voiceBtn.className = "text-xs font-medium px-2.5 py-1 rounded-full bg-rose-600 text-white animate-pulse";
-        } catch (err) {
-          alert("Microphone permission denied or not available.");
-        }
-      } else {
-        isRecordingVoice = false;
-        voiceBtn.innerText = "🎙️ Voice";
-        voiceBtn.className = "text-xs font-medium px-2.5 py-1 rounded-full bg-slate-800 text-slate-200";
-        if (mediaRecorder) mediaRecorder.stop();
-      }
+    function dismiss() {
+      document.getElementById('response-drawer').classList.remove('open');
+      document.getElementById('apply-row').style.display = 'none';
+      lastDiagnosis = null;
+      snapImagePath = null;
+      setStatus('Ready · Gemini live', '#64748b');
+      try { window.resizeTo(700, 110); } catch(e) {}
+    }
+    function resizeToFit() {
+      try {
+        const h = document.body.scrollHeight + 20;
+        window.resizeTo(700, Math.min(h, 500));
+      } catch(e) {}
     }
   </script>
-
 </body>
 </html>
 """
