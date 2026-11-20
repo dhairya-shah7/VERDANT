@@ -44,10 +44,24 @@ slide3_enhanced_transparent.png
 # Legacy Pages, Static Mocks & Binaries
 test_app.html
 stitch/
-capsule/capsule.exe
+capsule/
+apps/
+
+# Internal Planning, Scratch & Draft Markdown Files
+APPROACH_PLAN.md
+CUSTOM_ENGINE_SPEC.md
+explain.md
+GCP_SETUP_GUIDE.md
+IMPLEMENTATION_PLAN.md
+master.md
+MASTER_PLAN.md
+POSTPONED_FEATURES.md
+WHATS_DONE.md
+*.tmp.md
 
 # Video & Demo Clips
 demo_build/
 demo_clips/
 tests/*.mp3
 tests/*.srt
+*.mp4

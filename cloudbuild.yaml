@@ -55,7 +55,7 @@ steps:
       - '--min-instances=0'
       - '--max-instances=10'
       - '--timeout=300'
-      - '--set-env-vars=GCP_PROJECT=$PROJECT_ID,GCP_REGION=${_REGION},ENVIRONMENT=production,VERTEX_AI_ENABLED=true'
+      - '--update-env-vars=GCP_PROJECT=$PROJECT_ID,GCP_REGION=${_REGION},ENVIRONMENT=production,VERTEX_AI_ENABLED=true'
 
 images:
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/verdant-server:$COMMIT_SHA'
