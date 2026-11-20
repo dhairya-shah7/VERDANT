@@ -2522,6 +2522,15 @@ async def websocket_ide_endpoint(websocket: WebSocket):
             connected_ides.remove(websocket)
         print(f"[V.E.R.D.A.N.T. Daemon] VS Code client disconnected. Active IDEs: {len(connected_ides)}")
 
+@app.get("/api/gcp/status")
+async def api_gcp_status():
+    """Returns Google Cloud Platform (GCP) infrastructure & services health status."""
+    try:
+        from src.gcp_adapter import get_gcp_infrastructure_status
+        return get_gcp_infrastructure_status()
+    except Exception as e:
+        return {"error": str(e), "environment": "Local Fallback"}
+
 @app.post("/api/extension/ingest")
 async def api_extension_ingest(request: Request):
     """
