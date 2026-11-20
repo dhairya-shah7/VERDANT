@@ -47,6 +47,9 @@ from System.Windows.Controls import (
     Border, StackPanel, Grid, TextBox, TextBlock, Button, ScrollViewer,
     ColumnDefinition, RowDefinition, Orientation
 )
+from System.Windows.Interop import WindowInteropHelper
+import ctypes
+user32 = ctypes.windll.user32
 
 from capsule.bridge import CapsuleBridge
 from capsule.snapper import WindowSnapper
@@ -60,6 +63,16 @@ WIN_TOP = 80                    # Positioned clearly below Antigravity tab bar
 
 
 def build_and_run_capsule():
+    try:
+        _run_capsule_impl()
+    except Exception as e:
+        import traceback
+        with open("capsule_error.log", "w") as f:
+            f.write(traceback.format_exc())
+        print(f"FATAL CAPSULE ERROR: {e}")
+        sys.stdout.flush()
+
+def _run_capsule_impl():
     bridge = CapsuleBridge(ROOT)
     state = {
         "mode": "fast",
@@ -476,11 +489,19 @@ def build_and_run_capsule():
     win.Show()
     win.Activate()
 
+    helper = WindowInteropHelper(win)
+    hwnd = helper.Handle.ToInt64()
+    if hwnd:
+        user32.SetForegroundWindow(hwnd)
+        user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0040)
+
     print("=" * 60)
     print("🌿 V.E.R.D.A.N.T. Native Windows Desktop Capsule")
+    print(f"   Native Win32 HWND: {hwnd}")
     print(f"   Position: ({WIN_LEFT}, {WIN_TOP})  Size: {WIN_W}x{COLLAPSED_H}")
     print("   Always On Top · Frameless · Draggable")
     print("=" * 60)
+    sys.stdout.flush()
 
     app.Run(win)
 
@@ -489,7 +510,11 @@ def main():
     t = Thread(ThreadStart(build_and_run_capsule))
     t.SetApartmentState(ApartmentState.STA)
     t.Start()
-    t.Join()
+    try:
+        while t.IsAlive:
+            time.sleep(0.15)
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":
