@@ -21,15 +21,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     bufferSummary.innerHTML = `Active Tab: <b style="color:#e2e8f0;">${activeTab.title?.slice(0, 30) || 'Untitled'}</b><br><span style="font-size:10px; color:#64748b;">${activeTab.url?.slice(0, 45)}...</span>`;
   }
 
-  btnInspect.addEventListener('click', () => {
+  async function ensureScriptsInjected(tabId) {
+    try {
+      await chrome.scripting.insertCSS({
+        target: { tabId },
+        files: ['drawer.css']
+      });
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: [
+          'src/pii_scrubber.js',
+          'src/visual_crawler.js',
+          'src/in_tab_patcher.js',
+          'drawer.js',
+          'content.js'
+        ]
+      });
+    } catch (e) {
+      console.warn('Script injection skipped or failed:', e);
+    }
+  }
+
+  btnInspect.addEventListener('click', async () => {
     if (!activeTab?.id) return;
-    chrome.tabs.sendMessage(activeTab.id, { action: 'START_INSPECTION' });
-    window.close();
+    try {
+      await ensureScriptsInjected(activeTab.id);
+      chrome.tabs.sendMessage(activeTab.id, { action: 'START_INSPECTION' }, (res) => {
+        window.close();
+      });
+    } catch (err) {
+      console.error(err);
+      window.close();
+    }
   });
 
-  btnAnalyze.addEventListener('click', () => {
+  btnAnalyze.addEventListener('click', async () => {
     if (!activeTab?.id) return;
-    chrome.tabs.sendMessage(activeTab.id, { action: 'TRIGGER_ANALYSIS' });
-    window.close();
+    try {
+      await ensureScriptsInjected(activeTab.id);
+      chrome.tabs.sendMessage(activeTab.id, { action: 'TRIGGER_ANALYSIS' }, (res) => {
+        window.close();
+      });
+    } catch (err) {
+      console.error(err);
+      window.close();
+    }
   });
 });

@@ -19,7 +19,13 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "js": [
+        "src/pii_scrubber.js",
+        "src/visual_crawler.js",
+        "src/in_tab_patcher.js",
+        "drawer.js",
+        "content.js"
+      ],
       "css": ["drawer.css"],
       "run_at": "document_end"
     }
