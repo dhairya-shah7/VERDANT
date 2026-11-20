@@ -29,7 +29,7 @@ from src.verde_telemetry.compute_meter import calculate_green_telemetry
 from src.verde_telemetry.github_reporter import format_draft_pr_markdown
 from src.db import DB
 from src.gitops import GitOpsEngine
-from src.stitch_template import STITCH_HTML_TEMPLATE
+from src.stitch_template import STITCH_HTML_TEMPLATE, render_stitch_html
 from PIL import Image
 
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
@@ -1831,31 +1831,31 @@ ${diffSec}
 @app.get("/", response_class=HTMLResponse)
 @app.get("/home", response_class=HTMLResponse)
 def index():
-    return HTMLResponse(content=STITCH_HTML_TEMPLATE)
+    return HTMLResponse(content=render_stitch_html("home"))
 
 @app.get("/pipeline", response_class=HTMLResponse)
 @app.get("/analysis", response_class=HTMLResponse)
 def pipeline_page():
-    return HTMLResponse(content=STITCH_HTML_TEMPLATE)
+    return HTMLResponse(content=render_stitch_html("pipeline"))
 
 @app.get("/results", response_class=HTMLResponse)
 @app.get("/results-1", response_class=HTMLResponse)
 def results_page():
-    return HTMLResponse(content=STITCH_HTML_TEMPLATE)
+    return HTMLResponse(content=render_stitch_html("results"))
 
 @app.get("/results-2", response_class=HTMLResponse)
 def results_2_page():
-    return HTMLResponse(content=STITCH_HTML_TEMPLATE)
+    return HTMLResponse(content=render_stitch_html("results"))
 
 @app.get("/sustainability", response_class=HTMLResponse)
 @app.get("/verde-hydra", response_class=HTMLResponse)
 def sustainability_page():
-    return HTMLResponse(content=STITCH_HTML_TEMPLATE)
+    return HTMLResponse(content=render_stitch_html("sustainability"))
 
 @app.get("/history", response_class=HTMLResponse)
 @app.get("/audit", response_class=HTMLResponse)
 def history_page():
-    return HTMLResponse(content=STITCH_HTML_TEMPLATE)
+    return HTMLResponse(content=render_stitch_html("history"))
 
 @app.get("/legacy", response_class=HTMLResponse)
 def legacy_index():

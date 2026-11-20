@@ -1708,7 +1708,7 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
             scenario: {
               title: currentScenario === 'checkout_500' ? 'E-Commerce Checkout 500 Drop (Silent UI Freeze)' : 'Auth Token Expiry Failure (401 Drop)',
               video_duration: '24.2s',
-              patch_diff: '--- a/src/services/checkoutHandler.ts\n+++ b/src/services/checkoutHandler.ts\n@@ -40,3 +40,5 @@\n-  const cartId = paymentSession.cartId;\n+  if (!paymentSession || !paymentSession.cartId) {\n+    throw new CheckoutError("INVALID_CART_SESSION");\n+  }\n+  const cartId = paymentSession.cartId;'
+              patch_diff: `--- a/src/services/checkoutHandler.ts\n+++ b/src/services/checkoutHandler.ts\n@@ -40,3 +40,5 @@\n-  const cartId = paymentSession.cartId;\n+  if (!paymentSession || !paymentSession.cartId) {\n+    throw new CheckoutError("INVALID_CART_SESSION");\n+  }\n+  const cartId = paymentSession.cartId;`
             },
             gemini_verdict: {
               explanation: currentScenario === 'checkout_500' 
@@ -1844,7 +1844,7 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
         document.getElementById('res-patch-diff-view').innerText = data.scenario.patch_diff || '# No diff needed';
         document.getElementById('res-playwright-code').innerHTML = `<code>${escapeHtml(data.playwright_code || '')}</code>`;
       } else {
-        document.getElementById('res-patch-diff-view').innerText = '# Mode: QA Triage Only (No source repo connected)\n# Diagnostic cause: ' + data.gemini_verdict.explanation;
+        document.getElementById('res-patch-diff-view').innerText = `# Mode: QA Triage Only (No source repo connected)\n# Diagnostic cause: ${data.gemini_verdict.explanation}`;
         document.getElementById('res-playwright-code').innerHTML = `<code>// Playwright synthetic draft created for QA export\n${escapeHtml(data.playwright_code || '')}</code>`;
       }
 
@@ -2128,7 +2128,7 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
 - **Root Cause**: ${s.root_cause}
 - **Spoken Summary**: ${s.spoken_summary}
 - **Reproduction Steps**:
-${(s.reproduction_steps || []).map(x => `  - ${x}`).join('\n')}
+${(s.reproduction_steps || []).map(x => `  - ${x}`).join('\\n')}
 
 ${diffBlock}
 `;
@@ -2245,3 +2245,30 @@ ${diffBlock}
 </body>
 </html>
 """
+
+def render_stitch_html(active_screen: str = "home") -> str:
+    """Renders the Stitch template with the requested screen and tab pre-activated server-side."""
+    screens = ["home", "pipeline", "results", "sustainability", "history"]
+    if active_screen not in screens:
+        active_screen = "home"
+    
+    html = STITCH_HTML_TEMPLATE
+    
+    # 1. Update initial activeMainTab variable in JS
+    html = html.replace("let activeMainTab = 'home';", f"let activeMainTab = '{active_screen}';")
+    
+    # 2. Adjust screen visibilities
+    # First, make screen-home hidden if it's not active
+    if active_screen != "home":
+        html = html.replace('id="screen-home" class="w-full"', 'id="screen-home" class="w-full hidden"')
+        # Now un-hide the target active screen
+        html = html.replace(f'id="screen-{active_screen}" class="w-full hidden"', f'id="screen-{active_screen}" class="w-full"')
+        
+        # Adjust nav tab active styles
+        html = html.replace('id="nav-btn-home" onclick="navigateTab(\'home\', event)" class="nav-tab-active',
+                            'id="nav-btn-home" onclick="navigateTab(\'home\', event)" class="')
+        html = html.replace(f'id="nav-btn-{active_screen}" onclick="navigateTab(\'{active_screen}\', event)" class="',
+                            f'id="nav-btn-{active_screen}" onclick="navigateTab(\'{active_screen}\', event)" class="nav-tab-active ')
+    
+    return html
+
