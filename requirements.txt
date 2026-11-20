@@ -9,7 +9,11 @@ python-multipart>=0.0.9
 aiofiles>=23.2.1
 requests>=2.31.0
 python-dotenv>=1.0.0
-customtkinter>=6.0.0
-sounddevice>=0.4.6
-keyboard>=0.13.5
-pywin32>=306
+cryptography>=41.0.0
+playwright>=1.40.0
+
+# Optional Desktop Capture Client (Windows Only)
+customtkinter>=6.0.0; sys_platform == 'win32'
+sounddevice>=0.4.6; sys_platform == 'win32'
+keyboard>=0.13.5; sys_platform == 'win32'
+pywin32>=306; sys_platform == 'win32'
