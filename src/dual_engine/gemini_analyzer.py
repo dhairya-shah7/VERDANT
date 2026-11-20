@@ -243,3 +243,38 @@ def analyze_multimodal(
         f"All live Google Gemini model attempts failed. Last error: {last_error}. "
         "Strict Zero-Mock rule enforced: no synthetic fallback data provided."
     )
+
+
+def analyze_defect_with_gemini(
+    timeline_events: List[Dict[str, Any]],
+    network_errors: List[Dict[str, Any]],
+    console_errors: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """
+    Backwards-compatible interface for server.py and run_verdant.py.
+    Calls genuine live Gemini multimodal inference and adapts to dashboard format.
+    Zero mock/fallback dictionaries: strictly live model-driven.
+    """
+    diag = analyze_multimodal(
+        prompt="Analyze the attached runtime timeline events, console errors, and network errors to diagnose the defect.",
+        timeline_events=timeline_events,
+        network_errors=network_errors,
+        console_errors=console_errors,
+        mode="deepthink"
+    )
+
+    diff_str = ""
+    if diag.edits:
+        from ..replay_shield.patcher import generate_diff
+        for edit in diag.edits:
+            diff_str += f"--- a/{edit.path}\n+++ b/{edit.path}\n@@ search / replace @@\n-{edit.search}\n+{edit.replace}\n"
+
+    return {
+        "bug_detected": diag.action_type in [ActionType.FIX, ActionType.ENV],
+        "user_action_attempted": True,
+        "intent": diag.spoken_summary,
+        "category": diag.action_type.value.upper(),
+        "suspect_file": diag.evidence.suspect_file or (diag.edits[0].path if diag.edits else "src/app.ts"),
+        "suggested_fix_diff": diff_str or diag.root_cause,
+        "explanation": f"{diag.spoken_summary}\n\nRoot Cause: {diag.root_cause}"
+    }

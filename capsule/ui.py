@@ -1,9 +1,10 @@
 """
 V.E.R.D.A.N.T. Desktop Floating Capsule UI
 Pixel-perfect desktop pill inspired by the reference design:
-- Sleek dark theme (#0D111A) with subtle neon glow borders
+- Sleek dark theme (#0D111A) with neon glow border (#3B82F6 / #A855F7)
 - Text input with '| Ask anything...' placeholder
-- Controls: [+] attach screen, [Normal / DeepThink] mode toggles, [Voice] push-to-talk, [➤] submit
+- Controls: [+] attach screen, [Normal / DeepThink] mode toggles, [🎙️ Voice] push-to-talk, [➤] submit
+- Minimize [-] and Close [x] window controls
 - Expandable slide-out diff drawer for surgical patches with 1-click apply and proof verification
 - Always-on-top, draggable, frameless window
 """
@@ -37,19 +38,18 @@ class FloatingCapsule(ctk.CTk):
         self.voice_audio_bytes: Optional[bytes] = None
         self.latest_diagnosis = None
         self.is_drawer_open = False
+        self.is_visible = True
 
         # Configure Frameless & Draggable Window
         self.overrideredirect(True)
         self.attributes("-topmost", True)
-        self.configure(fg_color="#000001")  # Outer background
-        self.wm_attributes("-transparentcolor", "#000001")
 
         # Initial Dimensions & Center on Top of Screen
         screen_w = self.winfo_screenwidth()
-        self.capsule_width = 680
-        self.capsule_height = 110
+        self.capsule_width = 700
+        self.capsule_height = 115
         self.drawer_height = 360
-        init_x = int((screen_w - self.capsule_width) / 2)
+        init_x = max(40, int((screen_w - self.capsule_width) / 2))
         init_y = 60
         self.geometry(f"{self.capsule_width}x{self.capsule_height}+{init_x}+{init_y}")
 
@@ -57,7 +57,13 @@ class FloatingCapsule(ctk.CTk):
         self._drag_data = {"x": 0, "y": 0}
 
         self._build_ui()
+        self._bind_drag(self.glow_border)
         self._bind_drag(self.main_pill)
+
+        # Guarantee Immediate Visibility
+        self.deiconify()
+        self.lift()
+        self.focus_force()
 
     def _bind_drag(self, widget):
         widget.bind("<ButtonPress-1>", self._start_drag)
@@ -72,16 +78,27 @@ class FloatingCapsule(ctk.CTk):
         y = self.winfo_y() + (event.y - self._drag_data["y"])
         self.geometry(f"+{x}+{y}")
 
+    def toggle_visibility(self):
+        """Toggles show/hide safely on main thread."""
+        if self.is_visible:
+            self.withdraw()
+            self.is_visible = False
+        else:
+            self.deiconify()
+            self.lift()
+            self.focus_force()
+            self.is_visible = True
+
     def _build_ui(self):
         # Outer Glowing Frame (Simulates Neon Ambient Rim)
         self.glow_border = ctk.CTkFrame(
             self,
-            fg_color="#1F2839",  # Neon border tint
+            fg_color="#090D16",
             corner_radius=28,
-            border_width=1.5,
+            border_width=2,
             border_color="#3B82F6"
         )
-        self.glow_border.pack(fill="both", expand=True, padx=4, pady=4)
+        self.glow_border.pack(fill="both", expand=True, padx=2, pady=2)
 
         # Main Capsule Pill Body
         self.main_pill = ctk.CTkFrame(
@@ -92,13 +109,13 @@ class FloatingCapsule(ctk.CTk):
         )
         self.main_pill.pack(fill="both", expand=True, padx=2, pady=2)
 
-        # ---------------- TOP ROW: Prompt Input & Snapped Badge ----------------
+        # ---------------- TOP ROW: Prompt Input & Window Controls ----------------
         self.top_row = ctk.CTkFrame(self.main_pill, fg_color="transparent")
-        self.top_row.pack(fill="x", padx=18, pady=(12, 4))
+        self.top_row.pack(fill="x", padx=16, pady=(10, 4))
 
         self.input_entry = ctk.CTkEntry(
             self.top_row,
-            placeholder_text="| Ask anything... (e.g. 'Why is this failing?' or 'Fix the order checkout')",
+            placeholder_text="| Ask anything... (e.g. 'Fix the cart bug' or 'Explain error')",
             placeholder_text_color="#64748B",
             fg_color="transparent",
             text_color="#F1F5F9",
@@ -122,9 +139,41 @@ class FloatingCapsule(ctk.CTk):
             command=self.clear_attached_screen
         )
 
+        # Window Controls: Minimize [-] and Close [x]
+        self.win_controls = ctk.CTkFrame(self.top_row, fg_color="transparent")
+        self.win_controls.pack(side="right", padx=(8, 0))
+
+        self.min_btn = ctk.CTkButton(
+            self.win_controls,
+            text="—",
+            width=24,
+            height=24,
+            corner_radius=12,
+            fg_color="transparent",
+            hover_color="#1E293B",
+            text_color="#94A3B8",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            command=self.toggle_visibility
+        )
+        self.min_btn.pack(side="left", padx=2)
+
+        self.close_btn = ctk.CTkButton(
+            self.win_controls,
+            text="✕",
+            width=24,
+            height=24,
+            corner_radius=12,
+            fg_color="transparent",
+            hover_color="#EF4444",
+            text_color="#94A3B8",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            command=self.destroy
+        )
+        self.close_btn.pack(side="left", padx=2)
+
         # ---------------- BOTTOM ROW: Mode, Attachment, Voice, Submit ----------------
         self.bot_row = ctk.CTkFrame(self.main_pill, fg_color="transparent")
-        self.bot_row.pack(fill="x", padx=16, pady=(4, 12))
+        self.bot_row.pack(fill="x", padx=16, pady=(4, 10))
 
         # Left Group
         self.left_group = ctk.CTkFrame(self.bot_row, fg_color="transparent")
@@ -145,7 +194,7 @@ class FloatingCapsule(ctk.CTk):
         )
         self.snap_btn.pack(side="left", padx=(0, 8))
 
-        # [🌿 Normal ▾] Button
+        # [🌿 Normal] Button
         self.normal_btn = ctk.CTkButton(
             self.left_group,
             text="🌿 Normal",
@@ -160,7 +209,7 @@ class FloatingCapsule(ctk.CTk):
         )
         self.normal_btn.pack(side="left", padx=(0, 6))
 
-        # [💡 DeepThink ▾] Button
+        # [💡 DeepThink] Button
         self.deepthink_btn = ctk.CTkButton(
             self.left_group,
             text="💡 DeepThink",
@@ -252,7 +301,7 @@ class FloatingCapsule(ctk.CTk):
             self.drawer_frame,
             text="",
             text_color="#94A3B8",
-            wraplength=620,
+            wraplength=640,
             justify="left",
             font=ctk.CTkFont(size=12)
         )
@@ -316,11 +365,12 @@ class FloatingCapsule(ctk.CTk):
     def _do_snap(self):
         saved_path, win_title = WindowSnapper.capture_active_window()
         self.deiconify()  # Restore capsule
+        self.lift()
 
         self.attached_screenshot = saved_path
         self.attached_screenshot_title = win_title
 
-        short_title = (win_title[:18] + "..") if len(win_title) > 20 else win_title
+        short_title = (win_title[:16] + "..") if len(win_title) > 18 else win_title
         self.snap_badge.configure(text=f"📷 {short_title} ✕")
         self.snap_badge.pack(side="right", padx=(6, 0))
         self.status_lbl.configure(text=f"Attached: {short_title}")
@@ -342,7 +392,6 @@ class FloatingCapsule(ctk.CTk):
             self.voice_btn.configure(text="🎙️ Voice", fg_color="#1E293B")
             self.status_lbl.configure(text="Audio captured.")
             self.voice_audio_bytes = self.voice_recorder.stop_recording()
-            # If no text prompt typed yet, automatically submit voice
             if not self.input_entry.get().strip():
                 self.on_submit()
 
@@ -355,7 +404,6 @@ class FloatingCapsule(ctk.CTk):
         self.status_lbl.configure(text="Analyzing with Gemini...")
         self.submit_btn.configure(state="disabled")
 
-        # Run analysis asynchronously in worker thread
         threading.Thread(target=self._run_analysis_worker, args=(prompt,), daemon=True).start()
 
     def _run_analysis_worker(self, prompt: str):
@@ -381,7 +429,6 @@ class FloatingCapsule(ctk.CTk):
         if action_type == "fix" and result.get("diff_preview"):
             self.open_drawer(result)
         else:
-            # Advisory / Test / Env / Clarify: display spoken summary in entry or status
             self.input_entry.delete(0, "end")
             self.input_entry.insert(0, result["spoken_summary"])
             if self.is_drawer_open:
