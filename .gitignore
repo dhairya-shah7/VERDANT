@@ -22,3 +22,6 @@ env/
 # OS artifacts
 .DS_Store
 Thumbs.db
+
+.capsule_profile/
+uploads/captures/
