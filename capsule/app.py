@@ -30,11 +30,11 @@ from capsule.bridge import CapsuleBridge
 from capsule.snapper import WindowSnapper
 
 # ── Dimensions ───────────────────────────────────────────────────────────────
-WIN_W = 640
-COLLAPSED_H = 68
-EXPANDED_H = 390
-WIN_X = (1280 - WIN_W) // 2  # 320 on 1280x800
-WIN_Y = 20
+WIN_W = 650
+COLLAPSED_H = 78
+EXPANDED_H = 410
+WIN_X = (1280 - WIN_W) // 2  # 315 on 1280x800
+WIN_Y = 16
 
 
 # Global reference to avoid .NET SyncRoot recursion during pywebview introspection
@@ -146,7 +146,7 @@ CAPSULE_HTML = """<!DOCTYPE html>
   html, body {
     width: 100%;
     height: 100%;
-    background: transparent;
+    background: #0a0e1a;
     overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     user-select: none;
@@ -155,10 +155,19 @@ CAPSULE_HTML = """<!DOCTYPE html>
 
   /* ── Capsule Floating Pill ── */
   #pill {
-    width: calc(100% - 16px);
-    margin: 6px auto;
-    background: rgba(11, 15, 25, 0.98);
-    border: 1.5px solid rgba(59, 130, 246, 0.55);
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    background: #0d1224;
+    border: 1.5px solid rgba(59, 130, 246, 0.6);
+    border-radius: 14px;
+    padding: 8px 12px;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    transition: border-color 0.25s, box-shadow 0.25s;
+  }
     border-radius: 20px;
     padding: 8px 12px;
     box-shadow:
@@ -666,7 +675,8 @@ def main():
         y=WIN_Y,
         frameless=True,
         on_top=True,
-        transparent=True,
+        transparent=False,
+        background_color="#0a0e1a",
         easy_drag=True,
         resizable=True,
         min_size=(WIN_W, COLLAPSED_H)
