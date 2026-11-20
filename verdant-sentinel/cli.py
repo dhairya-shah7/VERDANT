@@ -9,13 +9,20 @@ import argparse
 import json
 from pathlib import Path
 
-# Add project root to path
+# Add project root and sentinel directory to sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SENTINEL_DIR = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+if str(SENTINEL_DIR) not in sys.path:
+    sys.path.insert(0, str(SENTINEL_DIR))
 
-from .sentinel_crawler import SentinelCrawler
-from .self_healer import DeterministicSelfHealer
+try:
+    from .sentinel_crawler import SentinelCrawler
+    from .self_healer import DeterministicSelfHealer
+except (ImportError, ValueError):
+    from sentinel_crawler import SentinelCrawler
+    from self_healer import DeterministicSelfHealer
 
 
 async def run_sentinel(url: str, viewports: list, auto_heal: bool):
