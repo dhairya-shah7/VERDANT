@@ -53,10 +53,10 @@ from capsule.snapper import WindowSnapper
 
 # ── Dimensions ───────────────────────────────────────────────────────────────
 WIN_W = 660
-COLLAPSED_H = 76
+COLLAPSED_H = 78
 EXPANDED_H = 390
 WIN_LEFT = (1280 - WIN_W) // 2  # 310
-WIN_TOP = 65                    # Clearly visible below top titlebars
+WIN_TOP = 80                    # Positioned clearly below Antigravity tab bar
 
 
 def build_and_run_capsule():
@@ -85,7 +85,7 @@ def build_and_run_capsule():
 
     app = Application()
 
-    # ── Root Window (Transparent canvas with native WPF rounded border) ───────
+    # ── Root Window (Opaque hardware composited — guaranteed visible) ─────────
     win = Window()
     win.Title = "V.E.R.D.A.N.T. Floating Capsule"
     win.Width = WIN_W
@@ -93,8 +93,8 @@ def build_and_run_capsule():
     win.Left = WIN_LEFT
     win.Top = WIN_TOP
     win.WindowStyle = getattr(WindowStyle, "None")
-    win.AllowsTransparency = True
-    win.Background = Brushes.Transparent
+    win.AllowsTransparency = False  # Opaque window ensures DWM renders it on top of Electron/VS Code
+    win.Background = C_BG_PILL
     win.Topmost = True
     win.ShowInTaskbar = True
 
@@ -106,13 +106,12 @@ def build_and_run_capsule():
             pass
     win.MouseLeftButtonDown += on_drag
 
-    # ── Main Outer Pill Border ───────────────────────────────────────────────
+    # ── Main Outer Border ────────────────────────────────────────────────────
     pill_border = Border()
-    pill_border.CornerRadius = CornerRadius(18)
     pill_border.Background = C_BG_PILL
     pill_border.BorderBrush = C_BORDER_NORM
-    pill_border.BorderThickness = Thickness(2)
-    pill_border.Padding = Thickness(12, 9, 12, 9)
+    pill_border.BorderThickness = Thickness(2.5)
+    pill_border.Padding = Thickness(12, 10, 12, 10)
 
     # ── Main Vertical Layout ─────────────────────────────────────────────────
     main_stack = StackPanel()
