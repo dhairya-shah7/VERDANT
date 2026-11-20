@@ -78,6 +78,7 @@ class Diagnosis(BaseModel):
     root_cause: str = Field(..., description="In-depth technical root cause analysis")
     evidence: Evidence = Field(default_factory=Evidence, description="Grounding evidence from logs, screens, and AST")
     edits: List[Edit] = Field(default_factory=list, description="List of atomic search/replace edits (for fix path)")
+    css_patch: Optional[str] = Field(default=None, description="Direct in-browser CSS hot-patch rule for visual layout defects")
     test_spec: Optional[TestSpec] = Field(default=None, description="Synthesized reproducer test (for test or fix path)")
     env_action: Optional[EnvAction] = Field(default=None, description="1-Click environment command (for env path)")
     clarification_question: Optional[str] = Field(default=None, description="Follow-up question (for clarify path)")

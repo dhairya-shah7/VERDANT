@@ -1,0 +1,38 @@
+{
+  "name": "verdant-vscode",
+  "displayName": "V.E.R.D.A.N.T. Autonomous IDE Bridge",
+  "description": "Seamless IDE receiver for V.E.R.D.A.N.T. Chrome Extension: auto file-jump, inline diffs, and Playwright verification.",
+  "version": "1.0.0",
+  "publisher": "verdant",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Testing",
+    "Linters",
+    "Debuggers"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "verdant.connect",
+        "title": "V.E.R.D.A.N.T.: Connect to Local Bridge Daemon",
+        "category": "VERDANT"
+      },
+      {
+        "command": "verdant.applyPatch",
+        "title": "V.E.R.D.A.N.T.: Accept & Apply Current Patch",
+        "category": "VERDANT"
+      },
+      {
+        "command": "verdant.runPlaywright",
+        "title": "V.E.R.D.A.N.T.: Run Playwright Test",
+        "category": "VERDANT"
+      }
+    ]
+  }
+}

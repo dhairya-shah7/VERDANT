@@ -34,18 +34,23 @@ def get_genai_client() -> genai.Client:
 SYSTEM_PROMPT = """
 You are V.E.R.D.A.N.T. (Visual Entropy & Runtime Distillation for Autonomous Net-zero Testing),
 an elite AI systems engineer built for Google Cloud & Google DeepMind.
-Your mission is to inspect the user's active screen, console logs, network errors, code AST, or audio prompt,
+Your mission is to inspect the user's active screen, console logs, network errors, code AST, visual element geometry, or audio prompt,
 and route the resolution into exactly one of 5 distinct operational paths:
 
 1. "advise": User is asking a conceptual, architectural, or code explanation question. Zero code edits.
-2. "fix": A concrete code bug or exception is detected in the browser, IDE, or logs. Produce surgical atomic edits.
+2. "fix": A concrete code bug, network exception, or visual UI formatting defect (e.g. text overflow, clipping, padding collision, broken flexbox) is detected. Produce surgical atomic edits and/or CSS patches.
 3. "test": The application functions, but the user requested an E2E Playwright/Pytest test or regression guard. Zero app edits.
 4. "env": The failure is purely environmental (port collision like EADDRINUSE, missing package, DB migration needed, container down). Return 1-click terminal command.
 5. "clarify": The screen/logs lack critical context. Ask a single sharp, grounded clarifying question. Do NOT guess.
 
-For path "fix", provide atomic search/replace pairs in "edits":
-- "search": must be a unique, exact block of code in the target file.
-- "replace": the drop-in corrected code block.
+For path "fix":
+- If it is a visual UI / CSS defect (e.g., overflow, layout wrapping, clipping, padding):
+  Provide "css_patch": the standalone CSS rule (e.g. ".pricing-card h3 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }") so the browser extension can hot-patch live in the tab.
+  Also provide atomic search/replace pairs in "edits" for the project file.
+- If it is a TypeScript/JavaScript/Python code defect:
+  Provide atomic search/replace pairs in "edits":
+  - "search": must be a unique, exact block of code in the target file.
+  - "replace": the drop-in corrected code block.
 
 Respond ONLY with a valid JSON object matching the following schema:
 {
@@ -59,6 +64,7 @@ Respond ONLY with a valid JSON object matching the following schema:
     "error_pattern": "Signature or exception regex",
     "console_log": "Relevant log snippet"
   },
+  "css_patch": "Optional direct CSS rule string for immediate in-browser hot-patching",
   "edits": [
     {
       "path": "src/file.ts",
@@ -68,7 +74,7 @@ Respond ONLY with a valid JSON object matching the following schema:
   ],
   "test_spec": {
     "path": "tests/reproducers/test_issue.py",
-    "content": "Full executable reproducer test script",
+    "content": "Full executable reproducer test script (Playwright or Pytest)",
     "runner": "pytest" or "playwright"
   },
   "env_action": {
@@ -99,11 +105,11 @@ def analyze_multimodal(
 
     # Model selection based on user mode
     if mode.lower() == "normal":
-        primary_model = CONFIG.GEMINI_FAST_MODEL or "gemini-3.5-flash-lite"
-        backup_models = ["gemini-3.1-flash-lite", CONFIG.GEMINI_MODEL]
+        primary_model = "gemini-3.1-flash-lite"
+        backup_models = ["gemini-3.5-flash-lite", "gemini-3.5-flash"]
     else:
-        primary_model = CONFIG.GEMINI_MODEL or "gemini-3.5-flash"
-        backup_models = [CONFIG.GEMINI_FAST_MODEL or "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
+        primary_model = "gemini-3.5-flash"
+        backup_models = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite"]
 
     candidate_models = [primary_model] + [m for m in backup_models if m != primary_model]
 
@@ -221,6 +227,7 @@ def analyze_multimodal(
                 root_cause=parsed.get("root_cause", "Analysis verified."),
                 evidence=evidence,
                 edits=edits,
+                css_patch=parsed.get("css_patch"),
                 test_spec=test_spec,
                 env_action=env_action,
                 clarification_question=parsed.get("clarification_question"),
@@ -260,7 +267,7 @@ def analyze_defect_with_gemini(
         timeline_events=timeline_events,
         network_errors=network_errors,
         console_errors=console_errors,
-        mode="deepthink"
+        mode="normal"
     )
 
     diff_str = ""

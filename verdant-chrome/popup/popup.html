@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>V.E.R.D.A.N.T.</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <div class="header">
+      <div class="logo-box">
+        <span class="icon">🌱</span>
+        <div>
+          <div class="title">V.E.R.D.A.N.T.</div>
+          <div class="subtitle">Autonomous Bug Runtime</div>
+        </div>
+      </div>
+      <div id="status-pill" class="badge badge-green">Connected</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-header">
+        <span>VERDE Compute Meter</span>
+        <span class="metric-highlight">-84.9% Bloat</span>
+      </div>
+      <div class="metric-sub">584 Wh saved &bull; 1.18 L H₂O cooled</div>
+    </div>
+
+    <div class="actions-grid">
+      <button id="btn-inspect-element" class="btn btn-secondary">
+        🔍 Inspect Element
+      </button>
+      <button id="btn-analyze-active" class="btn btn-primary">
+        ⚡ Analyze Tab
+      </button>
+    </div>
+
+    <div class="section-title">ACTIVE BUFFER</div>
+    <div id="buffer-summary" class="buffer-box">
+      Listening on active tab for console exceptions, 4xx/5xx drops, and visual layout shifts.
+    </div>
+
+    <div class="footer">
+      <a href="http://localhost:8000" target="_blank" class="footer-link">Open Central Portal ↗</a>
+      <span>v2.4.0</span>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

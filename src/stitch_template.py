@@ -317,20 +317,6 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
                     </div>
                   </div>
                 </div>
-
-                <!-- Scenario Switcher Buttons -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-3 mt-3 border-t border-surface-container">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <span class="text-xs text-outline font-semibold">Pre-set Scenarios:</span>
-                    <button onclick="selectPreset('checkout_500')" id="btn-preset-checkout" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary text-on-primary shadow-sm transition cursor-pointer">
-                      Checkout 500 Freeze
-                    </button>
-                    <button onclick="selectPreset('auth_token_expired')" id="btn-preset-auth" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition cursor-pointer">
-                      Auth 401 Expiry
-                    </button>
-                  </div>
-                  <span class="text-[11px] text-outline font-code">Dual-Engine Ready</span>
-                </div>
               </div>
             </div>
 
@@ -357,20 +343,16 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
 
           </section>
 
-          <!-- Primary Run Action Buttons -->
+          <!-- Primary Run Action Button -->
           <section class="w-full max-w-4xl mx-auto flex flex-col items-center gap-3 pt-2">
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 w-full sm:w-auto">
-              <button onclick="startAnalysisRun(false)" id="main-analyze-btn" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-full bg-primary hover:bg-primary-container text-on-primary shadow-md hover:shadow-lg text-sm sm:text-base font-semibold tracking-wide transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer text-center">
+            <div class="flex items-center justify-center w-full sm:w-auto">
+              <button onclick="startAnalysisRun()" id="main-analyze-btn" class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full bg-primary hover:bg-primary-container text-on-primary shadow-md hover:shadow-lg text-base font-semibold tracking-wide transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer text-center">
                 <span class="material-symbols-outlined text-[20px]">auto_fix_high</span>
-                <span id="analyze-btn-text">Analyze Video (Instant Repro • 1.5s)</span>
+                <span id="analyze-btn-text">Analyze Video & Synthesize Fix</span>
                 <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
               </button>
-              <button onclick="startAnalysisRun(true)" id="cloud-analyze-btn" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3.5 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface border border-surface-container-high shadow-sm text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer text-center">
-                <span class="material-symbols-outlined text-[18px] text-secondary">cloud_sync</span>
-                <span>Run Live Gemini 3.5 API (~50s)</span>
-              </button>
             </div>
-            <p class="text-[11px] text-outline text-center px-4">Instant Repro animates the optical flow pipeline & results immediately. Cloud mode connects live to Google Gemini 3.5.</p>
+            <p class="text-[11px] text-outline text-center px-4">Google Gemini & SSIM Sentinel autonomously extract defect locus, verify root cause, and synthesize surgical Playwright reproduction proof.</p>
           </section>
 
         </div>
@@ -1552,21 +1534,21 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
       const btnA = document.getElementById('btn-preset-auth');
 
       if (scenId === 'checkout_500') {
-        btnC.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-primary text-on-primary shadow-sm transition";
-        btnA.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition";
-        document.getElementById('hero-session-name').innerText = "checkout_unresponsive_submit_freeze.mp4";
-        document.getElementById('hero-session-desc').innerText = "User clicks 'Place Order'. Network returns 500; button stays disabled with zero visual repaint.";
-        document.getElementById('hero-ssim').innerHTML = "0.9984 <span class='text-[10px] text-error font-normal'>(Frozen)</span>";
-        document.getElementById('hero-delta').innerHTML = "0.02% <span class='text-[10px] text-secondary font-normal'>(Zero Drift)</span>";
-        document.getElementById('hero-network').innerText = "500 Fail";
+        if (btnC) btnC.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-primary text-on-primary shadow-sm transition";
+        if (btnA) btnA.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition";
+        const sn = document.getElementById('hero-session-name'); if (sn) sn.innerText = "checkout_unresponsive_submit_freeze.mp4";
+        const sd = document.getElementById('hero-session-desc'); if (sd) sd.innerText = "User clicks 'Place Order'. Network returns 500; button stays disabled with zero visual repaint.";
+        const ss = document.getElementById('hero-ssim'); if (ss) ss.innerHTML = "0.9984 <span class='text-[10px] text-error font-normal'>(Frozen)</span>";
+        const hd = document.getElementById('hero-delta'); if (hd) hd.innerHTML = "0.02% <span class='text-[10px] text-secondary font-normal'>(Zero Drift)</span>";
+        const hn = document.getElementById('hero-network'); if (hn) hn.innerText = "500 Fail";
       } else {
-        btnA.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-primary text-on-primary shadow-sm transition";
-        btnC.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition";
-        document.getElementById('hero-session-name').innerText = "auth_token_expired_silent_drop.mp4";
-        document.getElementById('hero-session-desc').innerText = "User submits settings update. JWT session expired mid-flight; client frontend fails silently.";
-        document.getElementById('hero-ssim').innerHTML = "0.9142 <span class='text-[10px] text-secondary font-normal'>(Repaint)</span>";
-        document.getElementById('hero-delta').innerHTML = "4.12% <span class='text-[10px] text-primary font-normal'>(Alert Drift)</span>";
-        document.getElementById('hero-network').innerText = "401 Unauth";
+        if (btnA) btnA.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-primary text-on-primary shadow-sm transition";
+        if (btnC) btnC.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition";
+        const sn = document.getElementById('hero-session-name'); if (sn) sn.innerText = "auth_token_expired_silent_drop.mp4";
+        const sd = document.getElementById('hero-session-desc'); if (sd) sd.innerText = "User submits settings update. JWT session expired mid-flight; client frontend fails silently.";
+        const ss = document.getElementById('hero-ssim'); if (ss) ss.innerHTML = "0.9142 <span class='text-[10px] text-secondary font-normal'>(Repaint)</span>";
+        const hd = document.getElementById('hero-delta'); if (hd) hd.innerHTML = "4.12% <span class='text-[10px] text-primary font-normal'>(Alert Drift)</span>";
+        const hn = document.getElementById('hero-network'); if (hn) hn.innerText = "401 Unauth";
       }
     }
 
@@ -1711,7 +1693,7 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
       // Playwright test filename
       const pwFilenameEl = document.getElementById('res-playwright-filename');
       if (pwFilenameEl) {
-        const cleanBase = suspectFile.split('/').pop().replace(/\.[^/.]+$/, "");
+        const cleanBase = suspectFile.split('/').pop().replace(/\\.[^/.]+$/, "");
         pwFilenameEl.innerText = `tests/synthetic/${cleanBase}-repro.spec.ts`;
       }
 

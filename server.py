@@ -7,10 +7,11 @@ import sys
 import time
 import json
 import shutil
-from typing import Optional, List, Dict, Any
-from fastapi import FastAPI, Request, UploadFile, File, Form
+from typing import Optional, List, Dict, Any, Set
+from fastapi import FastAPI, Request, UploadFile, File, Form, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 # Path setup
@@ -18,7 +19,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
 from src.config import CONFIG
-from src.context_prism.pii_sanitizer import sanitize_text
+from src.context_prism.pii_sanitizer import sanitize_text, sanitize_data
 from src.context_prism.log_parser import parse_console_logs, parse_har_network
 from src.context_prism.video_extractor import extract_and_analyze_video
 from src.dual_engine.ssim_sentinel import compute_frame_diff
@@ -38,6 +39,13 @@ UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app = FastAPI(title="V.E.R.D.A.N.T. Autonomous QA Dashboard")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 SCENARIOS = {
@@ -154,6 +162,7 @@ async def upload_video_api(file: UploadFile = File(...)):
 def run_pipeline_api(scenario_id: str = "checkout_500", custom_filename: str = "", session_mode: str = "WITH_REPO"):
     scenario = SCENARIOS.get(scenario_id, SCENARIOS["checkout_500"])
     start = time.time()
+    is_with_repo = (session_mode == "WITH_REPO")
     
     try:
         # 1. ContextPrism: Sanitize and Parse
@@ -207,7 +216,7 @@ def run_pipeline_api(scenario_id: str = "checkout_500", custom_filename: str = "
             diag: Diagnosis = analyze_multimodal(
                 prompt="Examine the attached user incident video frames. Transcribe any on-screen error messages, status codes (e.g. 500, 404, TypeError), or console logs visible in the frames. Diagnose the exact root cause, identify the suspect file or backend endpoint, and synthesize a surgical code fix and Playwright verification test.",
                 images=keyframe_images,
-                mode="deepthink"
+                mode="normal"
             )
             
             diff_str = ""
@@ -250,7 +259,7 @@ def run_pipeline_api(scenario_id: str = "checkout_500", custom_filename: str = "
             arbiter_result = arbitrate_decision(
                 gemini_verdict=gemini_verdict,
                 pixel_sentinel=ssim_result,
-                network_errors=network_errors,
+                network_errors=network_events,
                 console_errors=console_events
             )
             
@@ -2422,6 +2431,211 @@ async def api_capsule_apply_patch(request: Request):
         return res
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+# ==============================================================================
+# V.E.R.D.A.N.T. EXTENSION ECOSYSTEM & IDE BRIDGE DAEMON
+# ==============================================================================
+
+connected_ides: List[WebSocket] = []
+
+@app.get("/health")
+def health_check():
+    """Health check probe for Chrome Extension and VS Code Daemon."""
+    return {
+        "status": "ok",
+        "service": "V.E.R.D.A.N.T. Daemon",
+        "version": "2.4.0",
+        "connected_ides_count": len(connected_ides)
+    }
+
+@app.websocket("/ws/ide")
+async def websocket_ide_endpoint(websocket: WebSocket):
+    """
+    Bi-directional WebSocket Hub connecting the Local Daemon to VS Code Extensions.
+    Pushes live defects, atomic diffs, and Playwright reproducers in real-time.
+    """
+    await websocket.accept()
+    connected_ides.append(websocket)
+    print(f"[V.E.R.D.A.N.T. Daemon] VS Code client connected. Total active IDEs: {len(connected_ides)}")
+    try:
+        # Send initial handshake welcome
+        await websocket.send_text(json.dumps({
+            "type": "HANDSHAKE_ACK",
+            "message": "Connected to V.E.R.D.A.N.T. Local Bridge Daemon",
+            "version": "2.4.0"
+        }))
+        while True:
+            raw_msg = await websocket.receive_text()
+            try:
+                data = json.loads(raw_msg)
+                msg_type = data.get("type", "UNKNOWN")
+                if msg_type == "PING":
+                    await websocket.send_text(json.dumps({"type": "PONG", "timestamp": time.time()}))
+                elif msg_type == "FIX_ACCEPTED":
+                    print(f"[V.E.R.D.A.N.T. Daemon] IDE accepted fix for: {data.get('file')}")
+            except Exception:
+                pass
+    except WebSocketDisconnect:
+        if websocket in connected_ides:
+            connected_ides.remove(websocket)
+        print(f"[V.E.R.D.A.N.T. Daemon] VS Code client disconnected. Active IDEs: {len(connected_ides)}")
+
+@app.post("/api/extension/ingest")
+async def api_extension_ingest(request: Request):
+    """
+    Primary ingestion point for Chrome Extension.
+    Accepts DOM geometry, console errors, network drops, and screenshot bytes.
+    Performs server-side PII scrubbing and dynamic Gemini 3.1 multimodal analysis.
+    """
+    import base64
+    start_time = time.time()
+    raw_payload = await request.json()
+    
+    # 1. Zero-Leakage PII Scrubbing
+    payload = sanitize_data(raw_payload)
+    
+    url = payload.get("url", "http://localhost")
+    page_title = payload.get("pageTitle", "Web App Tab")
+    element = payload.get("element")
+    logs = payload.get("logs", [])
+    network_events = payload.get("networkEvents", [])
+    screenshot_b64 = payload.get("screenshotBase64")
+    
+    # 2. Build Multi-modal Prompt Context
+    prompt_sections = [
+        f"Diagnose and synthesize a verified fix for an incident on: {url} ({page_title})."
+    ]
+    
+    images = []
+    if screenshot_b64:
+        try:
+            img_bytes = base64.b64decode(screenshot_b64)
+            images.append(img_bytes)
+        except Exception as e:
+            print(f"[V.E.R.D.A.N.T.] Failed to decode screenshot: {e}")
+            
+    if element:
+        # Visual / Layout Defect
+        geom = element.get("geometry", {})
+        computed = element.get("computedStyles", {})
+        prompt_sections.append(
+            f"VISUAL / LAYOUT DEFECT DETECTED ON ELEMENT:\n"
+            f"- Selector: {element.get('selector')}\n"
+            f"- Parent: {element.get('parentSelector')}\n"
+            f"- Text: '{element.get('textPreview')}'\n"
+            f"- Geometry: width={geom.get('width')}px, height={geom.get('height')}px, scrollWidth={geom.get('scrollWidth')}px, clientWidth={geom.get('clientWidth')}px\n"
+            f"- Overflow Flags: horizontal_overflow={geom.get('hasHorizontalOverflow')}, vertical_overflow={geom.get('hasVerticalOverflow')}\n"
+            f"- Computed CSS: display={computed.get('display')}, position={computed.get('position')}, overflow={computed.get('overflow')}, boxSizing={computed.get('boxSizing')}\n"
+            f"- HTML Snippet: {element.get('htmlSnippet', '')[:300]}\n"
+            f"REQUIREMENT: Synthesize an immediate in-browser CSS hot-patch rule under 'css_patch', "
+            f"provide atomic code replacement in 'edits' for the source component, and provide a Playwright layout test in 'test_spec'."
+        )
+    else:
+        # Console / Network / Crash Defect
+        prompt_sections.append(
+            f"RUNTIME EXCEPTION / FAILURE DETECTED:\n"
+            f"- Console Logs: {json.dumps(logs[:8], indent=2)}\n"
+            f"- Network Events: {json.dumps(network_events[:6], indent=2)}\n"
+            f"REQUIREMENT: Identify root cause, suspect source file/line, atomic code edits in 'edits', and Playwright reproduction in 'test_spec'."
+        )
+        
+    full_prompt = "\n\n".join(prompt_sections)
+    
+    # 3. Dynamic Gemini 3.1 Fast Reasoning
+    diag = analyze_multimodal(
+        prompt=full_prompt,
+        images=images if images else None,
+        network_errors=network_events,
+        console_errors=logs,
+        mode="normal"  # gemini-3.1-flash-lite for ~2s speed
+    )
+    
+    latency = time.time() - start_time
+    diag_dict = diag.model_dump() if hasattr(diag, "model_dump") else diag.dict()
+    diag_dict["latency_seconds"] = latency
+    diag_dict["url"] = url
+    
+    # 4. Broadcast to Connected VS Code Extensions
+    if connected_ides:
+        ws_payload = json.dumps({
+            "type": "DEFECT_INGESTED",
+            "url": url,
+            "pageTitle": page_title,
+            "diagnosis": diag_dict
+        })
+        for ws in list(connected_ides):
+            try:
+                await ws.send_text(ws_payload)
+            except Exception:
+                if ws in connected_ides:
+                    connected_ides.remove(ws)
+                    
+    print(f"[V.E.R.D.A.N.T. Daemon] Ingestion complete in {latency:.2f}s | Path: {diag.action_type.value} | Broadcasted to {len(connected_ides)} IDEs")
+    return diag_dict
+
+@app.post("/api/extension/push-ide")
+async def api_extension_push_ide(request: Request):
+    """Explicitly pushes a diagnosis card to all connected VS Code extensions."""
+    data = await request.json()
+    if connected_ides:
+        ws_payload = json.dumps({
+            "type": "DEFECT_INGESTED",
+            "diagnosis": data
+        })
+        for ws in list(connected_ides):
+            try:
+                await ws.send_text(ws_payload)
+            except Exception:
+                pass
+        return {"ok": True, "pushed_to_count": len(connected_ides)}
+    return {"ok": True, "pushed_to_count": 0, "warning": "No VS Code extensions connected. Ensure VS Code is open."}
+
+@app.post("/api/ide/apply-patch")
+async def api_ide_apply_patch(request: Request):
+    """
+    Applies synthesized atomic edits directly to workspace files on disk.
+    Creates or updates the file, returning exact diff verification.
+    """
+    body = await request.json()
+    edits = body.get("edits", [])
+    results = []
+    
+    for edit in edits:
+        rel_path = edit.get("path")
+        search = edit.get("search")
+        replace = edit.get("replace")
+        if not rel_path or not replace:
+            continue
+            
+        full_path = os.path.join(BASE_DIR, rel_path)
+        if os.path.exists(full_path):
+            with open(full_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            if search and search in content:
+                new_content = content.replace(search, replace, 1)
+            else:
+                new_content = content + "\n" + replace
+            with open(full_path, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            results.append({"path": rel_path, "status": "patched"})
+        else:
+            # Create file
+            os.makedirs(os.path.dirname(full_path), exist_ok=True)
+            with open(full_path, "w", encoding="utf-8") as f:
+                f.write(replace)
+            results.append({"path": rel_path, "status": "created"})
+            
+    # Also save test spec if provided
+    test_spec = body.get("test_spec")
+    if test_spec and test_spec.get("path") and test_spec.get("content"):
+        test_path = os.path.join(BASE_DIR, test_spec["path"])
+        os.makedirs(os.path.dirname(test_path), exist_ok=True)
+        with open(test_path, "w", encoding="utf-8") as f:
+            f.write(test_spec["content"])
+        results.append({"path": test_spec["path"], "status": "test_saved"})
+        
+    return {"ok": True, "modified_files": results}
+
 
 if __name__ == "__main__":
     print("Starting V.E.R.D.A.N.T. Live Web Server on http://localhost:8000 ...")

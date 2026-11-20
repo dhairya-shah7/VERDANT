@@ -25,3 +25,7 @@ Thumbs.db
 
 .capsule_profile/
 uploads/captures/
+capsule_debug.log
+verdant_history.db
+.test_edge/
+.verde/
