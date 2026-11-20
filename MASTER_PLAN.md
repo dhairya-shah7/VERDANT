@@ -1,84 +1,212 @@
-# V.E.R.D.A.N.T. — Master Implementation & Buildathon Roadmap
-### Visual Entropy & Runtime Distillation for Autonomous Net-zero Testing
-*Official Project Plan for Startup Buildathon India 2026 (Google Cloud & Google DeepMind)*
-
-> [!IMPORTANT]
-> **Core Architectural Mandate: Zero Pre-Made or Hardcoded Algorithms**
-> - **Zero black-box bloat**: No heavy external frameworks (no OpenCV, LangChain, LlamaIndex, or third-party profilers).
-> - **100% Bespoke Algorithms**: We build our own Entropy Frame-Diff Extractor, V-Token AST Skeletonizer, Thermodynamic Water/Energy Profiler, and Deterministic Unified Patch Generator from scratch.
-> - **Hardware Decompression Stream**: Standard stdout pipe (`ffmpeg rawvideo`) feeds raw byte buffers directly to our custom Python algorithms, avoiding heavy C++ Python wrapper wheels.
+# V.E.R.D.A.N.T. Master Plan: The Universal Video-to-PR & Live Forensic Platform
+### *Visual Entropy & Runtime Distillation for Autonomous Net-zero Testing*
+**Google Cloud & Google DeepMind — Startup Buildathon India 2026**
 
 ---
 
-## 1. System Overview & The Three Fused Pillars
+## 1. Executive Vision: The Dual Ingestion Architecture
+
+V.E.R.D.A.N.T. provides two unified entry points that feed into the exact same multimodal reasoning and GitOps engine:
 
 ```
-       [ 30s Bug Video (MP4/WebM) + Console Logs via GitHub Issue or Web UI ]
-                                       │
-                                       ▼
-  ═══════════════════════ PILLAR 1: CONTEXTPRISM ═══════════════════════
-  * Custom V-Token AST Skeletonizer & DOM Pruner
-  * Strips non-semantic filler, reducing context by 75% to 85% natively
-  * Streams ultra-dense, low-latency payload to Google Gemini 1.5 Pro
-                                       │
-                                       ▼
-  ════════════════════════ PILLAR 2: APEXTRACE ═════════════════════════
-  * Gemini 1.5 Pro Multimodal Vision & State-Transition Engine
-  * Reconstructs user click sequence, routing exceptions, and visual breaks
-  * Synthesizes deterministic, executable Playwright / PyTest E2E scripts
-                                       │
-                                       ▼
-  ═══════════════════════ PILLAR 3: VERDE-HYDRA ════════════════════════
-  * Dynamic Compute Arbiter (GPU-to-CPU Thermal Offloading)
-  * Bare-metal measurement of Water Cooling (ml), Joules, and Carbon (gCO2e)
-  * Generates Verified Eco-Audit Badge on the Pull Request
+  ┌─────────────────────────────────────────┐     ┌─────────────────────────────────────────┐
+  │   CHANNEL 1: DESKTOP FLOATING BAR       │     │    CHANNEL 2: WEB PORTAL / MANUAL DROP  │
+  │   (For Developers at their desks)       │     │    (For QA, Product Managers, Users)    │
+  │ • Native Floating Capsule (Always-on-top│     │ • Next.js Web App / Dropzone            │
+  │ • Global Hotkey ([Alt + Space])         │     │ • Accepts raw MP4 / WebM bug videos     │
+  │ • Focused Window Capture (IDE/Terminal) │     │ • Accepts screenshots (PNG/JPG) + HAR   │
+  │ • Push-to-Talk Voice Streaming          │     │ • File drag-and-drop onto desktop pill  │
+  └────────────────────┬────────────────────┘     └────────────────────┬────────────────────┘
+                       │                                               │
+                       └───────────────────────┬───────────────────────┘
+                                               │
+                                               ▼
+  ═══════════════════════════════════════════════════════════════════════════════════════════
+                                THE V.E.R.D.A.N.T. CORE ENGINE
+  ═══════════════════════════════════════════════════════════════════════════════════════════
+                                               │
+                        ┌──────────────────────┴──────────────────────┐
+                        ▼                                             ▼
+             [ ContextPrism: AST & PII ]                   [ ApexTrace: SSIM Sentinels ]
+             • Distills active code repo                   • 60fps frame-diff extraction
+             • Strips 84.9% token bloat                    • Isolates exact glitch keyframes
+                        │                                             │
+                        └──────────────────────┬──────────────────────┘
+                                               │
+                                               ▼
+                              [ Google Gemini 1.5 Pro & Flash ]
+                              • Multimodal Screen + Audio + AST Correlation
+                              • Strict JSON Schema Decision Arbiter
+                                               │
+                                               ▼
+  ═══════════════════════════════════════════════════════════════════════════════════════════
+                                 THE 5 OPERATIONAL PATHS
+  ═══════════════════════════════════════════════════════════════════════════════════════════
 ```
 
 ---
 
-## 2. Flagship Usability Features
+## 2. The 5 Operational Execution Paths
 
-### Feature 1: GitHub Issue-to-PR Auto-Pilot
-1. A tester or user creates a GitHub issue and attaches a 30-second screen-recording MP4 showing a bug.
-2. The **V.E.R.D.A.N.T. GitHub Action** triggers automatically.
-3. It pipes video bytes into our **Native Entropy Frame-Diff Algorithm**, isolates the exact bug keyframe, and generates an executable Playwright test script.
-4. It automatically opens a ready-to-merge Pull Request with:
-   - The failing test script (proving the bug).
-   - The proposed code patch.
-   - An **Eco-Audit Badge** displaying exact milliliters of cooling water and Joules saved.
+Instead of only offering a code fix, V.E.R.D.A.N.T. intelligently classifies user intent and anomaly type into 5 distinct paths to maintain an ultra-clean, noise-free developer experience:
 
-### Feature 2: Interactive Time-Travel Scrubbing Canvas
-- In the Next.js developer dashboard, dragging the video scrubber across the timeline displays three synchronized panels:
-  - The exact video frame.
-  - The skeletonized AST code responsible for that UI component.
-  - Live meters showing real-time **water cooling (ml), Joules, and Scope 2 carbon ($gCO_2e$)**.
+```
+                                  [ Gemini Intent Router ]
+                                             │
+      ┌──────────────┬───────────────────────┼───────────────────────┬──────────────┐
+      ▼              ▼                       ▼                       ▼              ▼
+  [ PATH A ]     [ PATH B ]              [ PATH C ]              [ PATH D ]     [ PATH E ]
+  Advisory /     Surgical Code Fix       E2E Test Generation     Environment /  Ambiguity /
+  Explanation    Detected                (No Bug Present)        Build Error    Follow-Up
+```
 
-### Feature 3: Thermodynamic Eco-Scheduler
-- Dynamically recommends the greenest Google Cloud data center region and time of day (based on ambient wet-bulb temperature and carbon intensity) to run heavy regression test suites with **near-zero evaporative water cooling**.
+### **Path A: Advisory / Code Explanation (Voice-Only, Zero Clutter)**
+* **When**: Developer asks factual or architectural questions (e.g., *"What is triggering this re-render?"* or *"Explain how this state reducer works"*).
+* **Behavior**: 
+  * Gemini speaks the diagnosis cleanly in 2–3 sentences.
+  * Floating pill pulses softly.
+  * **Zero UI clutter**: No diff cards, buttons, or popups appear.
+
+### **Path B: Surgical Code Fix (Closed-Loop GitOps)**
+* **When**: A concrete bug or exception is detected in the browser, terminal, or IDE.
+* **Behavior**:
+  * **Voice**: Speaks a 1-sentence root-cause summary: *"Identified race condition on line 42 where paymentToken is accessed before resolution."*
+  * **UI**: A compact, floating diff card slides down from the pill showing the red/green patch.
+  * **Action**: `[ Apply Patch & Verify ]` or `[ Dismiss ]`.
+
+### **Path C: E2E Test Generation (Test-Only)**
+* **When**: The app is functioning, but developer asks: *"Write a Playwright test reproducing this checkout flow"* or wants to lock down a regression barrier.
+* **Behavior**:
+  * Synthesizes a new `tests/e2e/checkout.spec.ts` file without altering production application code.
+  * Runs the test locally to confirm it passes.
+  * Shows 1-click: `[ Commit Test to Branch ]`.
+
+### **Path D: Environment / Build / Dependency Error (1-Click Terminal Action)**
+* **When**: The error is environmental (e.g., `EADDRINUSE: port 3000 busy`, missing npm package, broken Docker container, missing `.env` variable).
+* **Behavior**:
+  * Voice explains the environment conflict.
+  * Pill surfaces a 1-click action button: `[ Run: kill -9 $(lsof -t -i:3000) ]` or `[ Run: npm install @stripe/stripe-js ]`.
+  * Zero code diffs generated.
+
+### **Path E: Ambiguity & Grounding Follow-up**
+* **When**: The screen lacks critical context (e.g., silent logic error without console logs).
+* **Behavior**:
+  * Rather than hallucinating a guess, Gemini speaks a targeted clarifying question: *"I see the button is disabled, but network logs show no pending request. Is there an active feature flag in your .env?"*
 
 ---
 
-## 3. Four-Phase Buildathon Execution Plan (Nov 8 – Dec 2)
+## 3. The Universal OS-Level Sentinel: Beyond Browser & IDE
 
-| Phase | Milestone | Key Deliverables |
+V.E.R.D.A.N.T. lives at the **operating system layer**, perceiving pixels rather than relying on application-specific plugins. Because Google Gemini's multimodal vision processes visual bitmaps natively, it detects anomalies across the developer's entire multi-window desktop:
+
+```
+  ┌──────────────────────────────────────────────────────────────────────────────────┐
+  │                    THE COMPLETE DEVELOPER DESKTOP WORKSPACE                      │
+  │                                                                                  │
+  │  [ Postman / Insomnia ]         [ Docker / Kubernetes ]     [ Mobile Emulators ] │
+  │  • 401 Unauthorized / JWT       • OOMKilled (Exit 137)      • Android/iOS Crash  │
+  │  • 422 Schema Validation        • Port bind conflict        • Flutter Exception  │
+  │                                                                                  │
+  │  [ Database Clients ]           [ Terminals & Logs ]        [ IDE & Browser ]    │
+  │  • DBeaver / TablePlus          • PowerShell, WSL, Bash     • VS Code, Cursor    │
+  │  • Missing Column / Migration   • Unhandled Rejection       • CSS / DOM Break    │
+  └────────────────────────────────────────┬─────────────────────────────────────────┘
+                                           │
+                                  [ Alt + Space Hook ]
+                                           │
+                                           ▼
+  ┌──────────────────────────────────────────────────────────────────────────────────┐
+  │                  UNIVERSAL VISUAL ANOMALY TO TARGET WORKSPACE                    │
+  │  1. Zero App Plugins: Works on any software without third-party extensions       │
+  │  2. Cross-App Correlation: Connects external app errors back to codebase files   │
+  │  3. Surgical Action: Generates git patches, terminal fixes, or migrations        │
+  └──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### **Universal Cross-App Diagnostic Matrix**
+| External Application | Visual Anomaly Detected by Gemini | Autonomous Action by V.E.R.D.A.N.T. |
 | :--- | :--- | :--- |
-| **Phase 1 (Nov 8 – 13)** | **Application & Core Engine** | - Scaffolding in `Desktop/Buildathon`<br>- Custom AST skeletonizer (`verde_ast.py`)<br>- Video pipe + custom entropy frame differencer (`verde_diff.py`)<br>- 1-Page Pitch Deck for `startupbuildathon.com` |
-| **Phase 2 (Nov 14 – 19)** | **Playwright & Eco-Telemetry** | - Structured prompt harness for Gemini 1.5 Pro<br>- Playwright Python test generator<br>- Bare-metal energy & water cooling thermodynamic formula integration |
-| **Phase 3 (Nov 20 – 21)** | **City Buildathon Sprint** | - Working GitHub Action (Issue-to-PR Auto-Pilot)<br>- Next.js Interactive Time-Travel Cockpit<br>- Live demo with real bug video |
-| **Phase 4 (Nov 22 – Dec 02)** | **Grand Finale at Google BLR** | - Final benchmark reports (Token compression % and Liters of water saved)<br>- Pitch deck presentation for Google DeepMind & Google Cloud VCs |
+| **Postman / Insomnia** | Red `401 Unauthorized` or missing auth header | Surfaces patch for backend auth middleware (`auth.ts`). |
+| **Docker Desktop** | Container status `Exited (137) Out of Memory` | Surfaces 1-click patch for `docker-compose.yml` memory limits. |
+| **Android / iOS Emulator**| Native crash dialog (*"App has stopped"*) | Pinpoints Kotlin/Swift null reference and patches mobile repo. |
+| **DBeaver / TablePlus** | `column "user_role" does not exist in relation` | Surfaces 1-click terminal command: `npx prisma migrate dev`. |
+| **System Terminal** | `EADDRINUSE: port 3000 already in use` | Surfaces 1-click terminal button: `kill -9 $(lsof -t -i:3000)`. |
 
 ---
 
-## 4. Directory Structure
+## 4. End-to-End GitOps Architecture
+
+Every fix in **Path B** and test in **Path C** is connected directly to GitHub with verifiable proof:
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer / Pill
+    participant Engine as V.E.R.D.A.N.T. Core
+    participant Sandbox as Local Docker / Chrome
+    participant Git as Local Git / GitHub API
+
+    Dev->>Engine: Hotkey / Trigger Fix
+    Engine->>Sandbox: 1. Generate & Run Playwright Test (RED Proof)
+    Sandbox-->>Engine: Confirmed Failure
+    Engine->>Sandbox: 2. Inject Surgical Patch Diff
+    Engine->>Sandbox: 3. Re-run Playwright Test (GREEN Proof)
+    Sandbox-->>Engine: 100% Passed
+    Engine->>Git: 4. Create Branch: fix/verdant-autofix-42
+    Engine->>Git: 5. Apply Patch to Local Workspace
+    Engine->>Git: 6. Push & Create GitHub PR
+    Note over Git: PR includes VERDE-Hydra Eco-Badge & Playwright Logs
+    Engine-->>Dev: Voice: "PR #18 created with verified green replay."
 ```
-Desktop/Buildathon/
-├── MASTER_PLAN.md               # Master specification & roadmap (This file)
-├── IMPLEMENTATION_PLAN.md        # Technical architecture details
-├── CUSTOM_ENGINE_SPEC.md        # Mathematical & algorithmic definitions
-├── src/
-│   ├── frame_diff.py            # Bespoke entropy frame-diff algorithm
-│   ├── ast_skeletonizer.py      # Bespoke Python/TS syntax tree pruner
-│   ├── patch_engine.py          # Unified diff & Playwright generator
-│   └── telemetry.py             # Bare-metal energy & water profiler
-└── action/                      # GitHub Issue-to-PR Action workflow
+
+### The GitHub PR Template (Auto-Generated by VERDE-Hydra):
+```markdown
+## 🌿 V.E.R.D.A.N.T. Autonomous Bug Fix: Issue #42
+
+### 1. Root Cause Summary
+Race condition detected at `src/components/Checkout.tsx`: `paymentToken` was dereferenced prior to asynchronous resolution.
+
+### 2. Surgical Patch Diff
+```diff
+- if (cart.items.length && !isProcessing)
++ if (cart.items.length && !isProcessing && paymentToken)
 ```
+
+### 3. Closed-Loop Playwright Verification Proof
+- [x] **RED Phase**: `tests/reproducers/bug_42.spec.ts` failed on unpatched code.
+- [x] **GREEN Phase**: Test passed with 0 errors in 1.4s post-patch.
+
+### 4. ⚡ VERDE-Hydra Eco-Telemetry Audit
+- **Energy Saved**: 89.7 Wh (prevented 4 manual CI rebuild cycles)
+- **Cooling Water Saved**: 142 mL (Google Cloud PUE 1.10 / WUE 1.58 L/kWh)
+- **Token Efficiency**: Distilled by 84.9% via ContextPrism AST
+```
+
+---
+
+## 5. Dual Platform Specifications
+
+### **A. Desktop Floating Capsule (`verdant-bar.exe`)**
+* **Form Factor**: Draggable, 320x48px frosted glass pill, stays on top of all windows.
+* **Hotkey**: Global listener (`Alt + Space`).
+* **Active Window Snapper**: Uses Windows `win32gui` / `GetForegroundWindow` to capture strictly the IDE, terminal, or browser window in focus.
+* **File Drop Support**: Users can drag a screenshot or video file directly onto the floating pill to trigger instant analysis.
+
+### **B. Web Dashboard (`verdant-web`)**
+* **Stack**: Next.js 14, TailwindCSS, Lucide icons.
+* **Purpose**: 
+  * Allows QA engineers, non-developers, or remote teammates to upload MP4/WebM bug videos.
+  * Live status board showing incoming bug reports, AST compression gauges, and dispatched GitHub PRs.
+  * Connects to the same backend REST API as the desktop client.
+
+---
+
+## 6. Team Execution Plan
+
+| Module | Dhairya | Teammate |
+| :--- | :---: | :---: |
+| **Multimodal Gemini Vision & Audio Pipeline** | Primary | |
+| **ContextPrism AST Skeletonizer & Intent Router (5 Paths)** | Primary | |
+| **VERDE-Hydra Eco-Telemetry & GitHub PR Bot** | Primary | |
+| **Desktop Floating Capsule UI & Hotkey Listener** | | Primary |
+| **Local Playwright Test Runner & File Patcher** | | Primary |
+| **Web Dashboard Dropzone (Next.js / FastAPI)** | | Primary |
