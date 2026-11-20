@@ -485,24 +485,22 @@ def _run_capsule_impl():
 
     btn_apply.Click += do_apply_patch
 
-    # ── Show Window ──────────────────────────────────────────────────────────
-    win.Show()
-    win.Activate()
+    # ── Hook Window Loaded & Start Application Message Pump ───────────────────
+    def on_loaded(sender, e):
+        helper = WindowInteropHelper(win)
+        hwnd = helper.Handle.ToInt64()
+        if hwnd:
+            user32.SetForegroundWindow(hwnd)
+            user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0040)
+        print("=" * 60)
+        print("🌿 V.E.R.D.A.N.T. Native Windows Desktop Capsule")
+        print(f"   Native Win32 HWND: {hwnd}")
+        print(f"   Position: ({WIN_LEFT}, {WIN_TOP})  Size: {WIN_W}x{COLLAPSED_H}")
+        print("   Always On Top · Frameless · Draggable")
+        print("=" * 60)
+        sys.stdout.flush()
 
-    helper = WindowInteropHelper(win)
-    hwnd = helper.Handle.ToInt64()
-    if hwnd:
-        user32.SetForegroundWindow(hwnd)
-        user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0040)
-
-    print("=" * 60)
-    print("🌿 V.E.R.D.A.N.T. Native Windows Desktop Capsule")
-    print(f"   Native Win32 HWND: {hwnd}")
-    print(f"   Position: ({WIN_LEFT}, {WIN_TOP})  Size: {WIN_W}x{COLLAPSED_H}")
-    print("   Always On Top · Frameless · Draggable")
-    print("=" * 60)
-    sys.stdout.flush()
-
+    win.Loaded += on_loaded
     app.Run(win)
 
 
