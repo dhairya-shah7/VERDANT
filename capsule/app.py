@@ -2,8 +2,6 @@
 V.E.R.D.A.N.T. Desktop Floating Capsule - Application Entrypoint
 Run this script to launch the native desktop floating capsule:
     python capsule/app.py
-Or as module:
-    python -m capsule.app
 """
 import sys
 from pathlib import Path
@@ -32,8 +30,9 @@ def main():
     register_global_hotkey("ctrl+shift+space", on_hotkey_pressed)
     register_global_hotkey("alt+space", on_hotkey_pressed)
 
-    print("[Capsule] Capsule window is now live and visible at top of your screen.")
-    print("[Capsule] Use [Ctrl+Shift+Space] or [Alt+Space] to toggle, or click [—] / [✕].")
+    print("[Capsule] Capsule window is now live and floating at the top of your screen.")
+    print("[Capsule] Check your screen top-center or taskbar icon: '🌿 V.E.R.D.A.N.T. Capsule'")
+    print("[Capsule] Hotkey: [Ctrl+Shift+Space] or [Alt+Space] to toggle.")
     
     app.mainloop()
 
