@@ -1,6 +1,6 @@
 """
 V.E.R.D.A.N.T. v2 — Native Windows Desktop Floating Capsule
-True native Win32 + WPF hardware-accelerated rounded floating pill.
+True native WPF hardware-accelerated rounded floating pill.
 Always on top of Antigravity, VS Code, Chrome. Zero browser dependencies.
 
 Usage:
@@ -11,7 +11,6 @@ import sys
 import time
 import json
 import threading
-import ctypes
 from pathlib import Path
 
 # Setup paths and environment
@@ -48,21 +47,16 @@ from System.Windows.Controls import (
     Border, StackPanel, Grid, TextBox, TextBlock, Button, ScrollViewer,
     ColumnDefinition, RowDefinition, Orientation
 )
-from System.Windows.Interop import WindowInteropHelper
 
 from capsule.bridge import CapsuleBridge
 from capsule.snapper import WindowSnapper
-
-# ── Win32 API ───────────────────────────────────────────────────────────────
-user32 = ctypes.windll.user32
-gdi32 = ctypes.windll.gdi32
 
 # ── Dimensions ───────────────────────────────────────────────────────────────
 WIN_W = 660
 COLLAPSED_H = 76
 EXPANDED_H = 390
 WIN_LEFT = (1280 - WIN_W) // 2  # 310
-WIN_TOP = 25
+WIN_TOP = 65                    # Clearly visible below top titlebars
 
 
 def build_and_run_capsule():
@@ -71,12 +65,11 @@ def build_and_run_capsule():
         "mode": "fast",
         "snapped_path": None,
         "last_diagnosis": None,
-        "is_busy": False,
-        "hwnd": 0
+        "is_busy": False
     }
 
     # Brushes created directly on STA thread & frozen
-    C_BG_PILL    = SolidColorBrush(Color.FromArgb(255, 13, 18, 36)); C_BG_PILL.Freeze()
+    C_BG_PILL    = SolidColorBrush(Color.FromArgb(248, 13, 18, 36)); C_BG_PILL.Freeze()
     C_BORDER_NORM= SolidColorBrush(Color.FromArgb(255, 59, 130, 246)); C_BORDER_NORM.Freeze()
     C_BORDER_DEEP= SolidColorBrush(Color.FromArgb(255, 168, 85, 247)); C_BORDER_DEEP.Freeze()
     C_INPUT_BG   = SolidColorBrush(Color.FromArgb(255, 20, 28, 54)); C_INPUT_BG.Freeze()
@@ -92,7 +85,7 @@ def build_and_run_capsule():
 
     app = Application()
 
-    # ── Root Window (Solid, hardware-composited, guaranteed visible) ──────────
+    # ── Root Window (Transparent canvas with native WPF rounded border) ───────
     win = Window()
     win.Title = "V.E.R.D.A.N.T. Floating Capsule"
     win.Width = WIN_W
@@ -100,8 +93,8 @@ def build_and_run_capsule():
     win.Left = WIN_LEFT
     win.Top = WIN_TOP
     win.WindowStyle = getattr(WindowStyle, "None")
-    win.AllowsTransparency = False  # Opaque window ensures Win32 DWM composites it
-    win.Background = C_BG_PILL
+    win.AllowsTransparency = True
+    win.Background = Brushes.Transparent
     win.Topmost = True
     win.ShowInTaskbar = True
 
@@ -113,13 +106,13 @@ def build_and_run_capsule():
             pass
     win.MouseLeftButtonDown += on_drag
 
-    # ── Main Outer Border ────────────────────────────────────────────────────
+    # ── Main Outer Pill Border ───────────────────────────────────────────────
     pill_border = Border()
-    pill_border.CornerRadius = CornerRadius(16)
+    pill_border.CornerRadius = CornerRadius(18)
     pill_border.Background = C_BG_PILL
     pill_border.BorderBrush = C_BORDER_NORM
-    pill_border.BorderThickness = Thickness(1.8)
-    pill_border.Padding = Thickness(10, 8, 10, 8)
+    pill_border.BorderThickness = Thickness(2)
+    pill_border.Padding = Thickness(12, 9, 12, 9)
 
     # ── Main Vertical Layout ─────────────────────────────────────────────────
     main_stack = StackPanel()
@@ -177,7 +170,7 @@ def build_and_run_capsule():
     btn_snap.BorderThickness = Thickness(0)
     btn_snap.Padding = Thickness(6, 4, 6, 4)
     btn_snap.Margin = Thickness(0, 0, 4, 0)
-    btn_snap.ToolTip = "Snap Active Window"
+    btn_snap.ToolTip = "Snap Active Foreground Window"
     Grid.SetColumn(btn_snap, 2)
     top_grid.Children.Add(btn_snap)
 
@@ -338,13 +331,6 @@ def build_and_run_capsule():
     win.Content = pill_border
 
     # ── Interactive Handlers ─────────────────────────────────────────────────
-    def update_window_shape(h):
-        hwnd = state.get("hwnd", 0)
-        if hwnd:
-            rgn = gdi32.CreateRoundRectRgn(0, 0, int(WIN_W), int(h), 22, 22)
-            user32.SetWindowRgn(hwnd, rgn, True)
-            user32.SetWindowPos(hwnd, -1, int(win.Left), int(win.Top), int(WIN_W), int(h), 0x0040)
-
     def set_mode(m):
         state["mode"] = m
         if m == "deep":
@@ -384,14 +370,12 @@ def build_and_run_capsule():
     def expand_drawer():
         win.Height = EXPANDED_H
         drawer.Visibility = Visibility.Visible
-        update_window_shape(EXPANDED_H)
 
     def collapse_drawer():
         drawer.Visibility = Visibility.Collapsed
         diff_scroll.Visibility = Visibility.Collapsed
         btn_apply.Visibility = Visibility.Collapsed
         win.Height = COLLAPSED_H
-        update_window_shape(COLLAPSED_H)
         status_txt.Text = "● Ready · Gemini 3.5 live on desktop"
 
     btn_dismiss.Click += lambda s, e: collapse_drawer()
@@ -489,17 +473,12 @@ def build_and_run_capsule():
 
     btn_apply.Click += do_apply_patch
 
-    # ── Show Window & Clip to Native Round Region ────────────────────────────
+    # ── Show Window ──────────────────────────────────────────────────────────
     win.Show()
     win.Activate()
 
-    helper = WindowInteropHelper(win)
-    state["hwnd"] = int(helper.Handle.ToInt64())
-    update_window_shape(COLLAPSED_H)
-
     print("=" * 60)
     print("🌿 V.E.R.D.A.N.T. Native Windows Desktop Capsule")
-    print(f"   Native Win32 HWND: {state['hwnd']}")
     print(f"   Position: ({WIN_LEFT}, {WIN_TOP})  Size: {WIN_W}x{COLLAPSED_H}")
     print("   Always On Top · Frameless · Draggable")
     print("=" * 60)
