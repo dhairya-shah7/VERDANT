@@ -12,7 +12,12 @@ __pycache__/
 
 # Uploads & temporary artifacts
 uploads/
+!uploads/assets/
+uploads/captures/
 *.tmp
+*.log
+capsule_debug.log
+pr_payload.md
 
 # Virtual environments
 venv/
@@ -23,9 +28,20 @@ env/
 .DS_Store
 Thumbs.db
 
-.capsule_profile/
-uploads/captures/
-capsule_debug.log
+# Database & Runtime State
 verdant_history.db*
 .test_edge/
 .verde/
+.capsule_profile/
+
+# Standalone Slide Generator Scripts & Presentation Graphic Drafts
+generate_*.py
+/*.jpg
+/*.png
+stair_impacts_benefits_slide.png
+slide3_enhanced_transparent.png
+
+# Legacy Pages, Static Mocks & Binaries
+test_app.html
+stitch/
+capsule/capsule.exe

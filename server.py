@@ -1990,17 +1990,13 @@ ${diffSec}
 from fastapi.responses import RedirectResponse
 
 # =========================================================================
-# STRICT CORE ROUTES (ONLY 4 LEGITIMATE PAGES PERMITTED)
+# STRICT CORE ROUTES (EXACTLY 3 PAGES PERMITTED)
 # =========================================================================
 
 @app.get("/", response_class=HTMLResponse)
 @app.get("/home", response_class=HTMLResponse)
 def index():
     return HTMLResponse(content=render_stitch_html("home"))
-
-@app.get("/results", response_class=HTMLResponse)
-def results_page():
-    return HTMLResponse(content=render_stitch_html("results"))
 
 @app.get("/sustainability", response_class=HTMLResponse)
 def sustainability_page():
@@ -2011,10 +2007,11 @@ def history_page():
     return HTMLResponse(content=render_stitch_html("history"))
 
 # ── SECURE ROUTE SHIELD: Block and redirect all non-permitted / legacy routes ──
-@app.get("/pipeline")
-@app.get("/analysis")
+@app.get("/results")
 @app.get("/results-1")
 @app.get("/results-2")
+@app.get("/pipeline")
+@app.get("/analysis")
 @app.get("/legacy")
 @app.get("/verde-hydra")
 @app.get("/audit")
