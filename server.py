@@ -2539,15 +2539,41 @@ async def api_extension_ingest(request: Request):
     url = payload.get("url", "http://localhost")
     page_title = payload.get("pageTitle", "Web App Tab")
     element = payload.get("element")
-    logs = payload.get("logs", [])
+    raw_logs = payload.get("logs", [])
     network_events = payload.get("networkEvents", [])
     layout_anomalies = payload.get("layoutAnomalies", [])
+    dom_summary = payload.get("domSummary", {})
+    dom_skeleton = payload.get("domSkeleton", "")
     screenshot_b64 = payload.get("screenshotBase64")
+    
+    # Filter out any internal extension messages
+    logs = [
+        l for l in raw_logs
+        if "[V.E.R.D.A.N.T.]" not in str(l.get("message", ""))
+        and "verdant-" not in str(l.get("message", ""))
+        and "[V.E.R.D.A.N.T.]" not in str(l.get("stack", ""))
+    ]
     
     # 2. Build Multi-modal Prompt Context
     prompt_sections = [
-        f"Diagnose and synthesize a verified fix for an incident on: {url} ({page_title})."
+        f"Diagnose and synthesize a verified audit for web page: {url} ({page_title})."
     ]
+    
+    if dom_summary:
+        stats = dom_summary.get("stats", {})
+        landmarks = dom_summary.get("landmarks", {})
+        broken_imgs = dom_summary.get("brokenImages", [])
+        empty_btns = dom_summary.get("emptyButtons", [])
+        prompt_sections.append(
+            f"LIVE DOM STRUCTURE FOR {url}:\n"
+            f"- Total DOM Nodes: {dom_summary.get('totalNodes', 0)}\n"
+            f"- Landmarks: {json.dumps(landmarks)}\n"
+            f"- Interactive Elements: {stats.get('buttons', 0)} buttons, {stats.get('inputs', 0)} inputs, {stats.get('links', 0)} links, {stats.get('images', 0)} images\n"
+            f"- Broken Images: {json.dumps(broken_imgs) if broken_imgs else 'None'}\n"
+            f"- Unlabeled Interactive Elements: {json.dumps(empty_btns) if empty_btns else 'None'}"
+        )
+        if dom_skeleton:
+            prompt_sections.append(f"PRUNED CONTEXTPRISM DOM SKELETON:\n{dom_skeleton[:1200]}")
     
     images = []
     if screenshot_b64:
@@ -2565,7 +2591,7 @@ async def api_extension_ingest(request: Request):
             print(f"[V.E.R.D.A.N.T.] Failed to decode/compress screenshot: {e}")
             
     raw_tokens_estimate = None
-    has_real_errors = bool(logs or network_events or layout_anomalies)
+    has_real_errors = bool(logs or network_events or layout_anomalies or (dom_summary and (dom_summary.get("brokenImages") or dom_summary.get("emptyButtons"))))
 
     if element:
         # Visual / Layout Defect on specifically inspected element

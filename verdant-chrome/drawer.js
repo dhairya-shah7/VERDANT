@@ -47,6 +47,14 @@ window.Verdant = window.Verdant || {};
           <div id="verdant-status-text" style="font-size:14px; color:#475569; line-height:1.6;">
             Active on current tab. Click <b>Inspect Element</b> for layout/formatting defects or <b>Analyze Tab State</b> to run Gemini.
           </div>
+
+          <!-- Live Telemetry Counts -->
+          <div id="verdant-telemetry-stats" style="margin-top:12px; display:grid; grid-template-columns:1fr 1fr; gap:8px; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0; font-size:12px;">
+            <div><span style="color:#64748b;">DOM Nodes:</span> <b id="verdant-stat-dom" style="color:#0f172a;">Scanning...</b></div>
+            <div><span style="color:#64748b;">Console Logs:</span> <b id="verdant-stat-logs" style="color:#0f172a;">0</b></div>
+            <div><span style="color:#64748b;">Network Drops:</span> <b id="verdant-stat-net" style="color:#0f172a;">0</b></div>
+            <div><span style="color:#64748b;">Layout Defects:</span> <b id="verdant-stat-anomalies" style="color:#0f172a;">0</b></div>
+          </div>
         </div>
 
         <!-- Live Diagnosis Results Card (Hidden initially) -->
@@ -102,6 +110,45 @@ window.Verdant = window.Verdant || {};
     document.getElementById('verdant-btn-send-ide').addEventListener('click', () => handleSendToIde());
   }
 
+  function refreshTelemetryStats() {
+    const domSummary = window.Verdant.extractPageDomSummary ? window.Verdant.extractPageDomSummary() : null;
+    const totalNodes = domSummary ? domSummary.totalNodes : document.querySelectorAll('*').length;
+    
+    const genuineLogs = (window.__verdant_logs || []).filter(l => {
+      const msg = String(l.message || '');
+      const stk = String(l.stack || '');
+      return !msg.includes('[V.E.R.D.A.N.T.]') && !msg.includes('verdant-') && !stk.includes('[V.E.R.D.A.N.T.]');
+    });
+
+    const genuineNet = (window.__verdant_network || []).filter(n => {
+      const u = String(n.url || '');
+      return !u.includes(':8000') && !u.includes('chrome-extension://');
+    });
+
+    const layoutAnomalies = window.Verdant.findActiveLayoutAnomalies ? window.Verdant.findActiveLayoutAnomalies() : [];
+
+    const domEl = document.getElementById('verdant-stat-dom');
+    const logsEl = document.getElementById('verdant-stat-logs');
+    const netEl = document.getElementById('verdant-stat-net');
+    const anomEl = document.getElementById('verdant-stat-anomalies');
+
+    if (domEl) domEl.innerText = `${totalNodes.toLocaleString()} nodes`;
+    if (logsEl) {
+      logsEl.innerText = `${genuineLogs.length} logs`;
+      logsEl.style.color = genuineLogs.length > 0 ? '#dc2626' : '#059669';
+    }
+    if (netEl) {
+      netEl.innerText = `${genuineNet.length} drops`;
+      netEl.style.color = genuineNet.length > 0 ? '#dc2626' : '#059669';
+    }
+    if (anomEl) {
+      anomEl.innerText = `${layoutAnomalies.length} defects`;
+      anomEl.style.color = layoutAnomalies.length > 0 ? '#ea580c' : '#059669';
+    }
+
+    return { domSummary, layoutAnomalies, genuineLogs, genuineNet };
+  }
+
   function toggleDrawer(forceState) {
     let drawer = document.getElementById('verdant-drawer-container');
     if (!drawer) {
@@ -110,8 +157,12 @@ window.Verdant = window.Verdant || {};
     }
     if (!drawer) return;
     isDrawerOpen = (forceState !== undefined) ? forceState : !isDrawerOpen;
-    if (isDrawerOpen) drawer.classList.add('open');
-    else drawer.classList.remove('open');
+    if (isDrawerOpen) {
+      drawer.classList.add('open');
+      refreshTelemetryStats();
+    } else {
+      drawer.classList.remove('open');
+    }
   }
 
   function displayDiagnosis(diag) {
@@ -221,13 +272,18 @@ window.Verdant = window.Verdant || {};
     const statusText = document.getElementById('verdant-status-text');
     statusText.innerHTML = `Analyzing <b>${geometryData.selector}</b> with Gemini 3.1...`;
 
+    const { domSummary, genuineLogs, genuineNet } = refreshTelemetryStats();
+
     chrome.runtime.sendMessage({
       type: 'ANALYZE_ELEMENT',
       payload: window.Verdant.scrubObject({
         url: window.location.href,
+        pageTitle: document.title,
         element: geometryData,
-        logs: window.__verdant_logs || [],
-        networkEvents: window.__verdant_network || []
+        domSummary: domSummary,
+        domSkeleton: domSummary?.domSkeleton || '',
+        logs: genuineLogs,
+        networkEvents: genuineNet
       })
     }, (response) => {
       if (response && response.diagnosis) {
@@ -239,19 +295,20 @@ window.Verdant = window.Verdant || {};
   function triggerFullTabAnalysis() {
     toggleDrawer(true);
     const statusText = document.getElementById('verdant-status-text');
-    statusText.innerHTML = 'Capturing DOM and network telemetry with Gemini 3.5...';
+    statusText.innerHTML = 'Capturing live DOM tree and telemetry with Gemini 3.5...';
 
-    // Scan for actual layout anomalies on the page
-    const layoutAnomalies = window.Verdant.findActiveLayoutAnomalies ? window.Verdant.findActiveLayoutAnomalies() : [];
+    const { domSummary, layoutAnomalies, genuineLogs, genuineNet } = refreshTelemetryStats();
 
     chrome.runtime.sendMessage({
       type: 'ANALYZE_TAB',
       payload: window.Verdant.scrubObject({
         url: window.location.href,
         pageTitle: document.title,
-        logs: window.__verdant_logs || [],
-        networkEvents: window.__verdant_network || [],
-        layoutAnomalies: layoutAnomalies
+        logs: genuineLogs,
+        networkEvents: genuineNet,
+        layoutAnomalies: layoutAnomalies,
+        domSummary: domSummary,
+        domSkeleton: domSummary?.domSkeleton || ''
       })
     }, (response) => {
       if (response && response.diagnosis) {
