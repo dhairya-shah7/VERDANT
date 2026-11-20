@@ -46,7 +46,7 @@ window.Verdant = window.Verdant || {};
         <div id="verdant-status-view" class="verdant-card">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <span style="font-size:12px; font-weight:700; color:#475569; letter-spacing:0.04em;">RUNTIME STATUS</span>
-            <span id="verdant-daemon-badge" class="verdant-badge verdant-badge-green">Daemon Active (:8000)</span>
+            <span id="verdant-daemon-badge" class="verdant-badge verdant-badge-green">Connected (Cloud Run)</span>
           </div>
           <div id="verdant-status-text" style="font-size:14px; color:#475569; line-height:1.6;">
             Active on current tab. Click <b>Inspect Element</b> for layout/formatting defects or <b>Analyze Tab State</b> to run Gemini.
@@ -153,6 +153,22 @@ window.Verdant = window.Verdant || {};
     return { domSummary, layoutAnomalies, genuineLogs, genuineNet };
   }
 
+  function updateDaemonBadge() {
+    const badge = document.getElementById('verdant-daemon-badge');
+    if (!badge) return;
+    try {
+      chrome.runtime.sendMessage({ type: 'CHECK_DAEMON_STATUS' }, (res) => {
+        if (res && res.connected) {
+          badge.innerText = `Connected (${res.server || 'Cloud Run'})`;
+          badge.className = 'verdant-badge verdant-badge-green';
+        } else {
+          badge.innerText = 'Offline';
+          badge.className = 'verdant-badge verdant-badge-red';
+        }
+      });
+    } catch {}
+  }
+
   function toggleDrawer(forceState) {
     let drawer = document.getElementById('verdant-drawer-container');
     if (!drawer) {
@@ -164,6 +180,7 @@ window.Verdant = window.Verdant || {};
     if (isDrawerOpen) {
       drawer.classList.add('open');
       refreshTelemetryStats();
+      updateDaemonBadge();
     } else {
       drawer.classList.remove('open');
     }

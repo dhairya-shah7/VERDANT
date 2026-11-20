@@ -1,9 +1,23 @@
 /**
  * V.E.R.D.A.N.T. Service Worker (Background Script)
- * Manages tab screenshots, communication with the local V.E.R.D.A.N.T. daemon (:8000), and IDE dispatch.
+ * Manages tab screenshots, communication with Google Cloud Run & local daemon, and IDE dispatch.
  */
 
-const DAEMON_API = 'http://localhost:8000';
+const CLOUD_DAEMON_API = 'https://verdant-server-1042112525098.us-central1.run.app';
+const LOCAL_DAEMON_API = 'http://localhost:8000';
+let ACTIVE_DAEMON_API = CLOUD_DAEMON_API;
+
+async function getActiveDaemonApi() {
+  try {
+    const res = await fetch(`${LOCAL_DAEMON_API}/health`, { method: 'GET', signal: AbortSignal.timeout(600) });
+    if (res.ok) {
+      ACTIVE_DAEMON_API = LOCAL_DAEMON_API;
+      return LOCAL_DAEMON_API;
+    }
+  } catch {}
+  ACTIVE_DAEMON_API = CLOUD_DAEMON_API;
+  return CLOUD_DAEMON_API;
+}
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'ANALYZE_ELEMENT' || request.type === 'ANALYZE_TAB') {
@@ -43,7 +57,8 @@ async function handleAnalysis(request, sender) {
     pageTitle: sender.tab?.title
   };
 
-  const response = await fetch(`${DAEMON_API}/api/extension/ingest`, {
+  const apiUrl = await getActiveDaemonApi();
+  const response = await fetch(`${apiUrl}/api/extension/ingest`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -58,7 +73,8 @@ async function handleAnalysis(request, sender) {
 }
 
 async function handlePushToIde(diagnosis) {
-  const response = await fetch(`${DAEMON_API}/api/extension/push-ide`, {
+  const apiUrl = await getActiveDaemonApi();
+  const response = await fetch(`${apiUrl}/api/extension/push-ide`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(diagnosis)
@@ -68,10 +84,23 @@ async function handlePushToIde(diagnosis) {
 }
 
 async function checkDaemonHealth() {
+  // 1. Try local dev daemon first
   try {
-    const res = await fetch(`${DAEMON_API}/health`, { method: 'GET' });
-    return { connected: res.ok };
-  } catch {
-    return { connected: false };
-  }
+    const res = await fetch(`${LOCAL_DAEMON_API}/health`, { method: 'GET', signal: AbortSignal.timeout(600) });
+    if (res.ok) {
+      ACTIVE_DAEMON_API = LOCAL_DAEMON_API;
+      return { connected: true, server: ':8000' };
+    }
+  } catch {}
+
+  // 2. Try live Google Cloud Run deployment
+  try {
+    const res = await fetch(`${CLOUD_DAEMON_API}/health`, { method: 'GET', signal: AbortSignal.timeout(2500) });
+    if (res.ok) {
+      ACTIVE_DAEMON_API = CLOUD_DAEMON_API;
+      return { connected: true, server: 'Cloud Run' };
+    }
+  } catch {}
+
+  return { connected: false, server: 'Offline' };
 }

@@ -11,6 +11,7 @@
   ],
   "host_permissions": [
     "http://localhost:8000/*",
+    "https://verdant-server-1042112525098.us-central1.run.app/*",
     "<all_urls>"
   ],
   "background": {

@@ -4,13 +4,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnInspect = document.getElementById('btn-inspect-element');
   const btnAnalyze = document.getElementById('btn-analyze-active');
 
-  // Check Local Daemon Health
+  // Check Daemon Health (Local or Cloud Run)
   chrome.runtime.sendMessage({ type: 'CHECK_DAEMON_STATUS' }, (res) => {
     if (res && res.connected) {
-      statusPill.innerText = 'Connected (:8000)';
+      statusPill.innerText = `Connected (${res.server || 'Cloud Run'})`;
       statusPill.className = 'badge badge-green';
     } else {
-      statusPill.innerText = 'Offline (:8000)';
+      statusPill.innerText = 'Offline';
       statusPill.className = 'badge badge-red';
     }
   });
