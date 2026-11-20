@@ -1,0 +1,5 @@
+# Optional Desktop Capsule Recorder dependencies (Windows only)
+customtkinter>=6.0.0
+sounddevice>=0.4.6
+keyboard>=0.13.5
+pywin32>=306
