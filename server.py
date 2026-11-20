@@ -2546,10 +2546,11 @@ async def api_extension_ingest(request: Request):
     dom_skeleton = payload.get("domSkeleton", "")
     screenshot_b64 = payload.get("screenshotBase64")
     
-    # Filter out any internal extension messages
+    # Filter out any internal extension messages and empty/phantom errors
     logs = [
         l for l in raw_logs
-        if "[V.E.R.D.A.N.T.]" not in str(l.get("message", ""))
+        if str(l.get("message", "")).strip() not in ("", "undefined", "null", "[object Object]", "Script error.", "Script runtime exception")
+        and "[V.E.R.D.A.N.T.]" not in str(l.get("message", ""))
         and "verdant-" not in str(l.get("message", ""))
         and "[V.E.R.D.A.N.T.]" not in str(l.get("stack", ""))
     ]

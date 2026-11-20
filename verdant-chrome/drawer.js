@@ -321,19 +321,25 @@ window.Verdant = window.Verdant || {};
     if (!currentDiagnosis) return;
     const testLiveBtn = document.getElementById('verdant-btn-test-live');
 
-    if (currentDiagnosis.css_patch) {
-      window.Verdant.applyCssHotPatch(currentDiagnosis.css_patch);
-      testLiveBtn.innerText = '✓ Patch Applied (Live)';
+    if (window.Verdant.isPatchActive && window.Verdant.isPatchActive()) {
+      // Revert Live Patch
+      window.Verdant.removeCssHotPatch();
+      testLiveBtn.innerText = '🧪 Test Fix Live (in Tab)';
+      testLiveBtn.style.background = '#f8fafc';
+      testLiveBtn.style.color = '#334155';
+      testLiveBtn.style.borderColor = '#cbd5e1';
+      return;
+    }
+
+    // Apply Live Fix
+    const applied = window.Verdant.applyDiagnosisLive ? window.Verdant.applyDiagnosisLive(currentDiagnosis) : false;
+    if (applied) {
+      testLiveBtn.innerText = '✓ Hot-Patch Active (Click to Revert)';
       testLiveBtn.style.background = '#059669';
-    } else if (currentDiagnosis.edits && currentDiagnosis.edits.length > 0) {
-      const edit = currentDiagnosis.edits[0];
-      if (edit.path && (edit.path.endsWith('.css') || edit.replace.includes('{'))) {
-        window.Verdant.applyCssHotPatch(edit.replace);
-        testLiveBtn.innerText = '✓ CSS Applied (Live)';
-        testLiveBtn.style.background = '#059669';
-      } else {
-        alert(`Code patch for ${edit.path} is ready to send to VS Code!`);
-      }
+      testLiveBtn.style.color = '#ffffff';
+      testLiveBtn.style.borderColor = '#059669';
+    } else {
+      alert(`This is a backend / script patch for: ${currentDiagnosis.edits?.[0]?.path || 'source code'}.\nClick 'Send to VS Code' to review the side-by-side git diff in your editor!`);
     }
   }
 

@@ -69,34 +69,40 @@
 
   // 3. Uncaught Window Errors
   window.addEventListener('error', function(event) {
-    const msg = event.message || 'Script runtime exception';
-    if (!isVerdantInternal(msg) && !isVerdantInternal(event.filename)) {
-      emitToContentScript({
-        category: 'log',
-        type: 'uncaught_error',
-        message: msg,
-        stack: event.error ? String(event.error.stack).slice(0, 1000) : null,
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno,
-        timestamp: new Date().toISOString()
-      });
+    // If error target is an HTML element (e.g. img or link 404), skip logging as script crash
+    if (event.target && event.target !== window && (event.target instanceof HTMLElement)) {
+      return;
     }
+    const msg = event.message;
+    if (!msg || msg === 'undefined' || msg === 'null' || msg === 'Script error.' || isVerdantInternal(msg) || isVerdantInternal(event.filename)) {
+      return;
+    }
+    emitToContentScript({
+      category: 'log',
+      type: 'uncaught_error',
+      message: msg,
+      stack: event.error ? String(event.error.stack).slice(0, 1000) : null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+      timestamp: new Date().toISOString()
+    });
   }, true);
 
   // 4. Unhandled Promise Rejections
   window.addEventListener('unhandledrejection', function(event) {
-    const reason = event.reason;
-    const msg = reason ? (reason.message || String(reason)) : 'Unhandled rejection';
-    if (!isVerdantInternal(msg)) {
-      emitToContentScript({
-        category: 'log',
-        type: 'unhandled_rejection',
-        message: msg,
-        stack: reason && reason.stack ? String(reason.stack).slice(0, 1000) : null,
-        timestamp: new Date().toISOString()
-      });
+    if (!event.reason) return;
+    const msg = event.reason.message || (typeof event.reason === 'string' ? event.reason : null);
+    if (!msg || msg === 'undefined' || msg === 'null' || msg === '[object Object]' || isVerdantInternal(msg)) {
+      return;
     }
+    emitToContentScript({
+      category: 'log',
+      type: 'unhandled_rejection',
+      message: msg,
+      stack: event.reason && event.reason.stack ? String(event.reason.stack).slice(0, 1000) : null,
+      timestamp: new Date().toISOString()
+    });
   }, true);
 
   // 5. Hook Fetch API for 4xx/5xx or Network Drops
