@@ -38,14 +38,14 @@ from System.Threading import Thread, ThreadStart, ApartmentState
 from System.Windows import (
     Application, Window, WindowStyle, WindowStartupLocation,
     HorizontalAlignment, VerticalAlignment, CornerRadius, Thickness,
-    Visibility, TextWrapping, FontWeights
+    Visibility, TextWrapping, FontWeights, GridLength, GridUnitType
 )
 from System.Windows.Media import (
     Brushes, Color, SolidColorBrush, FontFamily
 )
 from System.Windows.Controls import (
     Border, StackPanel, Grid, TextBox, TextBlock, Button, ScrollViewer,
-    ColumnDefinition, RowDefinition, GridLength, GridUnitType, Orientation
+    ColumnDefinition, RowDefinition, Orientation
 )
 
 from capsule.bridge import CapsuleBridge
