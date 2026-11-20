@@ -1,11 +1,16 @@
-/* V.E.R.D.A.N.T. Drawer & Floating Pill Styles */
+/* V.E.R.D.A.N.T. Drawer & Floating Pill - Clean Modern White Theme */
 :root {
-  --verdant-emerald: #10b981;
-  --verdant-dark: #0f172a;
-  --verdant-card: #1e293b;
-  --verdant-border: #334155;
-  --verdant-text: #f8fafc;
-  --verdant-muted: #94a3b8;
+  --verdant-primary: #10b981;
+  --verdant-primary-hover: #059669;
+  --verdant-blue: #2563eb;
+  --verdant-blue-hover: #1d4ed8;
+  --verdant-bg-white: #ffffff;
+  --verdant-bg-subtle: #f8fafc;
+  --verdant-bg-card: #ffffff;
+  --verdant-border: #e2e8f0;
+  --verdant-text-main: #0f172a;
+  --verdant-text-muted: #64748b;
+  --verdant-radius: 12px;
 }
 
 #verdant-floating-trigger {
@@ -15,53 +20,52 @@
   z-index: 2147483640 !important;
   display: flex !important;
   align-items: center !important;
-  gap: 8px !important;
-  background: #0f172a !important;
-  color: #ffffff !important;
-  padding: 10px 16px !important;
+  gap: 10px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  padding: 12px 20px !important;
   border-radius: 9999px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(16, 185, 129, 0.4) !important;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.12), 0 0 0 1.5px rgba(16, 185, 129, 0.5) !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
   user-select: none !important;
 }
 
 #verdant-floating-trigger:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.3) !important;
-  border-color: #10b981 !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 16px 36px -6px rgba(16, 185, 129, 0.25), 0 0 0 2px #10b981 !important;
 }
 
 #verdant-floating-trigger .pulse-dot {
-  width: 8px !important;
-  height: 8px !important;
+  width: 10px !important;
+  height: 10px !important;
   border-radius: 50% !important;
   background: #10b981 !important;
-  box-shadow: 0 0 8px #10b981 !important;
+  box-shadow: 0 0 10px #10b981 !important;
   animation: verdant-pulse 2s infinite !important;
 }
 
 @keyframes verdant-pulse {
-  0% { transform: scale(0.95); opacity: 0.8; }
+  0% { transform: scale(0.95); opacity: 0.85; }
   50% { transform: scale(1.3); opacity: 1; }
-  100% { transform: scale(0.95); opacity: 0.8; }
+  100% { transform: scale(0.95); opacity: 0.85; }
 }
 
-/* Slide-out Drawer */
+/* Slide-out Drawer - Crisp White Modern Aesthetic */
 #verdant-drawer-container {
   position: fixed !important;
   top: 0 !important;
-  right: -460px !important;
-  width: 440px !important;
+  right: -480px !important;
+  width: 460px !important;
   height: 100vh !important;
-  background: #0f172a !important;
-  color: #f8fafc !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
   z-index: 2147483645 !important;
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.7) !important;
-  border-left: 1px solid #334155 !important;
+  box-shadow: -12px 0 40px rgba(15, 23, 42, 0.15) !important;
+  border-left: 1px solid #e2e8f0 !important;
   transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   display: flex !important;
@@ -74,96 +78,109 @@
 }
 
 #verdant-drawer-header {
-  padding: 18px 20px !important;
-  border-bottom: 1px solid #1e293b !important;
+  padding: 20px 24px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
-  background: #131d31 !important;
+  background: #ffffff !important;
 }
 
 #verdant-drawer-content {
   flex: 1 !important;
   overflow-y: auto !important;
-  padding: 20px !important;
+  padding: 24px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 16px !important;
+  gap: 20px !important;
+  background: #f8fafc !important;
 }
 
 .verdant-card {
-  background: #1e293b !important;
-  border: 1px solid #334155 !important;
-  border-radius: 12px !important;
-  padding: 16px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 14px !important;
+  padding: 20px !important;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04) !important;
 }
 
 .verdant-btn {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 8px !important;
-  padding: 10px 16px !important;
-  border-radius: 8px !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
+  gap: 10px !important;
+  padding: 13px 20px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
   cursor: pointer !important;
   border: none !important;
-  transition: all 0.15s ease !important;
+  transition: all 0.18s ease !important;
   text-decoration: none !important;
 }
 
 .verdant-btn-primary {
   background: #10b981 !important;
   color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
 }
 
 .verdant-btn-primary:hover {
   background: #059669 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35) !important;
 }
 
 .verdant-btn-secondary {
-  background: #334155 !important;
-  color: #f8fafc !important;
+  background: #ffffff !important;
+  color: #334155 !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04) !important;
 }
 
 .verdant-btn-secondary:hover {
-  background: #475569 !important;
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
 }
 
 .verdant-btn-action {
   background: #2563eb !important;
   color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
 }
 
 .verdant-btn-action:hover {
   background: #1d4ed8 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35) !important;
 }
 
 .verdant-badge {
-  display: inline-block !important;
-  padding: 3px 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 4px 10px !important;
   border-radius: 9999px !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
 }
 
 .verdant-badge-green {
-  background: rgba(16, 185, 129, 0.2) !important;
-  color: #34d399 !important;
-  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #bbf7d0 !important;
 }
 
 .verdant-badge-red {
-  background: rgba(239, 68, 68, 0.2) !important;
-  color: #f87171 !important;
-  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fecaca !important;
 }
 
 /* Interactive Crosshair Outline */
 .verdant-inspect-highlight {
-  outline: 2px dashed #10b981 !important;
-  outline-offset: 2px !important;
+  outline: 2.5px dashed #10b981 !important;
+  outline-offset: 3px !important;
   cursor: crosshair !important;
-  background: rgba(16, 185, 129, 0.08) !important;
+  background: rgba(16, 185, 129, 0.12) !important;
 }

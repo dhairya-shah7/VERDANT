@@ -18,8 +18,8 @@ if env_path.exists():
 @dataclass
 class Config:
     # Model Selection
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite") # Ultra-fast low latency multimodal tier (~2s)
-    GEMINI_FAST_MODEL: str = os.getenv("GEMINI_FAST_MODEL", "gemini-3.1-flash-lite") # Verified active fast structured tier
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite") # Ultra-fast, highly available multimodal tier
+    GEMINI_FAST_MODEL: str = os.getenv("GEMINI_FAST_MODEL", "gemini-3.5-flash-lite") # Verified active fast structured tier
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     
     # ContextPrism Thresholds

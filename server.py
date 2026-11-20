@@ -2509,10 +2509,17 @@ async def api_extension_ingest(request: Request):
     images = []
     if screenshot_b64:
         try:
-            img_bytes = base64.b64decode(screenshot_b64)
-            images.append(img_bytes)
+            from io import BytesIO
+            img_raw = base64.b64decode(screenshot_b64)
+            img_pil = Image.open(BytesIO(img_raw))
+            if img_pil.width > 1280:
+                h = int(img_pil.height * (1280 / img_pil.width))
+                img_pil = img_pil.resize((1280, h), Image.Resampling.LANCZOS)
+            buf = BytesIO()
+            img_pil.convert("RGB").save(buf, format="JPEG", quality=75)
+            images.append(buf.getvalue())
         except Exception as e:
-            print(f"[V.E.R.D.A.N.T.] Failed to decode screenshot: {e}")
+            print(f"[V.E.R.D.A.N.T.] Failed to decode/compress screenshot: {e}")
             
     if element:
         # Visual / Layout Defect

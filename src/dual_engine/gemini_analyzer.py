@@ -105,11 +105,11 @@ def analyze_multimodal(
 
     # Model selection based on user mode
     if mode.lower() == "normal":
-        primary_model = "gemini-3.1-flash-lite"
-        backup_models = ["gemini-3.5-flash-lite", "gemini-3.5-flash"]
+        primary_model = "gemini-3.5-flash-lite"
+        backup_models = ["gemini-3.1-flash-lite"]
     else:
         primary_model = "gemini-3.5-flash"
-        backup_models = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite"]
+        backup_models = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
 
     candidate_models = [primary_model] + [m for m in backup_models if m != primary_model]
 
@@ -148,10 +148,18 @@ def analyze_multimodal(
 
     for model_name in candidate_models:
         try:
-            config = types.GenerateContentConfig(
-                temperature=0.1,
-                response_mime_type="application/json"
-            )
+            # For fast/normal mode, cap thinking tokens to 0 to prevent 60-80s reasoning delays
+            gen_kwargs = {
+                "temperature": 0.1,
+                "response_mime_type": "application/json"
+            }
+            if mode.lower() == "normal":
+                try:
+                    gen_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+                except Exception:
+                    pass
+
+            config = types.GenerateContentConfig(**gen_kwargs)
             response = client.models.generate_content(
                 model=model_name,
                 contents=contents,

@@ -1,5 +1,5 @@
 /**
- * V.E.R.D.A.N.T. In-Tab Drawer Component
+ * V.E.R.D.A.N.T. In-Tab Drawer Component - Modern White Aesthetic
  */
 
 window.Verdant = window.Verdant || {};
@@ -12,12 +12,12 @@ window.Verdant = window.Verdant || {};
   function initDrawer() {
     if (document.getElementById('verdant-drawer-container')) return;
 
-    // 1. Create Floating Trigger
+    // 1. Create Floating Trigger Pill
     const trigger = document.createElement('div');
     trigger.id = 'verdant-floating-trigger';
     trigger.innerHTML = `
       <span class="pulse-dot"></span>
-      <span>V.E.R.D.A.N.T.</span>
+      <span style="letter-spacing: -0.01em;">V.E.R.D.A.N.T.</span>
     `;
     document.body.appendChild(trigger);
 
@@ -26,19 +26,19 @@ window.Verdant = window.Verdant || {};
     drawer.id = 'verdant-drawer-container';
     drawer.innerHTML = `
       <div id="verdant-drawer-header">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span style="font-size:18px;">🌱</span>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:36px; height:36px; border-radius:10px; background:#dcfce7; display:flex; align-items:center; justify-content:center; font-size:20px;">🌱</div>
           <div>
-            <div style="font-weight:700; font-size:14px; color:#ffffff;">V.E.R.D.A.N.T. Debugger</div>
-            <div style="font-size:11px; color:#94a3b8;">Autonomous Chrome Runtime</div>
+            <div style="font-weight:800; font-size:16px; color:#0f172a; letter-spacing:-0.02em;">V.E.R.D.A.N.T. Debugger</div>
+            <div style="font-size:12px; color:#64748b; font-weight:500;">Autonomous Chrome Runtime</div>
           </div>
         </div>
-        <button id="verdant-drawer-close" style="background:none; border:none; color:#94a3b8; font-size:18px; cursor:pointer;">&times;</button>
+        <button id="verdant-drawer-close" style="background:#f1f5f9; border:none; width:32px; height:32px; border-radius:8px; color:#64748b; font-size:20px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s;">&times;</button>
       </div>
 
       <div id="verdant-drawer-content">
-        <!-- Quick Action Controls -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <!-- Action Buttons -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
           <button id="verdant-btn-inspect" class="verdant-btn verdant-btn-secondary">
             🔍 Inspect Element
           </button>
@@ -47,56 +47,45 @@ window.Verdant = window.Verdant || {};
           </button>
         </div>
 
-        <!-- Status / Inspection View -->
+        <!-- Status View Card -->
         <div id="verdant-status-view" class="verdant-card">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span style="font-size:12px; font-weight:600; color:#cbd5e1;">RUNTIME STATUS</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-size:12px; font-weight:700; color:#475569; letter-spacing:0.04em;">RUNTIME STATUS</span>
             <span id="verdant-daemon-badge" class="verdant-badge verdant-badge-green">Daemon Active (:8000)</span>
           </div>
-          <div id="verdant-status-text" style="font-size:12px; color:#94a3b8; line-height:1.5;">
-            Monitoring active DOM & console. Click <b>Inspect Element</b> for visual defects or <b>Analyze Tab State</b> to run Gemini 3.1.
+          <div id="verdant-status-text" style="font-size:14px; color:#475569; line-height:1.6;">
+            Active on current tab. Click <b>Inspect Element</b> for layout/formatting defects or <b>Analyze Tab State</b> to run Gemini.
           </div>
         </div>
 
         <!-- Live Diagnosis Results Card (Hidden initially) -->
-        <div id="verdant-results-card" class="verdant-card" style="display:none; border-color:#10b981;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span class="verdant-badge verdant-badge-green">Gemini 3.1 Flash-Lite</span>
-            <span id="verdant-latency-badge" style="font-size:11px; color:#34d399;">~2.1s</span>
+        <div id="verdant-results-card" class="verdant-card" style="display:none; border:2px solid #10b981;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <span class="verdant-badge verdant-badge-green" style="font-size:13px; padding:5px 12px;">Gemini 3.1 Flash-Lite</span>
+            <span id="verdant-latency-badge" style="font-size:13px; font-weight:700; color:#059669;">~2.1s</span>
           </div>
 
-          <div id="verdant-diag-title" style="font-size:13px; font-weight:700; color:#f8fafc; margin-bottom:6px;">
+          <div id="verdant-diag-title" style="font-size:15px; font-weight:800; color:#0f172a; margin-bottom:8px; line-height:1.4;">
             Root Cause Identified
           </div>
-          <div id="verdant-diag-cause" style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:12px; background:#0f172a; padding:10px; border-radius:6px; border:1px solid #334155;">
+          <div id="verdant-diag-cause" style="font-size:14px; color:#334155; line-height:1.6; margin-bottom:16px; background:#f8fafc; padding:14px; border-radius:10px; border:1px solid #e2e8f0;">
             -
           </div>
 
-          <!-- Target Edits / Proposed Fix -->
-          <div style="margin-bottom:12px;">
-            <div style="font-size:11px; font-weight:600; color:#94a3b8; margin-bottom:4px;">PROPOSED FIX:</div>
-            <pre id="verdant-diag-code" style="font-size:11px; background:#0f172a; color:#a7f3d0; padding:10px; border-radius:6px; overflow-x:auto; margin:0; border:1px solid #1e293b;">-</pre>
+          <!-- Proposed Fix Preview -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; letter-spacing:0.03em;">PROPOSED SURGICAL FIX:</div>
+            <pre id="verdant-diag-code" style="font-size:13px; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; background:#0f172a; color:#34d399; padding:14px; border-radius:10px; overflow-x:auto; margin:0; line-height:1.5;">-</pre>
           </div>
 
           <!-- Action Buttons -->
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            <button id="verdant-btn-test-live" class="verdant-btn verdant-btn-primary">
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <button id="verdant-btn-test-live" class="verdant-btn verdant-btn-primary" style="font-size:15px; padding:14px;">
               🧪 Test Fix Live in Tab
             </button>
-            <button id="verdant-btn-send-ide" class="verdant-btn verdant-btn-action">
+            <button id="verdant-btn-send-ide" class="verdant-btn verdant-btn-action" style="font-size:15px; padding:14px;">
               💻 Send to VS Code
             </button>
-          </div>
-        </div>
-
-        <!-- VERDE Sustainability Footprint -->
-        <div class="verdant-card" style="background:#064e3b; border-color:#059669;">
-          <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-            <span style="font-size:14px;">🍃</span>
-            <span style="font-size:12px; font-weight:700; color:#a7f3d0;">VERDE Compute Meter</span>
-          </div>
-          <div style="font-size:11px; color:#d1fae5; line-height:1.4;">
-            Zero-waste runtime: <b>-84.9% token bloat</b> eliminated. Saved <b>584 Wh</b> & <b>1.18 L</b> cooling water.
           </div>
         </div>
       </div>
@@ -135,7 +124,7 @@ window.Verdant = window.Verdant || {};
     causeEl.innerText = diag.root_cause || 'Defect analyzed.';
     
     if (diag.edits && diag.edits.length > 0) {
-      codeEl.innerText = `${diag.edits[0].path || 'CSS/DOM Patch'}:\n${diag.edits[0].replace || diag.edits[0].patch || ''}`;
+      codeEl.innerText = `${diag.edits[0].path || 'Source Patch'}:\n${diag.edits[0].replace || diag.edits[0].patch || ''}`;
     } else if (diag.css_patch) {
       codeEl.innerText = diag.css_patch;
     } else {
@@ -154,10 +143,10 @@ window.Verdant = window.Verdant || {};
       toast = document.createElement('div');
       toast.id = 'verdant-inspect-toast';
       toast.style.cssText = `
-        position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
-        background: #0f172a; color: #10b981; border: 1px solid #10b981;
-        padding: 8px 16px; border-radius: 9999px; font-size: 13px; font-weight: 600;
-        z-index: 2147483647; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+        background: #ffffff; color: #0f172a; border: 2px solid #10b981;
+        padding: 10px 22px; border-radius: 9999px; font-size: 14px; font-weight: 700;
+        z-index: 2147483647; box-shadow: 0 12px 30px rgba(0,0,0,0.15);
       `;
       toast.innerText = '🔍 Click any element to inspect layout & geometry (Esc to cancel)';
       document.body.appendChild(toast);
