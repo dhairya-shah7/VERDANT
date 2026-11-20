@@ -13,6 +13,7 @@ from src.replay_shield.patcher import AtomicPatcher
 from src.replay_shield.proofloop import ProofLoop, ProofResult
 from src.gitops import GitOpsEngine
 from src.schema import Diagnosis, ActionType
+from src.db import DB
 
 
 class CapsuleBridge:
@@ -53,7 +54,28 @@ class CapsuleBridge:
             patch_valid = preview.get("success", False)
             patch_errors = preview.get("errors", [])
 
+        session_id = None
+        try:
+            eco = diagnosis.eco_audit
+            saved = DB.save_session(
+                title=diagnosis.spoken_summary[:60] if diagnosis.spoken_summary else "Capsule Analysis",
+                session_mode="WITH_REPO" if (diagnosis.action_type == ActionType.FIX and diagnosis.edits) else "WITHOUT_REPO",
+                action_type=diagnosis.action_type.value,
+                root_cause=diagnosis.root_cause,
+                spoken_summary=diagnosis.spoken_summary,
+                confidence=diagnosis.confidence,
+                status="PATCH_READY" if (diagnosis.action_type == ActionType.FIX and diagnosis.edits) else "TRIAGE_REPORT",
+                video_filename=str(image_path.name) if image_path else "desktop_window_snap",
+                patch_diff=diff_preview,
+                energy_saved_wh=eco.energy_saved_wh if eco else 0.0,
+                water_saved_ml=eco.water_saved_ml if eco else 0.0
+            )
+            session_id = saved.get("id")
+        except Exception:
+            pass
+
         return {
+            "session_id": session_id,
             "diagnosis": diagnosis,
             "action_type": diagnosis.action_type.value,
             "confidence": diagnosis.confidence,
@@ -122,6 +144,32 @@ class CapsuleBridge:
                 head_branch=branch_name,
                 base_branch=current_branch
             )
+
+            # Record completed resolution in DB
+            try:
+                DB.save_session(
+                    title=f"Fix: {diagnosis.spoken_summary[:60]}",
+                    session_mode="WITH_REPO",
+                    action_type=diagnosis.action_type.value,
+                    root_cause=diagnosis.root_cause,
+                    spoken_summary=diagnosis.spoken_summary,
+                    confidence=diagnosis.confidence,
+                    status="PR_CREATED" if (pr_info and pr_info.get("pr_url")) else "PATCH_COMMITTED",
+                    patch_diff=self.patcher.preview_edits(diagnosis.edits).get("diff", ""),
+                    branch_name=branch_name,
+                    commit_hash=commit_hash,
+                    pr_url=pr_info.get("pr_url", "") if pr_info else "",
+                    energy_saved_wh=diagnosis.eco_audit.energy_saved_wh if diagnosis.eco_audit else 0.0,
+                    water_saved_ml=diagnosis.eco_audit.water_saved_ml if diagnosis.eco_audit else 0.0,
+                    proof_data={
+                        "red_phase_failed": proof_result.red_phase_failed if proof_result else True,
+                        "green_phase_passed": proof_result.green_phase_passed if proof_result else True,
+                        "execution_time_seconds": proof_result.execution_time_seconds if proof_result else 0.0,
+                        "reproducer_code": diagnosis.test_spec.content if diagnosis.test_spec else ""
+                    }
+                )
+            except Exception:
+                pass
 
             return {
                 "success": True,

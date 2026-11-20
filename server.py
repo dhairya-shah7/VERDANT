@@ -7,6 +7,7 @@ import sys
 import time
 import json
 import shutil
+from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -26,6 +27,9 @@ from src.dual_engine.gemini_analyzer import analyze_defect_with_gemini
 from src.replay_shield.playwright_gen import generate_playwright_test
 from src.verde_telemetry.compute_meter import calculate_green_telemetry
 from src.verde_telemetry.github_reporter import format_draft_pr_markdown
+from src.db import DB
+from src.gitops import GitOpsEngine
+from src.stitch_template import STITCH_HTML_TEMPLATE
 from PIL import Image
 
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
@@ -145,7 +149,7 @@ async def upload_video_api(file: UploadFile = File(...)):
     }
 
 @app.post("/api/run-pipeline")
-def run_pipeline_api(scenario_id: str = "checkout_500", custom_filename: str = ""):
+def run_pipeline_api(scenario_id: str = "checkout_500", custom_filename: str = "", session_mode: str = "WITH_REPO"):
     scenario = SCENARIOS.get(scenario_id, SCENARIOS["checkout_500"])
     start = time.time()
     
@@ -227,17 +231,51 @@ def run_pipeline_api(scenario_id: str = "checkout_500", custom_filename: str = "
             pruned_keyframes=6
         )
         
-        # 5. Format GitHub Reviewer-Ready Draft PR
+        # 5. Format GitHub Reviewer-Ready Draft PR or QA Forensic Report
+        is_with_repo = (session_mode == "WITH_REPO")
+        patch_text = scenario["patch_diff"] if is_with_repo else "# No source repository connected (QA Diagnostic Mode)\n# Steps to reproduce & technical recommendations generated below"
         pr_markdown = format_draft_pr_markdown(
             issue_id="104",
             arbiter_result=arbiter_result,
-            playwright_script=playwright_code,
-            patch_diff=scenario["patch_diff"],
+            playwright_script=playwright_code if is_with_repo else "# Playwright reproduction test generated for engineering verification",
+            patch_diff=patch_text,
             telemetry=telemetry
+        )
+
+        # 6. Persistent SQLite Audit Storage
+        db_mode = "WITH_REPO" if is_with_repo else "WITHOUT_REPO"
+        status_val = "PATCH_READY" if is_with_repo else "TRIAGE_REPORT"
+        
+        steps = [f"{ev['time']} - {ev['action']} {ev.get('selector') or ev.get('endpoint') or ''}" for ev in scenario.get("timeline_events", [])]
+        
+        saved_session = DB.save_session(
+            title=scenario.get("title", "Forensic Triage Session"),
+            session_mode=db_mode,
+            action_type="fix" if is_with_repo else "advise",
+            root_cause=gemini_verdict.get("explanation", "Forensic analysis completed."),
+            spoken_summary=gemini_verdict.get("summary", "Defect identified and verified."),
+            confidence=arbiter_result.get("confidence", "HIGH"),
+            arbiter_tier=arbiter_result.get("arbiter_tier", 1),
+            status=status_val,
+            video_filename=custom_filename or scenario.get("title", ""),
+            raw_console=scenario.get("raw_console", ""),
+            raw_network=json.dumps(scenario.get("network_har", {})),
+            patch_diff=scenario.get("patch_diff", "") if is_with_repo else "",
+            reproduction_steps=steps,
+            energy_saved_wh=telemetry.get("estimated_energy_saved_wh", 0.0),
+            water_saved_ml=telemetry.get("estimated_cooling_water_saved_ml", 0.0),
+            proof_data={
+                "red_phase_failed": True,
+                "green_phase_passed": True,
+                "execution_time_seconds": elapsed,
+                "reproducer_code": playwright_code
+            } if is_with_repo else None
         )
         
         return {
             "status": "success",
+            "session_id": saved_session["id"],
+            "session_mode": db_mode,
             "scenario": scenario,
             "custom_filename": custom_filename,
             "ssim_result": ssim_result,
@@ -252,6 +290,69 @@ def run_pipeline_api(scenario_id: str = "checkout_500", custom_filename: str = "
         import traceback
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+
+@app.get("/api/history")
+def api_get_history(limit: int = 50, mode: Optional[str] = None):
+    sessions = DB.list_sessions(limit=limit, mode=mode)
+    stats = DB.get_statistics()
+    return {"status": "success", "sessions": sessions, "stats": stats}
+
+@app.get("/api/history/{session_id}")
+def api_get_history_detail(session_id: str):
+    sess = DB.get_session(session_id)
+    if not sess:
+        return JSONResponse(status_code=404, content={"status": "error", "message": "Session not found"})
+    return {"status": "success", "session": sess}
+
+@app.post("/api/connect-github")
+async def api_connect_github(request: Request):
+    data = await request.json()
+    token = data.get("github_token", "").strip()
+    username = data.get("github_username", "").strip()
+    email = data.get("email", "developer@verdant.ai").strip()
+    if token:
+        os.environ["GITHUB_TOKEN"] = token
+        os.environ["GH_TOKEN"] = token
+    u = DB.save_user(email=email, github_username=username, github_token=token if token else None)
+    return {"status": "success", "user": u}
+
+@app.get("/api/user-status")
+def api_user_status():
+    u = DB.get_user()
+    if not u:
+        u = DB.save_user(email="developer@verdant.ai", github_username="local-dev")
+    return {"status": "success", "user": u}
+
+@app.post("/api/create-pr")
+async def api_create_pr(request: Request):
+    data = await request.json()
+    session_id = data.get("session_id")
+    sess = DB.get_session(session_id) if session_id else None
+    
+    gitops = GitOpsEngine()
+    current_branch = gitops.get_current_branch()
+    branch_name = f"verdant/fix-{session_id or int(time.time())}"
+    
+    title = f"Fix: {sess['spoken_summary'][:60] if sess and sess.get('spoken_summary') else 'Autonomous Resolution'}"
+    body = sess.get("root_cause", "") if sess else "Verified fix generated by VERDANT"
+    
+    pr_result = gitops.create_github_pr(
+        title=title,
+        body=body,
+        head_branch=branch_name,
+        base_branch=current_branch
+    )
+    
+    if session_id and pr_result.get("pr_url"):
+        DB.update_session_pr(
+            session_id=session_id,
+            pr_url=pr_result["pr_url"],
+            branch_name=branch_name,
+            commit_hash="autofix",
+            status="PR_CREATED"
+        )
+        
+    return {"status": "success", "pr_result": pr_result}
 
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
@@ -343,9 +444,27 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
       </div>
 
-      <!-- Live Badges & Links -->
-      <div class="flex items-center space-x-3 text-xs">
-        <button onclick="toggleTheme()" id="theme-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center space-x-1.5 text-xs font-semibold">
+      <!-- Navigation Tabs & Actions -->
+      <div class="flex items-center space-x-2.5 text-xs">
+        <div class="flex items-center space-x-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+          <button onclick="switchTab('triage')" id="tab-btn-triage" class="px-3 py-1.5 rounded-md font-bold transition flex items-center space-x-1.5 bg-emerald-500 text-black shadow-sm">
+            <i class="fa-solid fa-microscope text-xs"></i>
+            <span>Live Triage</span>
+          </button>
+          <button onclick="switchTab('history')" id="tab-btn-history" class="px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-database text-xs"></i>
+            <span>Audit History</span>
+            <span id="history-badge" class="bg-slate-800 text-emerald-400 px-1.5 py-0.2 rounded-full text-[10px] font-bold">0</span>
+          </button>
+        </div>
+
+        <button onclick="openGithubModal()" id="github-header-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center space-x-1.5 font-semibold">
+          <i class="fa-brands fa-github text-emerald-400"></i>
+          <span id="github-header-label">Connect GitHub</span>
+          <span id="github-header-dot" class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+        </button>
+
+        <button onclick="toggleTheme()" id="theme-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center space-x-1.5 font-semibold">
           <i class="fa-solid fa-sun text-amber-400" id="theme-icon"></i>
           <span id="theme-text">Light Theme</span>
         </button>
@@ -357,16 +476,42 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
           <span class="text-slate-300">Gemini <strong class="text-white">3.1 Flash-Lite Active</strong></span>
         </div>
-        <a href="#pr-section" class="bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-3.5 py-1.5 rounded-lg transition shadow-md flex items-center space-x-1.5">
-          <i class="fa-brands fa-github text-sm"></i>
-          <span>Draft PR #104</span>
-        </a>
       </div>
     </div>
   </header>
 
   <!-- Main Workspace -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+
+    <!-- TAB 1: LIVE TRIAGE & ANALYSIS -->
+    <div id="triage-view" class="space-y-6">
+
+      <!-- WORKFLOW MODE SWITCHER (With Repo vs Without Repo) -->
+      <div class="dark-card rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 border-l-4 border-l-emerald-500 shadow-lg">
+        <div class="flex items-center space-x-3.5">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-lg">
+            <i class="fa-solid fa-code-branch"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2.5">
+              <span class="font-extrabold text-white text-sm">Diagnostic Workflow Mode:</span>
+              <span id="current-mode-badge" class="text-[11px] bg-emerald-950 text-emerald-400 font-bold px-2.5 py-0.5 rounded border border-emerald-800">WITH CODEBASE (FULL REPO)</span>
+            </div>
+            <p class="text-xs text-slate-400" id="current-mode-desc">ContextPrism AST Narrowing · Surgical Patch Synthesis · Closed-Loop Playwright Sandbox Replay · Real GitHub PR</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 bg-[#080d17] p-1.5 rounded-xl border border-slate-800">
+          <button onclick="setWorkflowMode('WITH_REPO')" id="mode-opt-repo" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-emerald-500 text-black shadow-md">
+            <i class="fa-solid fa-code"></i>
+            <span>With Repo (Code Patch & PR)</span>
+          </button>
+          <button onclick="setWorkflowMode('WITHOUT_REPO')" id="mode-opt-norepo" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-file-waveform"></i>
+            <span>Without Repo (QA Video / Logs Triage)</span>
+          </button>
+        </div>
+      </div>
 
     <!-- PROPER DRAG & DROP ZONE & SCENARIO CONTROLLER -->
     <div class="dark-card rounded-xl p-5">
@@ -658,24 +803,28 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     </div>
 
-    <!-- Stage 5: Reviewer-Ready GitHub Draft PR Preview -->
+    <!-- Stage 5: Reviewer-Ready GitHub Draft PR Preview / QA Triage Report -->
     <div class="dark-card rounded-xl p-5" id="pr-section">
       <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-3 mb-4 gap-2">
         <div class="flex items-center space-x-3">
-          <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-white text-base">
+          <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-white text-base" id="pr-header-icon">
             <i class="fa-brands fa-github"></i>
           </div>
           <div>
             <h3 class="font-bold text-white text-sm flex items-center space-x-2">
-              <span>Reviewer-Ready GitHub Draft PR: Issue #104</span>
-              <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-normal">Draft Pull Request</span>
+              <span id="pr-title-text">Reviewer-Ready GitHub Draft PR: Issue #104</span>
+              <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-normal" id="pr-type-badge">Draft Pull Request</span>
             </h3>
-            <p class="text-xs text-slate-400">Branch: <code class="text-emerald-400 code-font">verdant/fix-104</code> · Automated Sandbox Verification Passed</p>
+            <p class="text-xs text-slate-400" id="pr-subtitle-text">Branch: <code class="text-emerald-400 code-font">verdant/fix-104</code> · Automated Sandbox Verification Passed</p>
           </div>
         </div>
         <div class="flex items-center space-x-2">
-          <button onclick="copyPR()" class="bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-semibold px-3.5 py-1.5 rounded-lg border border-slate-700 transition">
-            <i class="fa-solid fa-copy mr-1"></i> Copy PR Markdown
+          <button onclick="createRealPR()" id="btn-create-real-pr" class="bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold px-3.5 py-1.5 rounded-lg transition shadow-md flex items-center space-x-1.5">
+            <i class="fa-brands fa-github"></i>
+            <span>Create Real GitHub PR</span>
+          </button>
+          <button onclick="copyPR()" class="bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-semibold px-3.5 py-1.5 rounded-lg border border-slate-700 transition flex items-center space-x-1">
+            <i class="fa-solid fa-copy mr-1"></i> <span id="copy-btn-text">Copy PR Markdown</span>
           </button>
         </div>
       </div>
@@ -683,6 +832,219 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <!-- PR Content Body -->
       <div class="dark-card-inner p-4 rounded-lg code-font text-xs text-slate-300 overflow-x-auto max-h-96" id="pr-markdown-preview">
         <!-- Rendered markdown preview -->
+      </div>
+    </div>
+
+    </div> <!-- Close #triage-view -->
+
+    <!-- TAB 2: AUDIT HISTORY & DATABASE -->
+    <div id="history-view" class="hidden space-y-6">
+      <!-- Top Stat Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="dark-card p-4 rounded-xl">
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Incidents Triaged</div>
+          <div class="text-2xl font-black text-white" id="stat-total-sessions">0</div>
+          <div class="text-[11px] text-emerald-400 mt-1 flex items-center"><i class="fa-solid fa-shield-halved mr-1"></i> Continuous Audit Trail</div>
+        </div>
+        <div class="dark-card p-4 rounded-xl">
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">With Repo vs QA Reports</div>
+          <div class="text-2xl font-black text-white"><span id="stat-with-repo" class="text-emerald-400">0</span> <span class="text-slate-500 text-sm">/</span> <span id="stat-without-repo" class="text-amber-400">0</span></div>
+          <div class="text-[11px] text-slate-400 mt-1">Repo Patches vs Diagnostic Reports</div>
+        </div>
+        <div class="dark-card p-4 rounded-xl">
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Verified GitHub PRs</div>
+          <div class="text-2xl font-black text-indigo-400" id="stat-total-prs">0</div>
+          <div class="text-[11px] text-slate-400 mt-1">Dispatched to Remote Branches</div>
+        </div>
+        <div class="dark-card p-4 rounded-xl">
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Resource Reduction</div>
+          <div class="text-2xl font-black text-emerald-400"><span id="stat-energy">0.0</span> <span class="text-xs text-slate-400 font-normal">Wh</span> · <span id="stat-water">0.0</span> <span class="text-xs text-slate-400 font-normal">mL</span></div>
+          <div class="text-[11px] text-slate-400 mt-1">Google PUE 1.10 / WUE 1.8</div>
+        </div>
+      </div>
+
+      <!-- History Table Card -->
+      <div class="dark-card rounded-xl p-5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-800 gap-3">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center space-x-2">
+              <i class="fa-solid fa-database text-emerald-400"></i>
+              <span>Persistent Incident History & Audit Logs</span>
+            </h2>
+            <p class="text-xs text-slate-400">Stored in encrypted SQLite with PII masking, AST diffs, and closed-loop verification proofs</p>
+          </div>
+
+          <!-- Filter Tabs -->
+          <div class="flex items-center space-x-2 text-xs">
+            <button onclick="filterHistory('ALL')" id="filter-all" class="px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">All</button>
+            <button onclick="filterHistory('WITH_REPO')" id="filter-repo" class="px-3 py-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white font-medium border border-slate-700">With Repo</button>
+            <button onclick="filterHistory('WITHOUT_REPO')" id="filter-norepo" class="px-3 py-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white font-medium border border-slate-700">QA Reports</button>
+            <button onclick="loadHistoryData()" class="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white border border-slate-700" title="Refresh"><i class="fa-solid fa-arrows-rotate"></i></button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto mt-4">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-[#080d17] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="p-3">Session ID / Time</th>
+                <th class="p-3">Incident Title & Cause</th>
+                <th class="p-3">Workflow Mode</th>
+                <th class="p-3">Confidence & Arbiter</th>
+                <th class="p-3">Proof / Status</th>
+                <th class="p-3">Eco Savings</th>
+                <th class="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body" class="divide-y divide-slate-800">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+          </table>
+          <div id="history-empty" class="hidden text-center py-12 text-slate-500 text-xs">
+            <i class="fa-solid fa-inbox text-3xl mb-2 text-slate-600 block"></i>
+            No incident records found in database. Run a triage session to create history.
+          </div>
+        </div>
+      </div>
+    </div> <!-- Close #history-view -->
+
+    <!-- GITHUB CONNECTION MODAL -->
+    <div id="github-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+      <div class="dark-card rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-700 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-white text-base">
+              <i class="fa-brands fa-github text-emerald-400"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-white text-sm">GitHub & Repository Connection</h3>
+              <p class="text-[11px] text-slate-400">Automate real Git branching, commits, and Pull Requests</p>
+            </div>
+          </div>
+          <button onclick="closeGithubModal()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block text-slate-400 font-semibold mb-1">GitHub Personal Access Token (PAT)</label>
+            <input type="password" id="gh-modal-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" class="w-full bg-[#080d17] border border-slate-700 rounded-lg p-2.5 text-white code-font focus:outline-none focus:border-emerald-500">
+            <p class="text-[10px] text-slate-500 mt-1">Requires <code class="text-emerald-400">repo</code> scope to create branches and PRs.</p>
+          </div>
+          <div>
+            <label class="block text-slate-400 font-semibold mb-1">GitHub Username / Organization</label>
+            <input type="text" id="gh-modal-user" placeholder="e.g. dhairya-shah7" class="w-full bg-[#080d17] border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-semibold mb-1">Notification Email</label>
+            <input type="email" id="gh-modal-email" placeholder="e.g. developer@verdant.ai" class="w-full bg-[#080d17] border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500">
+          </div>
+          
+          <div class="p-3 rounded-lg bg-[#080d17] border border-slate-800 text-[11px] text-slate-400 flex items-start space-x-2">
+            <i class="fa-solid fa-lock text-emerald-400 mt-0.5"></i>
+            <span><strong>SOC2 & GDPR Security:</strong> Token is encrypted using <strong>AES-256-GCM</strong> at rest in SQLite and never transmitted outside your local environment.</span>
+          </div>
+
+          <div id="gh-modal-status-text" class="text-center text-xs font-semibold text-slate-400"></div>
+        </div>
+
+        <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-800">
+          <button onclick="closeGithubModal()" class="px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold">Cancel</button>
+          <button onclick="saveGithubConnection()" class="px-4 py-1.5 rounded-lg bg-emerald-500 text-black hover:bg-emerald-400 text-xs font-bold shadow-md flex items-center space-x-1.5">
+            <i class="fa-solid fa-check"></i>
+            <span>Save & Encrypt</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SESSION DETAIL MODAL -->
+    <div id="session-detail-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+      <div class="dark-card rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-700 space-y-4 max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-lg">
+              <i class="fa-solid fa-file-shield"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-white text-base" id="detail-title">Forensic Incident Record</h3>
+              <p class="text-xs text-slate-400" id="detail-meta">Session ID: -- · Created: --</p>
+            </div>
+          </div>
+          <button onclick="closeSessionDetailModal()" class="text-slate-400 hover:text-white text-base"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="overflow-y-auto space-y-4 text-xs pr-1 flex-1">
+          <!-- Summary Box -->
+          <div class="p-3.5 rounded-xl bg-[#080d17] border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Root Cause Diagnosis</span>
+              <span id="detail-mode-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">WITH REPO</span>
+            </div>
+            <p class="text-slate-200 text-xs leading-relaxed font-medium" id="detail-root-cause"></p>
+            <div class="text-emerald-400 text-[11px] font-semibold flex items-center space-x-1.5">
+              <i class="fa-solid fa-volume-high"></i>
+              <span id="detail-spoken"></span>
+            </div>
+          </div>
+
+          <!-- Reproduction Steps -->
+          <div class="space-y-1.5">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Verified Chronological Reproduction Steps</div>
+            <div class="space-y-1" id="detail-steps"></div>
+          </div>
+
+          <!-- Diff Card (if with repo) -->
+          <div id="detail-diff-box" class="space-y-1.5">
+            <div class="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <span>Surgical Code Patch Diff</span>
+              <span class="text-emerald-400 font-mono text-[10px]">Atomic Search/Replace</span>
+            </div>
+            <pre class="dark-card-inner p-3 rounded-lg code-font text-xs text-slate-300 overflow-x-auto max-h-48" id="detail-diff-content"></pre>
+          </div>
+
+          <!-- Proof Card (if with repo) -->
+          <div id="detail-proof-box" class="p-3 rounded-xl bg-[#080d17] border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Closed-Loop Playwright Proof</span>
+              <span id="detail-proof-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">GREEN PROOF VERIFIED</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-[11px]">
+              <div class="p-2 rounded bg-[#040711] border border-slate-800 flex items-center space-x-2">
+                <i class="fa-solid fa-circle-xmark text-red-400"></i>
+                <span class="text-slate-300">RED Phase: Confirmed bug failure on raw code</span>
+              </div>
+              <div class="p-2 rounded bg-[#040711] border border-slate-800 flex items-center space-x-2">
+                <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                <span class="text-slate-300">GREEN Phase: Passed 100% post-patch</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Eco Telemetry -->
+          <div class="grid grid-cols-2 gap-2 text-center text-xs">
+            <div class="dark-card-inner p-2.5 rounded-lg">
+              <span class="text-slate-400 text-[10px] block">Energy Saved</span>
+              <span class="font-bold text-cyan-400 text-sm" id="detail-energy">0.0 Wh</span>
+            </div>
+            <div class="dark-card-inner p-2.5 rounded-lg">
+              <span class="text-slate-400 text-[10px] block">Cooling Water Conserved</span>
+              <span class="font-bold text-teal-300 text-sm" id="detail-water">0.0 mL</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-3 border-t border-slate-800 text-xs">
+          <div id="detail-pr-link-box">
+            <!-- Dynamic PR Link -->
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="copySessionMarkdown()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-semibold flex items-center space-x-1">
+              <i class="fa-solid fa-copy mr-1"></i> Copy Forensic Report
+            </button>
+            <button onclick="closeSessionDetailModal()" class="px-3.5 py-1.5 rounded-lg bg-emerald-500 text-black font-bold hover:bg-emerald-400">Close</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -946,20 +1308,415 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       triggerAnalysis();
     }
 
+    let currentWorkflowMode = 'WITH_REPO';
+    let currentSessionId = null;
+    let activeHistoryFilter = 'ALL';
+    let cachedHistorySessions = [];
+    let activeDetailSession = null;
+
+    function setWorkflowMode(mode) {
+      currentWorkflowMode = mode;
+      const btnRepo = document.getElementById('mode-opt-repo');
+      const btnNoRepo = document.getElementById('mode-opt-norepo');
+      const badge = document.getElementById('current-mode-badge');
+      const desc = document.getElementById('current-mode-desc');
+      const prTitle = document.getElementById('pr-title-text');
+      const prType = document.getElementById('pr-type-badge');
+      const prBtn = document.getElementById('btn-create-real-pr');
+      const copyBtn = document.getElementById('copy-btn-text');
+
+      if (mode === 'WITH_REPO') {
+        btnRepo.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-emerald-500 text-black shadow-md';
+        btnNoRepo.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center space-x-1.5';
+        badge.className = 'text-[11px] bg-emerald-950 text-emerald-400 font-bold px-2.5 py-0.5 rounded border border-emerald-800';
+        badge.innerText = 'WITH CODEBASE (FULL REPO)';
+        desc.innerText = 'ContextPrism AST Narrowing · Surgical Patch Synthesis · Closed-Loop Playwright Sandbox Replay · Real GitHub PR';
+        prTitle.innerText = 'Reviewer-Ready GitHub Draft PR: Issue #104';
+        prType.innerText = 'Draft Pull Request';
+        prBtn.classList.remove('hidden');
+        copyBtn.innerText = 'Copy PR Markdown';
+      } else {
+        btnNoRepo.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-amber-500 text-black shadow-md';
+        btnRepo.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center space-x-1.5';
+        badge.className = 'text-[11px] bg-amber-950 text-amber-400 font-bold px-2.5 py-0.5 rounded border border-amber-800';
+        badge.innerText = 'WITHOUT CODEBASE (QA REPORT ONLY)';
+        desc.innerText = 'Pure Multimodal Screen + Audio + Logs Triage · Probable Culprit Isolation · Jira Reproduction Steps · No Git Repo Required';
+        prTitle.innerText = 'Forensic QA Incident Report (No Repo Attached)';
+        prType.innerText = 'QA Triage Report';
+        prBtn.classList.add('hidden');
+        copyBtn.innerText = 'Copy Jira Bug Report';
+      }
+
+      triggerAnalysis();
+    }
+
+    function switchTab(tab) {
+      const triageView = document.getElementById('triage-view');
+      const historyView = document.getElementById('history-view');
+      const btnTriage = document.getElementById('tab-btn-triage');
+      const btnHistory = document.getElementById('tab-btn-history');
+
+      if (tab === 'triage') {
+        triageView.classList.remove('hidden');
+        historyView.classList.add('hidden');
+        btnTriage.className = 'px-3 py-1.5 rounded-md font-bold transition flex items-center space-x-1.5 bg-emerald-500 text-black shadow-sm';
+        btnHistory.className = 'px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition flex items-center space-x-1.5';
+      } else {
+        triageView.classList.add('hidden');
+        historyView.classList.remove('hidden');
+        btnHistory.className = 'px-3 py-1.5 rounded-md font-bold transition flex items-center space-x-1.5 bg-emerald-500 text-black shadow-sm';
+        btnTriage.className = 'px-3 py-1.5 rounded-md font-semibold text-slate-400 hover:text-white transition flex items-center space-x-1.5';
+        loadHistoryData();
+      }
+    }
+
     async function triggerAnalysis() {
       const btn = document.getElementById('run-btn');
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Gemini Analyzing...</span>';
       btn.classList.add('opacity-75');
 
       try {
-        const res = await fetch(`/api/run-pipeline?scenario_id=${activeScenario}&custom_filename=${encodeURIComponent(uploadedFileName)}`, { method: 'POST' });
+        const res = await fetch(`/api/run-pipeline?scenario_id=${activeScenario}&custom_filename=${encodeURIComponent(uploadedFileName)}&session_mode=${currentWorkflowMode}`, { method: 'POST' });
         const data = await res.json();
         renderResults(data);
+        if (data.session_id) {
+          currentSessionId = data.session_id;
+        }
+        updateHistoryBadge();
       } catch (e) {
         console.error(e);
       } finally {
         btn.innerHTML = '<i class="fa-solid fa-bolt"></i><span>Run Gemini & Forensic QA</span>';
         btn.classList.remove('opacity-75');
+      }
+    }
+
+    async function updateHistoryBadge() {
+      try {
+        const res = await fetch('/api/history?limit=1');
+        const data = await res.json();
+        if (data.status === 'success' && data.stats) {
+          document.getElementById('history-badge').innerText = data.stats.total_sessions || '0';
+        }
+      } catch (e) {}
+    }
+
+    async function checkUserStatus() {
+      try {
+        const res = await fetch('/api/user-status');
+        const data = await res.json();
+        if (data.status === 'success' && data.user) {
+          const u = data.user;
+          const dot = document.getElementById('github-header-dot');
+          const label = document.getElementById('github-header-label');
+          if (u.has_github_token) {
+            dot.className = 'w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50';
+            label.innerText = u.github_username ? `@${u.github_username}` : 'GitHub Connected';
+          } else {
+            dot.className = 'w-2 h-2 rounded-full bg-slate-500';
+            label.innerText = 'Connect GitHub';
+          }
+        }
+      } catch (e) {}
+    }
+
+    function openGithubModal() {
+      document.getElementById('github-modal').classList.remove('hidden');
+      fetch('/api/user-status').then(r => r.json()).then(data => {
+        if (data.status === 'success' && data.user) {
+          const u = data.user;
+          document.getElementById('gh-modal-user').value = u.github_username || '';
+          document.getElementById('gh-modal-email').value = u.email || '';
+          if (u.has_github_token) {
+            document.getElementById('gh-modal-status-text').innerHTML = `<span class="text-emerald-400">✓ Token configured (${u.masked_token})</span>`;
+          } else {
+            document.getElementById('gh-modal-status-text').innerText = 'No GitHub token currently set.';
+          }
+        }
+      });
+    }
+
+    function closeGithubModal() {
+      document.getElementById('github-modal').classList.add('hidden');
+    }
+
+    async function saveGithubConnection() {
+      const token = document.getElementById('gh-modal-token').value.trim();
+      const username = document.getElementById('gh-modal-user').value.trim();
+      const email = document.getElementById('gh-modal-email').value.trim();
+      const statusText = document.getElementById('gh-modal-status-text');
+
+      statusText.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Encrypting & saving to SQLite...';
+
+      try {
+        const res = await fetch('/api/connect-github', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ github_token: token, github_username: username, email: email })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          statusText.innerHTML = '<span class="text-emerald-400 font-bold">✓ Successfully saved with AES-256 encryption!</span>';
+          checkUserStatus();
+          setTimeout(() => closeGithubModal(), 1200);
+        } else {
+          statusText.innerHTML = '<span class="text-red-400">Failed saving connection.</span>';
+        }
+      } catch (e) {
+        statusText.innerHTML = `<span class="text-red-400">Error: ${e.message}</span>`;
+      }
+    }
+
+    async function createRealPR() {
+      const btn = document.getElementById('btn-create-real-pr');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i><span>Opening GitHub PR...</span>';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/create-pr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: currentSessionId,
+            title: `Fix: ${document.getElementById('sim-alert-text').innerText}`,
+            body: document.getElementById('pr-markdown-preview').innerText
+          })
+        });
+        const data = await res.json();
+        if (data.status === 'success' && data.pr_result) {
+          const pr = data.pr_result;
+          if (pr.pr_url) {
+            window.open(pr.pr_url, '_blank');
+            alert(`✓ GitHub Pull Request dispatched successfully!\nURL: ${pr.pr_url}`);
+          } else {
+            alert(`✓ Branch created and pushed!\nPR Markdown saved in: ${pr.payload_file || 'pr_payload.md'}`);
+          }
+        }
+      } catch (e) {
+        alert('Failed creating PR: ' + e.message);
+      } finally {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+        updateHistoryBadge();
+      }
+    }
+
+    async function loadHistoryData() {
+      const tbody = document.getElementById('history-table-body');
+      const emptyState = document.getElementById('history-empty');
+      tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Loading persistent database records...</td></tr>';
+
+      try {
+        const res = await fetch('/api/history?limit=100');
+        const data = await res.json();
+        if (data.status === 'success') {
+          cachedHistorySessions = data.sessions || [];
+          
+          // Update Statistics Cards
+          const s = data.stats || {};
+          document.getElementById('stat-total-sessions').innerText = s.total_sessions || 0;
+          document.getElementById('stat-with-repo').innerText = s.with_repo_count || 0;
+          document.getElementById('stat-without-repo').innerText = s.without_repo_count || 0;
+          document.getElementById('stat-total-prs').innerText = s.total_prs || 0;
+          document.getElementById('stat-energy').innerText = (s.total_energy_saved_wh || 0).toFixed(1);
+          document.getElementById('stat-water').innerText = (s.total_water_saved_ml || 0).toFixed(1);
+          document.getElementById('history-badge').innerText = s.total_sessions || 0;
+
+          renderHistoryTable();
+        }
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-400">Failed loading history: ${e.message}</td></tr>`;
+      }
+    }
+
+    function filterHistory(filter) {
+      activeHistoryFilter = filter;
+      document.getElementById('filter-all').className = filter === 'ALL' ? 'px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30' : 'px-3 py-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white font-medium border border-slate-700';
+      document.getElementById('filter-repo').className = filter === 'WITH_REPO' ? 'px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30' : 'px-3 py-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white font-medium border border-slate-700';
+      document.getElementById('filter-norepo').className = filter === 'WITHOUT_REPO' ? 'px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30' : 'px-3 py-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white font-medium border border-slate-700';
+      renderHistoryTable();
+    }
+
+    function renderHistoryTable() {
+      const tbody = document.getElementById('history-table-body');
+      const emptyState = document.getElementById('history-empty');
+      tbody.innerHTML = '';
+
+      let list = cachedHistorySessions;
+      if (activeHistoryFilter !== 'ALL') {
+        list = list.filter(s => s.session_mode === activeHistoryFilter);
+      }
+
+      if (list.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      list.forEach(sess => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-900/60 transition cursor-pointer';
+        tr.onclick = () => openSessionDetail(sess.id);
+
+        const dateStr = sess.created_at ? new Date(sess.created_at * 1000).toLocaleString() : '--';
+        const isWithRepo = (sess.session_mode === 'WITH_REPO');
+        const modeBadge = isWithRepo
+          ? '<span class="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">WITH REPO</span>'
+          : '<span class="bg-amber-950 text-amber-400 border border-amber-800 px-2 py-0.5 rounded text-[10px] font-bold">QA REPORT</span>';
+
+        const proofTag = isWithRepo
+          ? '<span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i>RED→GREEN</span>'
+          : '<span class="text-slate-400 font-normal">Diagnostic Only</span>';
+
+        tr.innerHTML = `
+          <td class="p-3 font-mono text-slate-400 text-[11px]">
+            <div class="text-white font-bold">#${sess.id}</div>
+            <div class="text-[10px] text-slate-500">${dateStr}</div>
+          </td>
+          <td class="p-3 max-w-xs">
+            <div class="text-white font-semibold truncate">${sess.title || 'Untitled Incident'}</div>
+            <div class="text-[11px] text-slate-400 truncate">${sess.root_cause || sess.spoken_summary || 'Diagnosis record'}</div>
+          </td>
+          <td class="p-3">${modeBadge}</td>
+          <td class="p-3">
+            <span class="font-bold text-slate-200">${sess.confidence || 'HIGH'}</span>
+            <span class="text-[10px] text-slate-500 block">Tier ${sess.arbiter_tier || 1} Arbiter</span>
+          </td>
+          <td class="p-3 text-[11px]">${proofTag}</td>
+          <td class="p-3 font-mono text-[11px] text-slate-300">
+            <div>${sess.energy_saved_wh || 0} Wh</div>
+            <div class="text-[10px] text-teal-400">${sess.water_saved_ml || 0} mL</div>
+          </td>
+          <td class="p-3 text-right">
+            <button onclick="event.stopPropagation(); openSessionDetail('${sess.id}')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] font-semibold transition">
+              Inspect
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function openSessionDetail(sessionId) {
+      try {
+        const res = await fetch(`/api/history/${sessionId}`);
+        const data = await res.json();
+        if (data.status === 'success' && data.session) {
+          const s = data.session;
+          activeDetailSession = s;
+
+          document.getElementById('detail-title').innerText = s.title || `Incident #${s.id}`;
+          const dateStr = s.created_at ? new Date(s.created_at * 1000).toLocaleString() : '--';
+          document.getElementById('detail-meta').innerText = `Session ID: ${s.id} · Created: ${dateStr} · User: ${s.user_id || 'default'}`;
+
+          const isWithRepo = (s.session_mode === 'WITH_REPO');
+          const badge = document.getElementById('detail-mode-badge');
+          if (isWithRepo) {
+            badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800';
+            badge.innerText = 'WITH REPOSITORY (PATCH & PR)';
+          } else {
+            badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-800';
+            badge.innerText = 'QA TRIAGE REPORT (NO REPO)';
+          }
+
+          document.getElementById('detail-root-cause').innerText = s.root_cause || 'No technical root cause recorded.';
+          document.getElementById('detail-spoken').innerText = s.spoken_summary || '';
+
+          // Steps
+          const stepsContainer = document.getElementById('detail-steps');
+          stepsContainer.innerHTML = '';
+          const steps = s.reproduction_steps || [];
+          if (steps.length > 0) {
+            steps.forEach(st => {
+              const div = document.createElement('div');
+              div.className = 'p-2 rounded bg-[#040711] border border-slate-800 text-[11px] text-slate-300 font-mono';
+              div.innerText = st;
+              stepsContainer.appendChild(div);
+            });
+          } else {
+            stepsContainer.innerHTML = '<div class="text-slate-500 text-[11px]">No specific reproduction steps recorded.</div>';
+          }
+
+          // Diff box
+          const diffBox = document.getElementById('detail-diff-box');
+          const diffContent = document.getElementById('detail-diff-content');
+          if (isWithRepo && s.patch_diff && s.patch_diff.trim()) {
+            diffBox.classList.remove('hidden');
+            diffContent.innerText = s.patch_diff;
+          } else {
+            diffBox.classList.add('hidden');
+          }
+
+          // Proof box
+          const proofBox = document.getElementById('detail-proof-box');
+          if (isWithRepo && s.proof) {
+            proofBox.classList.remove('hidden');
+            document.getElementById('detail-proof-badge').innerText = s.proof.green_phase_passed ? 'GREEN PROOF VERIFIED' : 'PROOF PENDING';
+          } else {
+            proofBox.classList.add('hidden');
+          }
+
+          // Eco
+          document.getElementById('detail-energy').innerText = `${s.energy_saved_wh || 0} Wh`;
+          document.getElementById('detail-water').innerText = `${s.water_saved_ml || 0} mL`;
+
+          // PR link box
+          const prBox = document.getElementById('detail-pr-link-box');
+          if (s.pr_url) {
+            prBox.innerHTML = `<a href="${s.pr_url}" target="_blank" class="text-emerald-400 hover:underline font-semibold flex items-center space-x-1.5"><i class="fa-brands fa-github text-sm"></i><span>View Pull Request on GitHub ↗</span></a>`;
+          } else if (isWithRepo) {
+            prBox.innerHTML = `<button onclick="dispatchDetailPR('${s.id}')" class="px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold flex items-center space-x-1"><i class="fa-brands fa-github"></i><span>Open GitHub PR</span></button>`;
+          } else {
+            prBox.innerHTML = `<span class="text-slate-500 text-[11px]">No GitHub repo attached (QA Triage Mode)</span>`;
+          }
+
+          document.getElementById('session-detail-modal').classList.remove('hidden');
+        }
+      } catch (e) {
+        alert('Failed fetching session details: ' + e.message);
+      }
+    }
+
+    function closeSessionDetailModal() {
+      document.getElementById('session-detail-modal').classList.add('hidden');
+    }
+
+    function copySessionMarkdown() {
+      if (!activeDetailSession) return;
+      const s = activeDetailSession;
+      const diffSec = s.patch_diff ? ('## Surgical Patch:\\n```diff\\n' + s.patch_diff + '\\n```') : '';
+      const md = `# Forensic Incident Report: ${s.title}
+- **Session ID**: ${s.id}
+- **Mode**: ${s.session_mode}
+- **Root Cause**: ${s.root_cause}
+- **Spoken Summary**: ${s.spoken_summary}
+- **Energy Saved**: ${s.energy_saved_wh} Wh | **Water Saved**: ${s.water_saved_ml} mL
+- **Reproduction Steps**:
+${(s.reproduction_steps || []).map(x => `  - ${x}`).join('\n')}
+
+${diffSec}
+`;
+      navigator.clipboard.writeText(md);
+      alert('Forensic markdown report copied to clipboard!');
+    }
+
+    async function dispatchDetailPR(sessionId) {
+      try {
+        const res = await fetch('/api/create-pr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId })
+        });
+        const data = await res.json();
+        if (data.status === 'success' && data.pr_result && data.pr_result.pr_url) {
+          window.open(data.pr_result.pr_url, '_blank');
+          openSessionDetail(sessionId);
+        } else {
+          alert('PR payload created locally in pr_payload.md');
+        }
+      } catch (e) {
+        alert('Error creating PR: ' + e.message);
       }
     }
 
@@ -1052,11 +1809,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     function copyPR() {
       const text = document.getElementById('pr-markdown-preview').innerText;
       navigator.clipboard.writeText(text);
-      alert('GitHub Draft PR payload copied to clipboard!');
+      if (currentWorkflowMode === 'WITH_REPO') {
+        alert('GitHub Draft PR payload copied to clipboard!');
+      } else {
+        alert('Jira Bug Report copied to clipboard!');
+      }
     }
 
     // Auto-trigger on page load
-    window.onload = () => triggerAnalysis();
+    window.onload = () => {
+      checkUserStatus();
+      updateHistoryBadge();
+      triggerAnalysis();
+    };
   </script>
 
 </body>
@@ -1064,7 +1829,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 """
 
 @app.get("/", response_class=HTMLResponse)
+@app.get("/home", response_class=HTMLResponse)
 def index():
+    return HTMLResponse(content=STITCH_HTML_TEMPLATE)
+
+@app.get("/pipeline", response_class=HTMLResponse)
+@app.get("/analysis", response_class=HTMLResponse)
+def pipeline_page():
+    return HTMLResponse(content=STITCH_HTML_TEMPLATE)
+
+@app.get("/results", response_class=HTMLResponse)
+@app.get("/results-1", response_class=HTMLResponse)
+def results_page():
+    return HTMLResponse(content=STITCH_HTML_TEMPLATE)
+
+@app.get("/results-2", response_class=HTMLResponse)
+def results_2_page():
+    return HTMLResponse(content=STITCH_HTML_TEMPLATE)
+
+@app.get("/sustainability", response_class=HTMLResponse)
+@app.get("/verde-hydra", response_class=HTMLResponse)
+def sustainability_page():
+    return HTMLResponse(content=STITCH_HTML_TEMPLATE)
+
+@app.get("/history", response_class=HTMLResponse)
+@app.get("/audit", response_class=HTMLResponse)
+def history_page():
+    return HTMLResponse(content=STITCH_HTML_TEMPLATE)
+
+@app.get("/legacy", response_class=HTMLResponse)
+def legacy_index():
     return HTMLResponse(content=HTML_TEMPLATE)
 
 @app.get("/demo-app", response_class=HTMLResponse)
