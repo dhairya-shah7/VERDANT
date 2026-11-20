@@ -37,6 +37,10 @@ WIN_X = (1280 - WIN_W) // 2  # 320 on 1280x800
 WIN_Y = 20
 
 
+# Global reference to avoid .NET SyncRoot recursion during pywebview introspection
+_window_ref = [None]
+
+
 class CapsuleJSAPI:
     """Methods callable from the floating pill HTML via window.pywebview.api.*"""
 
@@ -44,32 +48,32 @@ class CapsuleJSAPI:
         self.bridge = CapsuleBridge(ROOT)
         self.last_diagnosis = None
         self.snapped_image_path = None
-        self.window = None
-
-    def set_window(self, win):
-        self.window = win
 
     def expand(self, height=EXPANDED_H):
-        if self.window:
-            self.window.resize(WIN_W, int(height))
+        win = _window_ref[0]
+        if win:
+            win.resize(WIN_W, int(height))
         return True
 
     def collapse(self):
-        if self.window:
-            self.window.resize(WIN_W, COLLAPSED_H)
+        win = _window_ref[0]
+        if win:
+            win.resize(WIN_W, COLLAPSED_H)
         return True
 
     def minimize(self):
-        if self.window:
-            self.window.minimize()
+        win = _window_ref[0]
+        if win:
+            win.minimize()
         return True
 
     def close(self):
         def _exit():
             import time
             time.sleep(0.1)
-            if self.window:
-                self.window.destroy()
+            win = _window_ref[0]
+            if win:
+                win.destroy()
             sys.exit(0)
         threading.Thread(target=_exit, daemon=True).start()
         return True
@@ -667,7 +671,7 @@ def main():
         resizable=True,
         min_size=(WIN_W, COLLAPSED_H)
     )
-    api.set_window(window)
+    _window_ref[0] = window
 
     print("=" * 60)
     print("🌿 V.E.R.D.A.N.T. Desktop Floating Capsule")
