@@ -25,14 +25,19 @@ def main():
 
     # Safely schedule UI visibility toggle onto the main Tkinter thread
     def on_hotkey_pressed():
-        app.after(0, app.toggle_visibility)
+        try:
+            app.after(0, app.toggle_visibility)
+        except Exception:
+            pass
 
-    register_global_hotkey("ctrl+shift+space", on_hotkey_pressed)
-    register_global_hotkey("alt+space", on_hotkey_pressed)
+    try:
+        register_global_hotkey("ctrl+shift+space", on_hotkey_pressed)
+        register_global_hotkey("alt+space", on_hotkey_pressed)
+    except Exception as e:
+        print(f"[Capsule] Hotkey listener notice: {e}")
 
-    print("[Capsule] Capsule window is now live and floating at the top of your screen.")
-    print("[Capsule] Check your screen top-center or taskbar icon: '🌿 V.E.R.D.A.N.T. Capsule'")
-    print("[Capsule] Hotkey: [Ctrl+Shift+Space] or [Alt+Space] to toggle.")
+    print("[Capsule] Native floating capsule window is now active.")
+    print("[Capsule] Window Title: '🌿 V.E.R.D.A.N.T. Capsule' (Anchored in Taskbar & Always-on-Top).")
     
     app.mainloop()
 
