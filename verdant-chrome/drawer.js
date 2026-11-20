@@ -12,16 +12,7 @@ window.Verdant = window.Verdant || {};
   function initDrawer() {
     if (document.getElementById('verdant-drawer-container')) return;
 
-    // 1. Create Floating Trigger Pill
-    const trigger = document.createElement('div');
-    trigger.id = 'verdant-floating-trigger';
-    trigger.innerHTML = `
-      <span class="pulse-dot"></span>
-      <span style="letter-spacing: -0.01em;">V.E.R.D.A.N.T.</span>
-    `;
-    document.body.appendChild(trigger);
-
-    // 2. Create Drawer Container
+    // Create Drawer Container (No persistent floating pill on the page)
     const drawer = document.createElement('div');
     drawer.id = 'verdant-drawer-container';
     drawer.innerHTML = `
@@ -61,7 +52,7 @@ window.Verdant = window.Verdant || {};
         <!-- Live Diagnosis Results Card (Hidden initially) -->
         <div id="verdant-results-card" class="verdant-card" style="display:none; border:2px solid #10b981;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <span class="verdant-badge verdant-badge-green" style="font-size:13px; padding:5px 12px;">Gemini 3.1 Flash-Lite</span>
+            <span id="verdant-model-badge" class="verdant-badge verdant-badge-green" style="font-size:13px; padding:5px 12px;">Gemini 3.5 Flash-Lite</span>
             <span id="verdant-latency-badge" style="font-size:13px; font-weight:700; color:#059669;">~2.1s</span>
           </div>
 
@@ -76,6 +67,17 @@ window.Verdant = window.Verdant || {};
           <div style="margin-bottom:16px;">
             <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; letter-spacing:0.03em;">PROPOSED SURGICAL FIX:</div>
             <pre id="verdant-diag-code" style="font-size:13px; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; background:#0f172a; color:#34d399; padding:14px; border-radius:10px; overflow-x:auto; margin:0; line-height:1.5;">-</pre>
+          </div>
+
+          <!-- Dynamic Eco-Pruning Meter -->
+          <div id="verdant-dynamic-eco" style="display:none; margin: 12px 0; padding: 12px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; font-size: 12px; color: #065f46;">
+            <div style="font-weight: 700; display:flex; justify-content:space-between; margin-bottom: 4px;">
+              <span>🌱 ContextPrism Dynamic Pruning</span>
+              <span id="verdant-eco-pct" style="color:#059669; font-weight:800;">-0%</span>
+            </div>
+            <div style="color: #047857; font-size: 11px;" id="verdant-eco-details">
+              Saved: 0.0 Wh · 0.0 mL Datacenter Cooling Water
+            </div>
           </div>
 
           <!-- Action Buttons -->
@@ -93,7 +95,6 @@ window.Verdant = window.Verdant || {};
     document.body.appendChild(drawer);
 
     // Wire Event Listeners
-    trigger.addEventListener('click', () => toggleDrawer());
     document.getElementById('verdant-drawer-close').addEventListener('click', () => toggleDrawer(false));
     document.getElementById('verdant-btn-inspect').addEventListener('click', () => startInspectionMode());
     document.getElementById('verdant-btn-capture').addEventListener('click', () => triggerFullTabAnalysis());
@@ -118,8 +119,12 @@ window.Verdant = window.Verdant || {};
     const causeEl = document.getElementById('verdant-diag-cause');
     const codeEl = document.getElementById('verdant-diag-code');
     const latencyEl = document.getElementById('verdant-latency-badge');
+    const modelEl = document.getElementById('verdant-model-badge');
 
     resultsCard.style.display = 'block';
+    if (modelEl && diag.model_used) {
+      modelEl.innerText = diag.model_used.replace('models/', '');
+    }
     titleEl.innerText = diag.spoken_summary || 'Diagnosis Ready';
     causeEl.innerText = diag.root_cause || 'Defect analyzed.';
     
@@ -133,6 +138,22 @@ window.Verdant = window.Verdant || {};
 
     if (diag.latency_seconds) {
       latencyEl.innerText = `${diag.latency_seconds.toFixed(2)}s`;
+    }
+
+    // Dynamic Eco-Audit Population (Zero Hardcoding)
+    const ecoContainer = document.getElementById('verdant-dynamic-eco');
+    const ecoPct = document.getElementById('verdant-eco-pct');
+    const ecoDetails = document.getElementById('verdant-eco-details');
+    if (ecoContainer && diag.eco_audit) {
+      ecoContainer.style.display = 'block';
+      const pct = diag.eco_audit.compression_ratio_pct || 0;
+      ecoPct.innerText = `-${pct.toFixed(1)}% Tokens`;
+      const wh = diag.eco_audit.energy_saved_wh || 0;
+      const ml = diag.eco_audit.water_saved_ml || 0;
+      const savedTokens = diag.eco_audit.tokens_saved || 0;
+      ecoDetails.innerText = `Pruned ${savedTokens} tokens · Saved ${wh.toFixed(3)} Wh & ${ml.toFixed(2)} mL cooling water`;
+    } else if (ecoContainer) {
+      ecoContainer.style.display = 'none';
     }
   }
 
@@ -214,14 +235,19 @@ window.Verdant = window.Verdant || {};
   function triggerFullTabAnalysis() {
     toggleDrawer(true);
     const statusText = document.getElementById('verdant-status-text');
-    statusText.innerHTML = 'Capturing DOM and network telemetry with Gemini 3.1...';
+    statusText.innerHTML = 'Capturing DOM and network telemetry with Gemini 3.5...';
+
+    // Scan for actual layout anomalies on the page
+    const layoutAnomalies = window.Verdant.findActiveLayoutAnomalies ? window.Verdant.findActiveLayoutAnomalies() : [];
 
     chrome.runtime.sendMessage({
       type: 'ANALYZE_TAB',
       payload: window.Verdant.scrubObject({
         url: window.location.href,
+        pageTitle: document.title,
         logs: window.__verdant_logs || [],
-        networkEvents: window.__verdant_network || []
+        networkEvents: window.__verdant_network || [],
+        layoutAnomalies: layoutAnomalies
       })
     }, (response) => {
       if (response && response.diagnosis) {

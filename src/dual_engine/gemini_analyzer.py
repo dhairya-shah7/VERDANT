@@ -95,7 +95,8 @@ def analyze_multimodal(
     network_errors: Optional[List[Dict[str, Any]]] = None,
     console_errors: Optional[List[Dict[str, Any]]] = None,
     code_context: Optional[str] = None,
-    mode: str = "deepthink"  # "normal" (fast-lite) or "deepthink" (flash reasoning)
+    mode: str = "deepthink",  # "normal" (fast-lite) or "deepthink" (flash reasoning)
+    raw_tokens_estimate: Optional[int] = None
 ) -> Diagnosis:
     """
     Multimodal analysis routing into the 5 operational paths.
@@ -151,9 +152,10 @@ def analyze_multimodal(
             # For fast/normal mode, cap thinking tokens to 0 to prevent 60-80s reasoning delays
             gen_kwargs = {
                 "temperature": 0.1,
+                "max_output_tokens": 650,
                 "response_mime_type": "application/json"
             }
-            if mode.lower() == "normal":
+            if mode.lower() == "normal" and "lite" not in model_name:
                 try:
                     gen_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
                 except Exception:
@@ -226,7 +228,7 @@ def analyze_multimodal(
             # Compute formula-backed EcoAudit
             # Estimate tokens from payload length
             est_tokens = max(250, int(len(str(contents)) / 3.8))
-            eco_audit = EcoTelemetry.calculate_audit(tokens_used=est_tokens)
+            eco_audit = EcoTelemetry.calculate_audit(tokens_used=est_tokens, raw_tokens_estimate=raw_tokens_estimate)
 
             diagnosis = Diagnosis(
                 action_type=action_type,
@@ -236,6 +238,7 @@ def analyze_multimodal(
                 evidence=evidence,
                 edits=edits,
                 css_patch=parsed.get("css_patch"),
+                model_used=model_name,
                 test_spec=test_spec,
                 env_action=env_action,
                 clarification_question=parsed.get("clarification_question"),

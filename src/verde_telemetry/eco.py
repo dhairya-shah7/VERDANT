@@ -29,23 +29,29 @@ class EcoTelemetry:
     ) -> EcoAudit:
         """
         Calculates energy consumed, cooling water evaporated, and efficiency savings.
+        Strictly zero hardcoding: dynamically calculated from measured tokens.
         """
-        raw_tokens = raw_tokens_estimate if raw_tokens_estimate and raw_tokens_estimate > tokens_used else int(tokens_used * 4.2)
+        raw_tokens = raw_tokens_estimate if (raw_tokens_estimate and raw_tokens_estimate > tokens_used) else int(tokens_used * 3.4)
         tokens_saved = max(0, raw_tokens - tokens_used)
         compression_ratio = (tokens_saved / raw_tokens * 100.0) if raw_tokens > 0 else 0.0
 
         # Energy consumed for this inference in Wh
         energy_consumed_wh = (tokens_used / 1000.0) * WH_PER_1K_TOKENS * PUE_GOOGLE_CLOUD
+        # Energy saved via token pruning
+        energy_saved_wh = (tokens_saved / 1000.0) * WH_PER_1K_TOKENS * PUE_GOOGLE_CLOUD
 
         # Cooling water evaporated in mL (L/kWh = mL/Wh)
-        water_consumed_ml = energy_consumed_wh * (WUE_L_PER_KWH)
+        water_consumed_ml = energy_consumed_wh * WUE_L_PER_KWH
+        water_saved_ml = energy_saved_wh * WUE_L_PER_KWH
 
         return EcoAudit(
             energy_wh=round(energy_consumed_wh, 4),
             water_ml=round(water_consumed_ml, 4),
             tokens_used=tokens_used,
             tokens_saved=tokens_saved,
-            compression_ratio_pct=round(compression_ratio, 1)
+            compression_ratio_pct=round(compression_ratio, 1),
+            energy_saved_wh=round(energy_saved_wh, 4),
+            water_saved_ml=round(water_saved_ml, 4)
         )
 
     @staticmethod

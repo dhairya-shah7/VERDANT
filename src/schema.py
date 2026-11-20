@@ -58,13 +58,16 @@ class Evidence(BaseModel):
 
 class EcoAudit(BaseModel):
     """
-    Formula-backed thermodynamic telemetry based on Google Cloud PUE 1.10 / WUE 1.58 L/kWh.
+    Formula-backed thermodynamic telemetry based on Google Cloud PUE 1.10 / WUE 1.18 L/kWh.
     """
     energy_wh: float = Field(..., description="Total electrical energy consumed in Watt-hours")
     water_ml: float = Field(..., description="Total cooling water consumed in milliliters")
     tokens_used: int = Field(..., description="Active token count evaluated")
     tokens_saved: int = Field(default=0, description="Tokens eliminated via AST pruning")
     compression_ratio_pct: float = Field(default=0.0, description="Percentage of tokens pruned prior to inference")
+    energy_saved_wh: float = Field(default=0.0, description="Calculated energy saved through pruning")
+    water_saved_ml: float = Field(default=0.0, description="Calculated cooling water saved through pruning")
+
 
 
 class Diagnosis(BaseModel):
@@ -79,6 +82,7 @@ class Diagnosis(BaseModel):
     evidence: Evidence = Field(default_factory=Evidence, description="Grounding evidence from logs, screens, and AST")
     edits: List[Edit] = Field(default_factory=list, description="List of atomic search/replace edits (for fix path)")
     css_patch: Optional[str] = Field(default=None, description="Direct in-browser CSS hot-patch rule for visual layout defects")
+    model_used: Optional[str] = Field(default="gemini-3.5-flash-lite", description="Active Google Gemini model utilized")
     test_spec: Optional[TestSpec] = Field(default=None, description="Synthesized reproducer test (for test or fix path)")
     env_action: Optional[EnvAction] = Field(default=None, description="1-Click environment command (for env path)")
     clarification_question: Optional[str] = Field(default=None, description="Follow-up question (for clarify path)")

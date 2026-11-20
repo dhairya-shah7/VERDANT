@@ -161,7 +161,7 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
             <span class="material-symbols-outlined text-[18px] text-secondary">eco</span>
             <span class="text-xs font-bold">See What You Saved</span>
           </div>
-          <p class="text-[11px] text-on-surface-variant leading-tight">82.2% energy & 1.18 L/kWh data center water reduction.</p>
+          <p class="text-[11px] text-on-surface-variant leading-tight" id="sidebar-saved-summary">Calculated live per user from real audits.</p>
         </a>
       </div>
 
@@ -294,134 +294,47 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
             </div>
           </section>
 
-          <!-- Video Dropzone & Preview Section -->
-          <section class="w-full max-w-4xl mx-auto flex flex-col gap-4">
-            
-            <!-- Toggle Tabs: Fresh File Dropzone vs Pre-loaded Demo -->
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-1">
-              <div class="flex items-center gap-1.5 bg-surface-container-low p-1 rounded-xl w-full sm:w-auto">
-                <button class="flex-1 sm:flex-initial px-4 py-1.5 rounded-lg text-xs bg-surface-container-lowest text-primary shadow-sm font-semibold transition-all cursor-pointer" id="btn-tab-upload" onclick="switchDropState('empty')">
-                  Fresh File Dropzone
-                </button>
-                <button class="flex-1 sm:flex-initial px-4 py-1.5 rounded-lg text-xs text-on-surface-variant hover:text-on-surface transition-all cursor-pointer" id="btn-tab-preview" onclick="switchDropState('filled')">
-                  Pre-loaded Session (Active)
-                </button>
-              </div>
-              <span class="text-xs text-outline flex items-center gap-1">
-                <span class="material-symbols-outlined text-[15px] text-secondary">verified</span> Google Gemini 3.5 & SSIM Consensus
-              </span>
-            </div>
-
-            <!-- STATE A: Pre-loaded / Filled Preview Card (Hidden by default) -->
-            <div class="w-full bg-surface-container-lowest rounded-2xl shadow-sm p-4 sm:p-6 flex flex-col md:flex-row gap-6 items-center transition-all border border-surface-container-high hidden" id="state-filled">
-              <!-- Video Preview Thumbnail / Live Video -->
-              <div class="relative w-full md:w-80 h-48 sm:h-52 rounded-xl overflow-hidden bg-surface-container-highest flex-shrink-0 group shadow-inner">
-                <video id="live-video-player" class="w-full h-full object-cover hidden" controls></video>
-                <img id="static-video-thumb" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtgG0dzA9PiKrAt8unHFrKp0r-aOjcLquhlIrvfr6cQ3bistPLMWfOkAR9JWW_ChQdJQbvld9OjWlaGRLq0WmvsfdH6elr2izwwXdgL-6Z9lQZapS0KWQAAsRXKcR_uNbGdVDGdE1bTd-kdEyS1KmqWQ_-we1VetVJo9uUnNLqPmRARl4sOwI-RsPkMQinDyP6BUHRcz40V649EjB2u20knEX7jkurqiJhsMqx5qI" alt="Checkout session preview">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-between p-3 pointer-events-none">
-                  <div class="flex items-center justify-between">
-                    <span class="px-2 py-0.5 rounded-full bg-surface-container-lowest/90 font-code text-[11px] text-on-surface font-semibold flex items-center gap-1 shadow-sm">
-                      <span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span> 1080p 60fps
-                    </span>
-                    <span class="px-2 py-0.5 rounded bg-surface-container-lowest/90 font-code text-[11px] text-on-surface" id="hero-video-dur">00:24.2</span>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-1 px-2 py-1 rounded bg-error-container/90 text-on-error-container text-[11px] font-semibold backdrop-blur">
-                      <span class="material-symbols-outlined text-[14px]">touch_app</span> <span id="hero-defect-tag">Silent Freeze Detected</span>
-                    </div>
-                  </div>
+          <!-- Extension-Only Autonomous Workflow Hub -->
+          <section class="w-full max-w-4xl mx-auto flex flex-col gap-5 pt-2">
+            <div class="bg-surface-container-lowest rounded-2xl p-6 border border-surface-container-high shadow-sm">
+              <div class="flex items-center justify-between mb-4 pb-3 border-b border-surface-container-high">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-3 h-3 rounded-full bg-secondary animate-pulse"></span>
+                  <span class="font-bold text-sm text-on-surface">Autonomous In-Browser Operations Only</span>
                 </div>
+                <span class="px-3 py-1 rounded-full bg-secondary-fixed/50 text-secondary text-xs font-bold">Extension Driven</span>
               </div>
+              <p class="text-xs sm:text-sm text-on-surface-variant leading-relaxed mb-6">
+                Manual video uploading and mock runs are disabled. All triage, visual layout element inspection, live in-tab CSS hot-patching, and IDE dispatching occur <b>autonomously inside your active browser session</b> via the V.E.R.D.A.N.T. Chrome Extension.
+              </p>
 
-              <!-- Video Details and Keyframe Metrics -->
-              <div class="flex flex-col justify-between w-full h-full min-w-0">
-                <div>
-                  <div class="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                      <div class="flex items-center gap-2 flex-wrap">
-                        <h3 class="font-bold text-sm sm:text-base text-on-surface truncate" id="hero-session-name">
-                          checkout_unresponsive_submit_freeze.mp4
-                        </h3>
-                        <span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant text-[11px] font-semibold" id="hero-file-size">
-                          14.2 MB
-                        </span>
-                      </div>
-                      <p class="text-xs text-on-surface-variant mt-1" id="hero-session-desc">
-                        User clicks 'Place Order'. Network returns 500; button stays disabled with zero visual repaint.
-                      </p>
-                    </div>
-                  </div>
+              <!-- 4-Step Interactive Extension Workflow -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 flex flex-col">
+                  <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-sm mb-2.5">1</div>
+                  <h4 class="font-bold text-xs text-on-surface mb-1">Pin Extension</h4>
+                  <p class="text-[11px] text-on-surface-variant leading-snug">Load unpacked <code class="font-code text-primary">verdant-chrome</code> in <code class="font-code">chrome://extensions</code>.</p>
+                </div>
 
-                  <!-- Keyframe Indicators -->
-                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 my-3">
-                    <div class="bg-surface-container-low p-2 rounded-xl flex flex-col">
-                      <span class="text-[10px] text-outline uppercase font-semibold">SSIM Index</span>
-                      <span class="text-sm text-on-surface font-bold" id="hero-ssim">0.9984 <span class="text-[10px] text-error font-normal">(Frozen)</span></span>
-                    </div>
-                    <div class="bg-surface-container-low p-2 rounded-xl flex flex-col">
-                      <span class="text-[10px] text-outline uppercase font-semibold">Pixel Delta</span>
-                      <span class="text-sm text-on-surface font-bold" id="hero-delta">0.02% <span class="text-[10px] text-secondary font-normal">(Zero Drift)</span></span>
-                    </div>
-                    <div class="bg-surface-container-low p-2 rounded-xl flex flex-col">
-                      <span class="text-[10px] text-outline uppercase font-semibold">Network API</span>
-                      <span class="text-sm text-error font-bold" id="hero-network">500 Fail</span>
-                    </div>
-                    <div class="bg-surface-container-low p-2 rounded-xl flex flex-col">
-                      <span class="text-[10px] text-outline uppercase font-semibold">Target DOM</span>
-                      <span class="font-code text-xs text-primary font-bold truncate">button#checkout-btn</span>
-                    </div>
-                  </div>
+                <div class="p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 flex flex-col">
+                  <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-sm mb-2.5">2</div>
+                  <h4 class="font-bold text-xs text-on-surface mb-1">Inspect Element</h4>
+                  <p class="text-[11px] text-on-surface-variant leading-snug">Click any overflowing text, broken button, or padding anomaly to capture geometry.</p>
+                </div>
 
-                  <!-- Extraction Progress -->
-                  <div class="flex flex-col gap-1 mt-2">
-                    <div class="flex items-center justify-between text-xs">
-                      <span class="flex items-center gap-1 text-secondary font-semibold">
-                        <span class="material-symbols-outlined text-[16px]">check_circle</span>
-                        100% Ingested & ContextPrism Distilled
-                      </span>
-                      <span class="font-code text-[11px] text-outline-variant">Pruned -84.9% Tokens</span>
-                    </div>
-                    <div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
-                      <div class="w-full h-full bg-secondary rounded-full"></div>
-                    </div>
-                  </div>
+                <div class="p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 flex flex-col">
+                  <div class="w-8 h-8 rounded-lg bg-secondary-fixed/60 text-secondary flex items-center justify-center font-bold text-sm mb-2.5">3</div>
+                  <h4 class="font-bold text-xs text-on-surface mb-1">Test Fix Live</h4>
+                  <p class="text-[11px] text-on-surface-variant leading-snug">Preview synthesized CSS fixes in the tab before committing any code.</p>
+                </div>
+
+                <div class="p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 flex flex-col">
+                  <div class="w-8 h-8 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant flex items-center justify-center font-bold text-sm mb-2.5">4</div>
+                  <h4 class="font-bold text-xs text-on-surface mb-1">Send to VS Code</h4>
+                  <p class="text-[11px] text-on-surface-variant leading-snug">WebSocket bridge auto-focuses the file, renders the diff, and runs Playwright.</p>
                 </div>
               </div>
             </div>
-
-            <!-- STATE B: Empty Drag-and-Drop Zone (Visible by default) -->
-            <div class="w-full bg-primary/5 hover:bg-primary/10 border-2 border-dashed border-primary/30 hover:border-primary/60 transition-all rounded-2xl p-6 sm:p-10 flex flex-col items-center justify-center text-center cursor-pointer shadow-sm group min-h-[260px] sm:min-h-[300px] relative overflow-hidden" id="state-empty"
-                 ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" onclick="document.getElementById('file-input-real').click()">
-              <input type="file" id="file-input-real" class="hidden" accept="video/mp4,video/webm,image/png,image/jpeg" onchange="handleFileSelect(event)">
-              <div class="w-full py-4 flex flex-col items-center justify-center text-center relative pointer-events-none">
-                <div class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-on-primary shadow-lg mb-4 animate-bounce">
-                  <span class="material-symbols-outlined text-[32px]">file_download</span>
-                </div>
-                <h2 class="text-xl sm:text-2xl font-bold text-primary mb-1.5" id="drop-header-text">Drop Your Bug Video or Logs Here</h2>
-                <p class="text-xs sm:text-sm text-on-surface-variant max-w-md mb-4 px-2">
-                  Supports MP4, WebM, and HAR/Console log archives. ContextPrism automatically isolates critical transition frames within ±1.5s.
-                </p>
-                <div class="flex items-center gap-2 text-xs">
-                  <span class="px-3.5 py-1.5 rounded-full bg-surface-container-lowest text-primary font-semibold shadow-sm border border-surface-container-high">
-                    Browse or Drop File
-                  </span>
-                  <span class="text-outline">• Up to 50MB</span>
-                </div>
-              </div>
-            </div>
-
-          </section>
-
-          <!-- Primary Run Action Button -->
-          <section class="w-full max-w-4xl mx-auto flex flex-col items-center gap-3 pt-2">
-            <div class="flex items-center justify-center w-full sm:w-auto">
-              <button onclick="startAnalysisRun()" id="main-analyze-btn" class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full bg-primary hover:bg-primary-container text-on-primary shadow-md hover:shadow-lg text-base font-semibold tracking-wide transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer text-center">
-                <span class="material-symbols-outlined text-[20px]">auto_fix_high</span>
-                <span id="analyze-btn-text">Analyze Video & Synthesize Fix</span>
-                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
-              </button>
-            </div>
-            <p class="text-[11px] text-outline text-center px-4">Google Gemini & SSIM Sentinel autonomously extract defect locus, verify root cause, and synthesize surgical Playwright reproduction proof.</p>
           </section>
 
         </div>
@@ -1522,6 +1435,9 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
       if (tab === 'history') {
         loadHistoryData();
       }
+      if (tab === 'sustainability') {
+        loadSustainabilityData();
+      }
     }
 
     function navigateTab(tab, event) {
@@ -1865,6 +1781,37 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
       }
     }
 
+    // ── Sustainability Live Metrics (Zero Hardcoding) ───────────────────────
+    async function loadSustainabilityData() {
+      try {
+        const res = await fetch('/api/sustainability');
+        const data = await res.json();
+        if (data.status === 'success') {
+          const whEl = document.getElementById('eco-saved-wh');
+          const waterEl = document.getElementById('eco-water-ml');
+          const tokenEl = document.getElementById('eco-token-pct');
+          const sidebarSummary = document.getElementById('sidebar-saved-summary');
+          const navBadge = document.getElementById('nav-history-badge');
+
+          if (whEl) whEl.innerText = `${data.total_energy_saved_wh} Wh`;
+          if (waterEl) {
+            if (data.total_water_saved_ml >= 1000) {
+              waterEl.innerText = `${(data.total_water_saved_ml / 1000).toFixed(2)} L`;
+            } else {
+              waterEl.innerText = `${data.total_water_saved_ml.toFixed(1)} mL`;
+            }
+          }
+          if (tokenEl) tokenEl.innerText = `-${data.average_reduction_pct}%`;
+          if (navBadge) navBadge.innerText = data.total_sessions || '0';
+          if (sidebarSummary) {
+            sidebarSummary.innerText = `${data.total_energy_saved_wh} Wh & ${data.total_water_saved_ml} mL saved across ${data.total_sessions} audits.`;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load sustainability metrics:', e);
+      }
+    }
+
     // ── Audit History Database ──────────────────────────────────────────────
     async function loadHistoryData() {
       const tbody = document.getElementById('history-table-body');
@@ -2153,6 +2100,7 @@ ${diffBlock}
       initScreenFromUrl();
       checkUserStatus();
       updateHistoryCount();
+      loadSustainabilityData();
     };
 
     window.addEventListener('popstate', () => {
