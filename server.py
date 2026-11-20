@@ -1069,6 +1069,370 @@ def demo_app():
     with open(test_path, "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
+
+# =========================================================================
+# V.E.R.D.A.N.T. v2 FLOATING CAPSULE ROUTES
+# =========================================================================
+
+CAPSULE_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🌿 V.E.R.D.A.N.T. Capsule</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: #06090F;
+      color: #F1F5F9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow-x: hidden;
+    }
+    .capsule-pill {
+      background: #0D111A;
+      border: 1.5px solid rgba(59, 130, 246, 0.5);
+      box-shadow: 0 0 25px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.02);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .capsule-pill.deepthink {
+      border-color: rgba(168, 85, 247, 0.6);
+      box-shadow: 0 0 25px rgba(168, 85, 247, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.02);
+    }
+    .diff-add { color: #10B981; background: rgba(16, 185, 129, 0.08); }
+    .diff-rem { color: #EF4444; background: rgba(239, 68, 68, 0.08); }
+  </style>
+</head>
+<body class="p-3 select-none flex flex-col items-center justify-start min-h-screen">
+
+  <!-- THE FLOATING CAPSULE PILL -->
+  <div id="capsule-container" class="w-full max-w-[660px] capsule-pill rounded-2xl p-3">
+    
+    <!-- TOP ROW: Text Input -->
+    <div class="flex items-center gap-2 mb-2 px-1">
+      <input 
+        id="prompt-input" 
+        type="text" 
+        placeholder="| Ask anything... (e.g. 'Fix the checkout bug' or 'Explain error')"
+        class="w-full bg-transparent text-slate-100 placeholder-slate-500 text-sm focus:outline-none"
+        onkeydown="if(event.key === 'Enter') submitQuery();"
+      />
+      <div id="screen-badge" class="hidden text-xs bg-slate-800 text-sky-400 font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer" onclick="clearScreenBadge()">
+        <span id="screen-badge-title">📷 Snapped</span>
+        <span class="text-slate-400 hover:text-white">✕</span>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW: Controls -->
+    <div class="flex items-center justify-between pt-1 border-t border-slate-800/60">
+      
+      <!-- Left Controls: [+] [Normal] [DeepThink] -->
+      <div class="flex items-center gap-2">
+        <button onclick="snapScreen()" title="Snap Active Window" class="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold flex items-center justify-center text-sm transition">
+          +
+        </button>
+        <button id="btn-mode-normal" onclick="setMode('Normal')" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-white transition">
+          🌿 Normal ▾
+        </button>
+        <button id="btn-mode-deepthink" onclick="setMode('DeepThink')" class="text-xs font-semibold px-2.5 py-1 rounded-full text-slate-400 hover:text-slate-200 transition">
+          💡 DeepThink ▾
+        </button>
+      </div>
+
+      <!-- Right Controls: Status, [Voice], [➤] -->
+      <div class="flex items-center gap-2">
+        <span id="status-indicator" class="text-xs text-sky-400 hidden">Analyzing...</span>
+        
+        <button id="btn-voice" onclick="toggleVoice()" class="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1 transition">
+          🎙️ Voice
+        </button>
+        
+        <button id="btn-submit" onclick="submitQuery()" class="w-7 h-7 rounded-full bg-gradient-to-r from-violet-600 to-purple-500 hover:opacity-90 text-white font-bold flex items-center justify-center text-xs shadow-md transition">
+          ➤
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SLIDE-OUT DIFF DRAWER (Initially Hidden) -->
+  <div id="diff-drawer" class="hidden w-full max-w-[660px] bg-[#0A0E17] border border-slate-800 rounded-xl mt-3 p-4 shadow-2xl">
+    
+    <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center gap-2">
+        <h3 id="diff-title" class="text-sm font-bold text-white">Surgical Patch Preview</h3>
+        <span id="diff-confidence" class="text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded-full">Confidence: 98%</span>
+      </div>
+      <button onclick="closeDrawer()" class="text-slate-400 hover:text-white text-xs">✕ Dismiss</button>
+    </div>
+
+    <p id="diff-summary" class="text-xs text-slate-400 mb-3 leading-relaxed"></p>
+
+    <!-- Code Diff Box -->
+    <pre id="diff-code" class="bg-black/60 border border-slate-900 rounded-lg p-3 text-xs font-mono overflow-x-auto max-h-52 text-slate-300 leading-normal mb-3"></pre>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-3">
+      <button id="btn-apply-patch" onclick="applyPatch()" class="text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow transition">
+        ▶ Apply Patch & Run Verification Proof
+      </button>
+      <button onclick="closeDrawer()" class="text-xs text-slate-400 hover:text-white px-2 py-1">
+        Dismiss
+      </button>
+    </div>
+
+  </div>
+
+  <!-- SCRIPT ENGINE -->
+  <script>
+    let activeMode = "Normal";
+    let attachedScreenPath = null;
+    let latestDiagnosis = null;
+    let isRecordingVoice = false;
+    let mediaRecorder = null;
+    let audioChunks = [];
+
+    function setMode(mode) {
+      activeMode = mode;
+      const container = document.getElementById("capsule-container");
+      const btnNorm = document.getElementById("btn-mode-normal");
+      const btnDeep = document.getElementById("btn-mode-deepthink");
+
+      if (mode === "Normal") {
+        container.classList.remove("deepthink");
+        btnNorm.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-white transition";
+        btnDeep.className = "text-xs font-semibold px-2.5 py-1 rounded-full text-slate-400 hover:text-slate-200 transition";
+      } else {
+        container.classList.add("deepthink");
+        btnDeep.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-purple-300 transition";
+        btnNorm.className = "text-xs font-semibold px-2.5 py-1 rounded-full text-slate-400 hover:text-slate-200 transition";
+      }
+    }
+
+    async function snapScreen() {
+      const status = document.getElementById("status-indicator");
+      status.innerText = "Snapping active window...";
+      status.classList.remove("hidden");
+
+      try {
+        const res = await fetch("/api/capsule/snap", { method: "POST" });
+        const data = await res.json();
+        if (data.success) {
+          attachedScreenPath = data.path;
+          const badge = document.getElementById("screen-badge");
+          const title = document.getElementById("screen-badge-title");
+          title.innerText = "📷 " + (data.title ? data.title.substring(0, 14) + ".." : "Screen");
+          badge.classList.remove("hidden");
+          status.innerText = "Attached: " + (data.title || "Window");
+        } else {
+          status.innerText = "Snap failed.";
+        }
+      } catch (e) {
+        status.innerText = "Snap error.";
+      }
+    }
+
+    function clearScreenBadge() {
+      attachedScreenPath = null;
+      document.getElementById("screen-badge").classList.add("hidden");
+      document.getElementById("status-indicator").classList.add("hidden");
+    }
+
+    async function submitQuery() {
+      const input = document.getElementById("prompt-input");
+      const prompt = input.value.trim();
+      const status = document.getElementById("status-indicator");
+      const submitBtn = document.getElementById("btn-submit");
+
+      if (!prompt && !attachedScreenPath) {
+        status.innerText = "Type prompt or click + to snap.";
+        status.classList.remove("hidden");
+        return;
+      }
+
+      status.innerText = "Analyzing with Gemini...";
+      status.classList.remove("hidden");
+      submitBtn.disabled = true;
+
+      try {
+        const res = await fetch("/api/capsule/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: prompt,
+            mode: activeMode.toLowerCase(),
+            image_path: attachedScreenPath
+          })
+        });
+
+        const data = await res.json();
+        submitBtn.disabled = false;
+
+        if (data.success) {
+          latestDiagnosis = data.diagnosis;
+          status.innerText = "Path: " + data.action_type.toUpperCase();
+
+          if (data.action_type === "fix" && data.diff_preview) {
+            openDrawer(data);
+          } else {
+            input.value = data.spoken_summary;
+            closeDrawer();
+          }
+        } else {
+          status.innerText = "Error: " + (data.error || "Failed");
+        }
+      } catch (err) {
+        submitBtn.disabled = false;
+        status.innerText = "Network error: " + err.message;
+      }
+    }
+
+    function openDrawer(data) {
+      const drawer = document.getElementById("diff-drawer");
+      const title = document.getElementById("diff-title");
+      const conf = document.getElementById("diff-confidence");
+      const summary = document.getElementById("diff-summary");
+      const code = document.getElementById("diff-code");
+
+      title.innerText = "Surgical Fix: " + (data.diagnosis.evidence?.suspect_file || "Source Code");
+      conf.innerText = "Confidence: " + Math.round((data.confidence || 0.95) * 100) + "%";
+      summary.innerText = data.spoken_summary;
+
+      // Colorize diff lines
+      const lines = (data.diff_preview || "").split("\\n");
+      code.innerHTML = lines.map(line => {
+        if (line.startsWith("+")) return `<div class="diff-add">${escapeHtml(line)}</div>`;
+        if (line.startsWith("-")) return `<div class="diff-rem">${escapeHtml(line)}</div>`;
+        return `<div>${escapeHtml(line)}</div>`;
+      }).join("");
+
+      drawer.classList.remove("hidden");
+    }
+
+    function closeDrawer() {
+      document.getElementById("diff-drawer").classList.add("hidden");
+    }
+
+    async function applyPatch() {
+      if (!latestDiagnosis) return;
+      const btn = document.getElementById("btn-apply-patch");
+      btn.innerText = "Applying & Verifying Proof...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/api/capsule/apply_patch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ diagnosis: latestDiagnosis })
+        });
+        const data = await res.json();
+        btn.disabled = false;
+
+        if (data.success) {
+          btn.innerText = "✔ Verified & Applied (" + (data.branch || "fix") + ")";
+          btn.className = "text-xs font-bold bg-blue-600 text-white px-3.5 py-1.5 rounded-lg";
+          setTimeout(closeDrawer, 2500);
+        } else {
+          btn.innerText = "Verification Failed";
+          btn.className = "text-xs font-bold bg-rose-600 text-white px-3.5 py-1.5 rounded-lg";
+          alert(data.error || "Patch verification failed");
+        }
+      } catch (e) {
+        btn.disabled = false;
+        btn.innerText = "Error applying patch";
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    async function toggleVoice() {
+      const voiceBtn = document.getElementById("btn-voice");
+      if (!isRecordingVoice) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+          mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+          mediaRecorder.onstop = () => {
+            document.getElementById("status-indicator").innerText = "Voice recorded.";
+            submitQuery();
+          };
+          mediaRecorder.start();
+          isRecordingVoice = true;
+          voiceBtn.innerText = "🔴 Stop";
+          voiceBtn.className = "text-xs font-medium px-2.5 py-1 rounded-full bg-rose-600 text-white animate-pulse";
+        } catch (err) {
+          alert("Microphone permission denied or not available.");
+        }
+      } else {
+        isRecordingVoice = false;
+        voiceBtn.innerText = "🎙️ Voice";
+        voiceBtn.className = "text-xs font-medium px-2.5 py-1 rounded-full bg-slate-800 text-slate-200";
+        if (mediaRecorder) mediaRecorder.stop();
+      }
+    }
+  </script>
+
+</body>
+</html>
+"""
+
+@app.get("/capsule", response_class=HTMLResponse)
+def get_floating_capsule_ui():
+    return HTMLResponse(content=CAPSULE_HTML)
+
+@app.post("/api/capsule/snap")
+def api_capsule_snap():
+    from capsule.snapper import WindowSnapper
+    try:
+        path, title = WindowSnapper.capture_active_window()
+        return {"success": True, "path": str(path) if path else None, "title": title}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/capsule/analyze")
+async def api_capsule_analyze(request: Request):
+    from capsule.bridge import CapsuleBridge
+    body = await request.json()
+    prompt = body.get("prompt", "")
+    mode = body.get("mode", "normal")
+    image_path = body.get("image_path")
+    
+    bridge = CapsuleBridge()
+    try:
+        img_p = Path(image_path) if image_path else None
+        res = bridge.analyze(prompt=prompt, image_path=img_p, mode=mode)
+        # Serialize diagnosis to dict
+        diag_dict = res["diagnosis"].model_dump() if hasattr(res["diagnosis"], "model_dump") else res["diagnosis"].dict()
+        return {
+            "success": True,
+            "diagnosis": diag_dict,
+            "action_type": res["action_type"],
+            "confidence": res["confidence"],
+            "spoken_summary": res["spoken_summary"],
+            "root_cause": res["root_cause"],
+            "diff_preview": res["diff_preview"],
+            "patch_valid": res["patch_valid"]
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/capsule/apply_patch")
+async def api_capsule_apply_patch(request: Request):
+    from capsule.bridge import CapsuleBridge
+    from src.schema import Diagnosis
+    body = await request.json()
+    diag_data = body.get("diagnosis", {})
+    
+    bridge = CapsuleBridge()
+    try:
+        diagnosis = Diagnosis(**diag_data)
+        res = bridge.apply_patch_and_verify(diagnosis)
+        return res
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 if __name__ == "__main__":
     print("Starting V.E.R.D.A.N.T. Live Web Server on http://localhost:8000 ...")
     uvicorn.run(app, host="127.0.0.1", port=8000)

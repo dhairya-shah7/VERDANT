@@ -41,14 +41,15 @@ class FloatingCapsule(tk.Tk):
         self.configure(bg="#06090F")
         self.resizable(False, False)
 
-        # Precise On-Screen Geometry
+        # Precise On-Screen Geometry (Centered in Middle of Screen)
         screen_w = self.winfo_screenwidth() or 1280
+        screen_h = self.winfo_screenheight() or 800
         self.capsule_width = 660
         self.capsule_height = 98
         self.drawer_height = 280
 
         init_x = max(20, int((screen_w - self.capsule_width) / 2))
-        init_y = 35
+        init_y = max(40, int((screen_h - self.capsule_height) / 3))
         self.geometry(f"{self.capsule_width}x{self.capsule_height}+{init_x}+{init_y}")
 
         # Drag Window Handlers
