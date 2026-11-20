@@ -58,7 +58,8 @@
         "drawer.css",
         "src/visual_crawler.js",
         "src/in_tab_patcher.js",
-        "src/pii_scrubber.js"
+        "src/pii_scrubber.js",
+        "icons/*"
       ],
       "matches": ["<all_urls>"]
     }

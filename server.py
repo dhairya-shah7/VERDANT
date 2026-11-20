@@ -1987,44 +1987,41 @@ ${diffSec}
 </html>
 """
 
+from fastapi.responses import RedirectResponse
+
+# =========================================================================
+# STRICT CORE ROUTES (ONLY 4 LEGITIMATE PAGES PERMITTED)
+# =========================================================================
+
 @app.get("/", response_class=HTMLResponse)
 @app.get("/home", response_class=HTMLResponse)
 def index():
     return HTMLResponse(content=render_stitch_html("home"))
 
-@app.get("/pipeline", response_class=HTMLResponse)
-@app.get("/analysis", response_class=HTMLResponse)
-def pipeline_page():
-    return HTMLResponse(content=render_stitch_html("pipeline"))
-
 @app.get("/results", response_class=HTMLResponse)
-@app.get("/results-1", response_class=HTMLResponse)
 def results_page():
     return HTMLResponse(content=render_stitch_html("results"))
 
-@app.get("/results-2", response_class=HTMLResponse)
-def results_2_page():
-    return HTMLResponse(content=render_stitch_html("results"))
-
 @app.get("/sustainability", response_class=HTMLResponse)
-@app.get("/verde-hydra", response_class=HTMLResponse)
 def sustainability_page():
     return HTMLResponse(content=render_stitch_html("sustainability"))
 
 @app.get("/history", response_class=HTMLResponse)
-@app.get("/audit", response_class=HTMLResponse)
 def history_page():
     return HTMLResponse(content=render_stitch_html("history"))
 
-@app.get("/legacy", response_class=HTMLResponse)
-def legacy_index():
-    return HTMLResponse(content=HTML_TEMPLATE)
-
-@app.get("/demo-app", response_class=HTMLResponse)
-def demo_app():
-    test_path = os.path.join(BASE_DIR, "test_app.html")
-    with open(test_path, "r", encoding="utf-8") as f:
-        return HTMLResponse(content=f.read())
+# ── SECURE ROUTE SHIELD: Block and redirect all non-permitted / legacy routes ──
+@app.get("/pipeline")
+@app.get("/analysis")
+@app.get("/results-1")
+@app.get("/results-2")
+@app.get("/legacy")
+@app.get("/verde-hydra")
+@app.get("/audit")
+@app.get("/demo-app")
+@app.get("/capsule")
+def secure_route_redirect():
+    return RedirectResponse(url="/", status_code=307)
 
 
 # =========================================================================
@@ -2479,9 +2476,10 @@ CAPSULE_HTML = """<!DOCTYPE html>
 </html>
 """
 
-@app.get("/capsule", response_class=HTMLResponse)
-def get_floating_capsule_ui():
-    return HTMLResponse(content=CAPSULE_HTML)
+# Legacy capsule UI disabled for public web security
+# @app.get("/capsule", response_class=HTMLResponse)
+# def get_floating_capsule_ui():
+#     return HTMLResponse(content=CAPSULE_HTML)
 
 @app.post("/api/capsule/snap")
 def api_capsule_snap():

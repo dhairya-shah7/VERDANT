@@ -165,14 +165,6 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
         </a>
       </div>
 
-      <!-- 1-Click Extension Download in Sidebar -->
-      <div class="px-1 mt-2">
-        <a href="/api/extension/download" download class="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-primary text-on-primary hover:bg-primary/90 transition-all cursor-pointer font-bold text-xs shadow-sm">
-          <span class="material-symbols-outlined text-[18px]">extension</span>
-          <span>Download Chrome Ext</span>
-        </a>
-      </div>
-
     </div>
   </aside>
 
@@ -192,10 +184,6 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
           
           <!-- Hero Header -->
           <section class="w-full flex flex-col items-center text-center max-w-4xl mx-auto pt-2">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant text-xs font-bold mb-3 shadow-sm border border-secondary-fixed">
-              <span class="material-symbols-outlined text-[16px] text-secondary">eco</span>
-              <span>Google Cloud Buildathon India 2026 • Autonomous Bug Runtime</span>
-            </div>
             <h1 class="text-2xl sm:text-3xl md:text-5xl font-black text-on-surface tracking-tight mb-3">
               Visual Entropy & Runtime Distillation for Autonomous Net-zero Testing.
             </h1>
@@ -203,7 +191,7 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
               V.E.R.D.A.N.T. is the world's first thermodynamic, zero-waste autonomous debugging runtime. From live Chrome layout bugs to server exceptions, V.E.R.D.A.N.T. distills code ASTs, synthesizes in-tab live hot-patches, and dispatches verified Playwright PRs straight to VS Code.
             </p>
 
-            <!-- 1-Click Multi-Surface Toolchain Downloads & Actions -->
+            <!-- 1-Click Multi-Surface Toolchain Downloads -->
             <div class="flex flex-wrap items-center justify-center gap-3 mt-4">
               <a href="/api/extension/download" download class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-on-primary font-bold text-xs sm:text-sm shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer">
                 <span class="material-symbols-outlined text-[20px]">extension</span>
@@ -213,10 +201,6 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
                 <span class="material-symbols-outlined text-[20px]">terminal</span>
                 <span>Get VS Code Extension (.zip)</span>
               </a>
-              <button onclick="navigateTab('pipeline', event)" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-secondary-fixed hover:bg-secondary-fixed/80 text-on-secondary-fixed-variant font-bold text-xs sm:text-sm shadow-sm transition-all hover:scale-105 cursor-pointer">
-                <span class="material-symbols-outlined text-[20px]">play_circle</span>
-                <span>Launch Triage Lab</span>
-              </button>
             </div>
           </section>
 
@@ -338,193 +322,6 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
           </section>
 
         </div>
-      </div>
-    </div>
-
-    <!-- ======================================================================= -->
-    <!-- SCREEN 2: MULTI-LAYER PROCESSING PIPELINE                               -->
-    <!-- ======================================================================= -->
-    <div id="screen-pipeline" class="w-full hidden">
-      <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col gap-6">
-        
-        <!-- Pipeline Header -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-surface-container-high">
-          <div>
-            <div class="flex items-center gap-2 mb-1">
-              <span class="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold uppercase tracking-wider">Multi-Layer Runtime</span>
-              <span class="text-outline">•</span>
-              <span class="text-xs font-code text-secondary font-semibold" id="pipeline-status-text">Optical Flow & Verification Active</span>
-            </div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-on-surface">Forensic Processing Pipeline</h1>
-            <p class="text-xs sm:text-sm text-on-surface-variant">Real-time state distillation across ContextPrism, ApexTrace, and Replay Shield</p>
-          </div>
-          <div class="flex items-center gap-2 self-start md:self-auto flex-wrap">
-            <button onclick="navigateTab('home', event)" class="px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold transition shadow-sm flex items-center gap-1.5 cursor-pointer">
-              <span class="material-symbols-outlined text-[16px]">arrow_back</span>
-              <span>Back to Ingestion</span>
-            </button>
-            <button onclick="navigateTab('results', event)" class="px-5 py-2 rounded-full bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container transition shadow-sm flex items-center gap-1.5 cursor-pointer">
-              <span>View Verified Fix & PR</span>
-              <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Upper Grid: Dial Gauge + Frame Inspector Carousel -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          <!-- Circular Progress Dial (4 Cols on xl, 5 on lg) -->
-          <div class="lg:col-span-5 xl:col-span-4 bg-surface-container-lowest p-5 sm:p-6 rounded-2xl shadow-sm flex flex-col justify-between border border-surface-container-high">
-            <div>
-              <div class="flex items-center justify-between mb-space-sm">
-                <h2 class="text-base font-bold text-on-surface">Synthesis Progress</h2>
-                <span class="px-2 py-0.5 rounded bg-surface-container text-[11px] font-code text-primary font-semibold">Hermetic Loop</span>
-              </div>
-              <p class="text-xs text-on-surface-variant">4-layer pipeline synchronization</p>
-            </div>
-
-            <!-- SVG Gauge -->
-            <div class="my-space-lg flex flex-col items-center justify-center">
-              <div class="relative w-48 h-48 flex items-center justify-center">
-                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="42" stroke="#efedf1" stroke-width="8" fill="transparent"></circle>
-                  <circle id="pipeline-svg-circle" cx="50" cy="50" r="42" stroke="#0058bd" stroke-width="8" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="12" fill="transparent"></circle>
-                </svg>
-                <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span class="text-3xl font-bold text-on-surface tracking-tight" id="pipeline-pct-label">96%</span>
-                  <span class="text-[10px] font-bold text-primary uppercase tracking-wider">Completed</span>
-                  <div class="flex items-center gap-1 mt-1 text-secondary font-code text-[11px]">
-                    <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
-                    <span>Layers Synchronized</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Diagnostic Specs -->
-            <div class="grid grid-cols-2 gap-space-sm bg-surface-container-low p-space-md rounded-lg text-xs">
-              <div>
-                <span class="text-[10px] text-on-surface-variant block uppercase font-semibold">Frame Index</span>
-                <span class="font-code text-xs font-semibold text-on-surface" id="pipe-frame-count">562 / 720</span>
-              </div>
-              <div>
-                <span class="text-[10px] text-on-surface-variant block uppercase font-semibold">Sampling Rate</span>
-                <span class="font-code text-xs font-semibold text-on-surface">30.0 fps (Raw)</span>
-              </div>
-              <div>
-                <span class="text-[10px] text-on-surface-variant block uppercase font-semibold">Optic Flow Depth</span>
-                <span class="font-code text-xs font-semibold text-secondary">Verified (12 Flow Vecs)</span>
-              </div>
-              <div>
-                <span class="text-[10px] text-on-surface-variant block uppercase font-semibold">Consensus Engine</span>
-                <span class="font-code text-xs font-semibold text-primary">Gemini 3.5 + SSIM</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Live Frame Inspector & Optical Vectors (7 Cols on lg, 8 Cols on xl) -->
-          <div class="lg:col-span-7 xl:col-span-8 bg-surface-container-lowest p-5 sm:p-6 rounded-2xl shadow-sm flex flex-col justify-between border border-surface-container-high">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-surface-container">
-              <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-secondary text-[22px]">video_search</span>
-                <div>
-                  <h3 class="font-bold text-sm text-on-surface">Live Frame Inspector & Optical Transition Vectors</h3>
-                  <p class="text-xs text-on-surface-variant">Temporal sampling around user interaction locus</p>
-                </div>
-              </div>
-              <span class="inline-flex items-center gap-1 font-code text-xs text-error bg-error-container/60 px-3 py-1 rounded-full font-semibold self-start sm:self-auto">
-                <span class="material-symbols-outlined text-[15px]">warning</span>
-                Defect Locus at T+00:12.4s
-              </span>
-            </div>
-
-            <!-- 5-Frame Carousel Grid (Clickable) -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 my-4">
-              <!-- Frame 1 -->
-              <div id="carousel-frame-1" onclick="selectFrame(1)" class="flex flex-col gap-1 cursor-pointer hover:ring-2 hover:ring-primary rounded-lg p-0.5 transition">
-                <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-surface-container-high shadow-inner">
-                  <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6zedw27BYsaMGlsI_q7T4GmBnCQm-_mhiL52Mr-gkyH9QL6K1vc8cV_cb7Dy8in5jtKemp3zvzTp_ztgqWBbSwuBQ5PQaadlY-Q4UXwwdizsqg-zr1xh2m8z5YNaXxYIltOsogbrxBdFwCPVdbXRI40B3ffBSBN46Zh-CwoHx4NTJi-vhWg7HCgGuOTBCVgLdTXOX17S7rniSMCz9CFNhOimn-9Qv7pfSHE1Ffk8">
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <span class="absolute bottom-1 left-1.5 font-code text-[10px] text-white">00:04.0</span>
-                  <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-secondary"></span>
-                </div>
-                <div class="flex items-center justify-between font-code text-[10px] text-on-surface-variant">
-                  <span>Frame #120</span>
-                  <span class="text-secondary font-medium">SSIM 0.99</span>
-                </div>
-              </div>
-
-              <!-- Frame 2 -->
-              <div id="carousel-frame-2" onclick="selectFrame(2)" class="flex flex-col gap-1 cursor-pointer hover:ring-2 hover:ring-primary rounded-lg p-0.5 transition">
-                <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-surface-container-high shadow-inner">
-                  <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwCNnO1HdO23ZHjskBt50HWs9tzRIJozyyckcDeegj0BNE_W-LDoCLti9fQw3_egPo-tfwKix2z5EZCDQlDqWJ-Ty1P8VBDJDg09lwK0ElNFM_tJZJonOndlwJjHgmPFj_oDDztO-83GdxVF3iVx82O1iG3jsNI7okyDaIH31Z5p8QZLimPA4jX02KySNK5PhhtkEOjpLpULWaV1T_meEYWeIAkjDA0GvhCHAX_pI">
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <span class="absolute bottom-1 left-1.5 font-code text-[10px] text-white">00:08.0</span>
-                  <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-secondary"></span>
-                </div>
-                <div class="flex items-center justify-between font-code text-[10px] text-on-surface-variant">
-                  <span>Frame #240</span>
-                  <span class="text-secondary font-medium">SSIM 0.98</span>
-                </div>
-              </div>
-
-              <!-- Frame 3 (ANOMALY) -->
-              <div id="carousel-frame-3" onclick="selectFrame(3)" class="flex flex-col gap-1 relative ring-2 ring-error rounded-lg p-0.5 cursor-pointer bg-error/5">
-                <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-surface-container-high shadow-md">
-                  <img class="w-full h-full object-cover scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTNksevmGPnmEw9YBhcXBElRAJn6JfNiH7OprSLDCjq0uJEkmv2kimS4ak6SBKib9G2vsJUOdIE5cbPKFFU1HLw1Cvef8fs1abBRiadSoKpryTh_SiFkaWWe4wL9616AS9jfCIpSl07TUcfS2zu3z7Eg2SuO2JvlF9oi6fjqNCmPMpt4oeBOkW3LI91sVJqSAcAxzl5YyjgQmF_wdm1Jsp7YIZ-YeNlq4_QeAxl9o">
-                  <!-- Red Target Overlay -->
-                  <div class="absolute inset-0 bg-error/10 flex items-center justify-center">
-                    <div class="w-16 h-8 border-2 border-dashed border-error rounded flex items-center justify-center bg-error/20">
-                      <span class="text-[9px] font-code font-bold text-error">FREEZE</span>
-                    </div>
-                  </div>
-                  <span class="absolute bottom-1 left-1.5 font-code text-[10px] text-white font-bold bg-error/80 px-1 rounded">00:12.4</span>
-                  <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error animate-ping"></span>
-                </div>
-                <div class="flex items-center justify-between font-code text-[10px] text-error font-bold">
-                  <span>Frame #372</span>
-                  <span>Δ 0.02%</span>
-                </div>
-              </div>
-
-              <!-- Frame 4 -->
-              <div id="carousel-frame-4" onclick="selectFrame(4)" class="flex flex-col gap-1 cursor-pointer hover:ring-2 hover:ring-primary rounded-lg p-0.5 transition">
-                <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-surface-container-high shadow-inner">
-                  <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6zedw27BYsaMGlsI_q7T4GmBnCQm-_mhiL52Mr-gkyH9QL6K1vc8cV_cb7Dy8in5jtKemp3zvzTp_ztgqWBbSwuBQ5PQaadlY-Q4UXwwdizsqg-zr1xh2m8z5YNaXxYIltOsogbrxBdFwCPVdbXRI40B3ffBSBN46Zh-CwoHx4NTJi-vhWg7HCgGuOTBCVgLdTXOX17S7rniSMCz9CFNhOimn-9Qv7pfSHE1Ffk8">
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <span class="absolute bottom-1 left-1.5 font-code text-[10px] text-white">00:16.0</span>
-                  <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span>
-                </div>
-                <div class="flex items-center justify-between font-code text-[10px] text-on-surface-variant">
-                  <span>Frame #480</span>
-                  <span class="text-error font-medium">Halted</span>
-                </div>
-              </div>
-
-              <!-- Frame 5 -->
-              <div id="carousel-frame-5" onclick="selectFrame(5)" class="flex flex-col gap-1 cursor-pointer hover:ring-2 hover:ring-primary rounded-lg p-0.5 transition">
-                <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-surface-container-high shadow-inner">
-                  <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwCNnO1HdO23ZHjskBt50HWs9tzRIJozyyckcDeegj0BNE_W-LDoCLti9fQw3_egPo-tfwKix2z5EZCDQlDqWJ-Ty1P8VBDJDg09lwK0ElNFM_tJZJonOndlwJjHgmPFj_oDDztO-83GdxVF3iVx82O1iG3jsNI7okyDaIH31Z5p8QZLimPA4jX02KySNK5PhhtkEOjpLpULWaV1T_meEYWeIAkjDA0GvhCHAX_pI">
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <span class="absolute bottom-1 left-1.5 font-code text-[10px] text-white">00:20.0</span>
-                  <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span>
-                </div>
-                <div class="flex items-center justify-between font-code text-[10px] text-on-surface-variant">
-                  <span>Frame #600</span>
-                  <span class="text-error font-medium">Halted</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Footer Stats -->
-            <div class="pt-space-sm border-t border-surface-container flex items-center justify-between text-xs text-on-surface-variant">
-              <span>Entropy Shift: <strong class="text-error">High Anomaly Spike (+84.2%)</strong></span>
-              <span class="font-code text-[11px] text-outline">Locus: &lt;button#checkout-btn&gt;</span>
-            </div>
-          </div>
-
-        </div>
-
       </div>
     </div>
 
@@ -1415,7 +1212,7 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
     // ── Main Tab Switching & URL Routing ───────────────────────────────────
     function switchMainTab(tab) {
       activeMainTab = tab;
-      const screens = ['home', 'pipeline', 'results', 'sustainability', 'history'];
+      const screens = ['home', 'results', 'sustainability', 'history'];
       screens.forEach(s => {
         const el = document.getElementById('screen-' + s);
         const btn = document.getElementById('nav-btn-' + s);
@@ -1444,7 +1241,6 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
       if (event) event.preventDefault();
       const pathMap = {
         'home': '/',
-        'pipeline': '/pipeline',
         'results': '/results',
         'sustainability': '/sustainability',
         'history': '/history'
@@ -1459,9 +1255,7 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
 
     function initScreenFromUrl() {
       const p = window.location.pathname.toLowerCase();
-      if (p.includes('pipeline') || p.includes('analysis')) {
-        switchMainTab('pipeline');
-      } else if (p.includes('results') || p.includes('bench')) {
+      if (p.includes('results') || p.includes('bench')) {
         switchMainTab('results');
       } else if (p.includes('sustain') || p.includes('verde') || p.includes('eco')) {
         switchMainTab('sustainability');
@@ -2114,7 +1908,7 @@ ${diffBlock}
 
 def render_stitch_html(active_screen: str = "home") -> str:
     """Renders the Stitch template with the requested screen and tab pre-activated server-side."""
-    screens = ["home", "pipeline", "results", "sustainability", "history"]
+    screens = ["home", "results", "sustainability", "history"]
     if active_screen not in screens:
         active_screen = "home"
     

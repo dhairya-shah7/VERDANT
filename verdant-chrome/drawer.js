@@ -18,7 +18,11 @@ window.Verdant = window.Verdant || {};
     drawer.innerHTML = `
       <div id="verdant-drawer-header">
         <div style="display:flex; align-items:center; gap:12px;">
-          <div style="width:36px; height:36px; border-radius:10px; background:#dcfce7; display:flex; align-items:center; justify-content:center; font-size:20px;">🌱</div>
+          <div style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg, #059669 0%, #047857 100%); display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(5,150,105,0.25); flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4.5 5.5L12 18.5L19.5 5.5" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
           <div>
             <div style="font-weight:800; font-size:16px; color:#0f172a; letter-spacing:-0.02em;">V.E.R.D.A.N.T. Debugger</div>
             <div style="font-size:12px; color:#64748b; font-weight:500;">Autonomous Chrome Runtime</div>
@@ -80,7 +84,7 @@ window.Verdant = window.Verdant || {};
           <!-- Dynamic Eco-Pruning Meter -->
           <div id="verdant-dynamic-eco" style="display:none; margin: 12px 0; padding: 12px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; font-size: 12px; color: #065f46;">
             <div style="font-weight: 700; display:flex; justify-content:space-between; margin-bottom: 4px;">
-              <span>🌱 ContextPrism Dynamic Pruning</span>
+              <span>⚡ ContextPrism Dynamic Pruning</span>
               <span id="verdant-eco-pct" style="color:#059669; font-weight:800;">-0%</span>
             </div>
             <div style="color: #047857; font-size: 11px;" id="verdant-eco-details">
