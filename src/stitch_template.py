@@ -166,31 +166,6 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
       </div>
 
     </div>
-
-    <!-- Bottom Sidebar Controls -->
-    <div class="flex flex-col gap-2 pt-4 border-t border-surface-container-high">
-      <!-- GitHub Connector -->
-      <button onclick="openGithubModal()" id="header-gh-btn" class="w-full flex items-center justify-between p-2.5 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface-variant transition text-xs">
-        <div class="flex items-center gap-2 min-w-0">
-          <span class="material-symbols-outlined text-[18px]">account_tree</span>
-          <div class="flex flex-col text-left min-w-0">
-            <div class="flex items-center gap-1 font-code text-[11px] truncate">
-              <span id="gh-status-dot" class="w-2 h-2 rounded-full bg-secondary animate-pulse flex-shrink-0"></span>
-              <span id="gh-repo-label" class="text-on-surface font-medium truncate">dhairya-shah7/VERDANT</span>
-            </div>
-            <span class="text-[10px] text-outline">Branch: main</span>
-          </div>
-        </div>
-        <span class="material-symbols-outlined text-[16px] text-on-surface-variant">settings</span>
-      </button>
-
-      <!-- Buggy Store link -->
-      <a href="/demo-app" target="_blank" class="w-full flex items-center gap-2 p-2 rounded-lg text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition">
-        <span class="material-symbols-outlined text-[16px] text-primary">storefront</span>
-        <span>Launch Buggy Store Demo</span>
-        <span class="material-symbols-outlined text-[14px] ml-auto">open_in_new</span>
-      </a>
-    </div>
   </aside>
 
   <!-- ========================================================================= -->
@@ -222,47 +197,48 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
           </section>
 
           <!-- 3D Nature & Technology Visual Showcase Grid -->
+          <!-- 3 Pristine Architecture Showcase Cards -->
           <section class="w-full grid grid-cols-1 md:grid-cols-3 gap-5 my-2">
             
-            <!-- Card 1: Dual-Engine Nature & AI Synthesis -->
+            <!-- Card 1: Autonomous CI/CD Sentinel -->
             <div class="bg-surface-container-lowest rounded-2xl p-4 border border-surface-container-high shadow-sm hover:shadow-md transition-all flex flex-col">
               <div class="w-full h-44 rounded-xl overflow-hidden mb-3 bg-surface-container-high border border-surface-container-high/60">
-                <img src="/uploads/assets/google_ai_tools_3d_verdant.jpg" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="Dual Engine Nature & AI">
+                <img src="/uploads/assets/overview_ci_cd_sentinel.jpg" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="Autonomous CI/CD Sentinel">
               </div>
               <div class="flex items-center gap-1.5 mb-1.5">
-                <span class="px-2 py-0.5 rounded-full bg-secondary-fixed/50 text-secondary text-[11px] font-bold">🌱 Zero-Waste AI</span>
+                <span class="px-2 py-0.5 rounded-full bg-secondary-fixed/50 text-secondary text-[11px] font-bold">🤖 CI/CD Sentinel</span>
               </div>
-              <h3 class="text-base font-bold text-on-surface mb-1">Dual-Engine Consensus</h3>
+              <h3 class="text-base font-bold text-on-surface mb-1">Autonomous Self-Healing</h3>
               <p class="text-xs text-on-surface-variant leading-relaxed">
-                Google Gemini 3.1 multimodal vision paired with mathematical SSIM covariance eliminates 84.9% token bloat and rejects 100% of hallucinations.
+                Headless Playwright synthetic crawler tests Desktop & Mobile viewports on every PR. Autonomously verifies RED ❌ to GREEN ✅ and commits verified code fixes.
               </p>
             </div>
 
-            <!-- Card 2: Multi-Surface Ecosystem Architecture -->
+            <!-- Card 2: Multi-Surface Trinity Architecture -->
             <div class="bg-surface-container-lowest rounded-2xl p-4 border border-surface-container-high shadow-sm hover:shadow-md transition-all flex flex-col">
               <div class="w-full h-44 rounded-xl overflow-hidden mb-3 bg-surface-container-high border border-surface-container-high/60">
-                <img src="/uploads/assets/solution_architecture_verdant_3d_medium.jpg" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="Multi-Surface Architecture">
+                <img src="/uploads/assets/overview_trinity_architecture.jpg" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="Trinity Architecture">
               </div>
               <div class="flex items-center gap-1.5 mb-1.5">
-                <span class="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold">⚡ Autonomous Extension</span>
+                <span class="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold">🌐 The Trinity Ecosystem</span>
               </div>
-              <h3 class="text-base font-bold text-on-surface mb-1">Chrome + VS Code Bridge</h3>
+              <h3 class="text-base font-bold text-on-surface mb-1">Browser + IDE + CI/CD</h3>
               <p class="text-xs text-on-surface-variant leading-relaxed">
-                Catch visual UI overflows in Chrome, test instant in-tab CSS hot-patches, and push atomic diffs + Playwright tests to VS Code in ~3.9s.
+                Seamlessly bridges <code class="font-code text-primary">verdant-chrome</code> (live in-tab hot-patch), <code class="font-code">verdant-vscode</code> (IDE diff stream), and <code class="font-code text-secondary">verdant-sentinel</code> (headless bot).
               </p>
             </div>
 
             <!-- Card 3: Google Cloud Certified Eco Ledger -->
             <div class="bg-surface-container-lowest rounded-2xl p-4 border border-surface-container-high shadow-sm hover:shadow-md transition-all flex flex-col">
               <div class="w-full h-44 rounded-xl overflow-hidden mb-3 bg-surface-container-high border border-surface-container-high/60">
-                <img src="/uploads/assets/impacts_and_benefits_visual.jpg" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="Certified Eco Ledger">
+                <img src="/uploads/assets/overview_eco_ledger.jpg" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="Certified Eco Ledger">
               </div>
               <div class="flex items-center gap-1.5 mb-1.5">
-                <span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant text-[11px] font-bold">💧 WUE 1.18 L/kWh</span>
+                <span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant text-[11px] font-bold">💧 Google Cloud PUE 1.10 / WUE 1.18</span>
               </div>
-              <h3 class="text-base font-bold text-on-surface mb-1">Thermodynamic Savings</h3>
+              <h3 class="text-base font-bold text-on-surface mb-1">Thermodynamic Net-Zero</h3>
               <p class="text-xs text-on-surface-variant leading-relaxed">
-                Prevents multi-pass CI server build loops. Saves 584 Wh and 1.18 L cooling water per bug run with certified PUE 1.10.
+                Dynamic ContextPrism AST & DOM pruning eliminates 70% to 92% token bloat. Live Watt-hours and cooling water savings recorded dynamically in SQLite.
               </p>
             </div>
 
@@ -276,10 +252,10 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
               </div>
               <div>
                 <div class="flex items-center gap-2">
-                  <span class="font-bold text-sm text-on-surface">Local Daemon & Extension Bridge</span>
+                  <span class="font-bold text-sm text-on-surface">Ecosystem Runtime Engine</span>
                   <span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-secondary text-[10px] font-bold">Port 8000 Active</span>
                 </div>
-                <p class="text-xs text-on-surface-variant">Connected to Google Chrome Extension and VS Code IDE Bridge</p>
+                <p class="text-xs text-on-surface-variant">Active WebSocket Bridge connecting Chrome Extension, VS Code IDE, and CI/CD Sentinel</p>
               </div>
             </div>
             <div class="flex items-center gap-2.5 flex-wrap">
@@ -294,44 +270,44 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
             </div>
           </section>
 
-          <!-- Extension-Only Autonomous Workflow Hub -->
+          <!-- Trinity Closed-Loop Workflow Hub -->
           <section class="w-full max-w-4xl mx-auto flex flex-col gap-5 pt-2">
             <div class="bg-surface-container-lowest rounded-2xl p-6 border border-surface-container-high shadow-sm">
               <div class="flex items-center justify-between mb-4 pb-3 border-b border-surface-container-high">
                 <div class="flex items-center gap-2.5">
                   <span class="w-3 h-3 rounded-full bg-secondary animate-pulse"></span>
-                  <span class="font-bold text-sm text-on-surface">Autonomous In-Browser Operations Only</span>
+                  <span class="font-bold text-sm text-on-surface">The V.E.R.D.A.N.T. Trinity Architecture</span>
                 </div>
-                <span class="px-3 py-1 rounded-full bg-secondary-fixed/50 text-secondary text-xs font-bold">Extension Driven</span>
+                <span class="px-3 py-1 rounded-full bg-secondary-fixed/50 text-secondary text-xs font-bold">Full Ecosystem Active</span>
               </div>
               <p class="text-xs sm:text-sm text-on-surface-variant leading-relaxed mb-6">
-                Manual video uploading and mock runs are disabled. All triage, visual layout element inspection, live in-tab CSS hot-patching, and IDE dispatching occur <b>autonomously inside your active browser session</b> via the V.E.R.D.A.N.T. Chrome Extension.
+                A unified closed-loop testing and repair runtime. Developers inspect and hot-patch live in the browser, diffs stream to VS Code via WebSockets, and headless Playwright sentinels autonomously self-heal regressions on every pull request.
               </p>
 
-              <!-- 4-Step Interactive Extension Workflow -->
+              <!-- 4-Step Trinity Workflow -->
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 flex flex-col">
                   <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-sm mb-2.5">1</div>
-                  <h4 class="font-bold text-xs text-on-surface mb-1">Pin Extension</h4>
-                  <p class="text-[11px] text-on-surface-variant leading-snug">Load unpacked <code class="font-code text-primary">verdant-chrome</code> in <code class="font-code">chrome://extensions</code>.</p>
+                  <h4 class="font-bold text-xs text-on-surface mb-1">In-Browser Extension</h4>
+                  <p class="text-[11px] text-on-surface-variant leading-snug">Inspect DOM bounding boxes, detect text overflow, and test instant in-tab CSS hot-patches.</p>
                 </div>
 
                 <div class="p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 flex flex-col">
                   <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-sm mb-2.5">2</div>
-                  <h4 class="font-bold text-xs text-on-surface mb-1">Inspect Element</h4>
-                  <p class="text-[11px] text-on-surface-variant leading-snug">Click any overflowing text, broken button, or padding anomaly to capture geometry.</p>
+                  <h4 class="font-bold text-xs text-on-surface mb-1">VS Code Live Bridge</h4>
+                  <p class="text-[11px] text-on-surface-variant leading-snug">WebSocket port 8000 streams atomic Search/Replace diffs straight into your editor.</p>
                 </div>
 
                 <div class="p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 flex flex-col">
                   <div class="w-8 h-8 rounded-lg bg-secondary-fixed/60 text-secondary flex items-center justify-center font-bold text-sm mb-2.5">3</div>
-                  <h4 class="font-bold text-xs text-on-surface mb-1">Test Fix Live</h4>
-                  <p class="text-[11px] text-on-surface-variant leading-snug">Preview synthesized CSS fixes in the tab before committing any code.</p>
+                  <h4 class="font-bold text-xs text-on-surface mb-1">Autonomous CI/CD</h4>
+                  <p class="text-[11px] text-on-surface-variant leading-snug">Headless Playwright synthetic crawler tests Desktop & Mobile viewports on every pull request.</p>
                 </div>
 
                 <div class="p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 flex flex-col">
                   <div class="w-8 h-8 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant flex items-center justify-center font-bold text-sm mb-2.5">4</div>
-                  <h4 class="font-bold text-xs text-on-surface mb-1">Send to VS Code</h4>
-                  <p class="text-[11px] text-on-surface-variant leading-snug">WebSocket bridge auto-focuses the file, renders the diff, and runs Playwright.</p>
+                  <h4 class="font-bold text-xs text-on-surface mb-1">RED ❌ -> GREEN ✅ Proof</h4>
+                  <p class="text-[11px] text-on-surface-variant leading-snug">Proves failure on unpatched code, applies fix, verifies pass, and commits self-healed PR.</p>
                 </div>
               </div>
             </div>
