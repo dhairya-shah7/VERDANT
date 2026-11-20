@@ -58,23 +58,22 @@ EXPANDED_H = 390
 WIN_LEFT = (1280 - WIN_W) // 2  # 310
 WIN_TOP = 22
 
-# ── Colors ───────────────────────────────────────────────────────────────────
-C_BG_PILL    = SolidColorBrush(Color.FromArgb(248, 13, 18, 36))     # Deep dark navy
-C_BORDER_NORM= SolidColorBrush(Color.FromArgb(220, 59, 130, 246))   # Neon blue
-C_BORDER_DEEP= SolidColorBrush(Color.FromArgb(220, 168, 85, 247))   # Neon purple
-C_INPUT_BG   = SolidColorBrush(Color.FromArgb(180, 20, 28, 54))     # Input field dark
-C_INPUT_BRD  = SolidColorBrush(Color.FromArgb(100, 255, 255, 255))
-C_BTN_ASK    = SolidColorBrush(Color.FromArgb(255, 37, 99, 235))    # Blue accent
-C_BTN_APPLY  = SolidColorBrush(Color.FromArgb(255, 22, 163, 74))   # Green
-C_BTN_TOOL   = SolidColorBrush(Color.FromArgb(120, 30, 41, 68))
-C_TEXT_PRI   = SolidColorBrush(Color.FromArgb(255, 241, 245, 249))
-C_TEXT_SEC   = SolidColorBrush(Color.FromArgb(255, 148, 163, 184))
-C_TEXT_ECO   = SolidColorBrush(Color.FromArgb(255, 74, 222, 128))
-C_DIFF_ADD   = SolidColorBrush(Color.FromArgb(255, 74, 222, 128))
-C_DIFF_DEL   = SolidColorBrush(Color.FromArgb(255, 248, 113, 113))
-
-
 def build_and_run_capsule():
+    # Colors created on STA thread & frozen for thread safety
+    C_BG_PILL    = SolidColorBrush(Color.FromArgb(248, 13, 18, 36)); C_BG_PILL.Freeze()
+    C_BORDER_NORM= SolidColorBrush(Color.FromArgb(220, 59, 130, 246)); C_BORDER_NORM.Freeze()
+    C_BORDER_DEEP= SolidColorBrush(Color.FromArgb(220, 168, 85, 247)); C_BORDER_DEEP.Freeze()
+    C_INPUT_BG   = SolidColorBrush(Color.FromArgb(180, 20, 28, 54)); C_INPUT_BG.Freeze()
+    C_INPUT_BRD  = SolidColorBrush(Color.FromArgb(100, 255, 255, 255)); C_INPUT_BRD.Freeze()
+    C_BTN_ASK    = SolidColorBrush(Color.FromArgb(255, 37, 99, 235)); C_BTN_ASK.Freeze()
+    C_BTN_APPLY  = SolidColorBrush(Color.FromArgb(255, 22, 163, 74)); C_BTN_APPLY.Freeze()
+    C_BTN_TOOL   = SolidColorBrush(Color.FromArgb(120, 30, 41, 68)); C_BTN_TOOL.Freeze()
+    C_TEXT_PRI   = SolidColorBrush(Color.FromArgb(255, 241, 245, 249)); C_TEXT_PRI.Freeze()
+    C_TEXT_SEC   = SolidColorBrush(Color.FromArgb(255, 148, 163, 184)); C_TEXT_SEC.Freeze()
+    C_TEXT_ECO   = SolidColorBrush(Color.FromArgb(255, 74, 222, 128)); C_TEXT_ECO.Freeze()
+    C_DIFF_ADD   = SolidColorBrush(Color.FromArgb(255, 74, 222, 128)); C_DIFF_ADD.Freeze()
+    C_DIFF_DEL   = SolidColorBrush(Color.FromArgb(255, 248, 113, 113)); C_DIFF_DEL.Freeze()
+
     bridge = CapsuleBridge(ROOT)
     state = {
         "mode": "fast",
