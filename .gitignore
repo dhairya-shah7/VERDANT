@@ -45,3 +45,9 @@ slide3_enhanced_transparent.png
 test_app.html
 stitch/
 capsule/capsule.exe
+
+# Video & Demo Clips
+demo_build/
+demo_clips/
+tests/*.mp3
+tests/*.srt
