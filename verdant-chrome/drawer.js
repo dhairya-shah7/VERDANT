@@ -103,7 +103,11 @@ window.Verdant = window.Verdant || {};
   }
 
   function toggleDrawer(forceState) {
-    const drawer = document.getElementById('verdant-drawer-container');
+    let drawer = document.getElementById('verdant-drawer-container');
+    if (!drawer) {
+      initDrawer();
+      drawer = document.getElementById('verdant-drawer-container');
+    }
     if (!drawer) return;
     isDrawerOpen = (forceState !== undefined) ? forceState : !isDrawerOpen;
     if (isDrawerOpen) drawer.classList.add('open');
@@ -295,6 +299,7 @@ window.Verdant = window.Verdant || {};
     });
   }
 
+  window.initDrawer = initDrawer;
   window.Verdant.initDrawer = initDrawer;
   window.Verdant.toggleDrawer = toggleDrawer;
   window.Verdant.displayDiagnosis = displayDiagnosis;
