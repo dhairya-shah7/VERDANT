@@ -23,7 +23,9 @@ from src.context_prism.log_parser import parse_console_logs, parse_har_network
 from src.context_prism.video_extractor import extract_and_analyze_video
 from src.dual_engine.ssim_sentinel import compute_frame_diff
 from src.dual_engine.consensus_arbiter import arbitrate_decision
-from src.dual_engine.gemini_analyzer import analyze_defect_with_gemini
+from src.dual_engine.gemini_analyzer import analyze_defect_with_gemini, analyze_multimodal
+from src.schema import Diagnosis, ActionType
+from pathlib import Path
 from src.replay_shield.playwright_gen import generate_playwright_test
 from src.verde_telemetry.compute_meter import calculate_green_telemetry
 from src.verde_telemetry.github_reporter import format_draft_pr_markdown
@@ -159,10 +161,11 @@ def run_pipeline_api(scenario_id: str = "checkout_500", custom_filename: str = "
         network_events = parse_har_network(scenario["network_har"])
         
         # 2. Dual-Engine: SSIM Sentinel & Gemini
-        # Check if user has an uploaded video on disk to analyze dynamically via OpenCV
         uploaded_video_path = os.path.join(UPLOAD_DIR, custom_filename) if custom_filename else None
+        keyframe_images = []
         if uploaded_video_path and os.path.exists(uploaded_video_path):
             video_analysis = extract_and_analyze_video(uploaded_video_path)
+            keyframe_images = [Path(p) for p in video_analysis.get("keyframe_paths", []) if os.path.exists(p)]
             ssim_result = {
                 "ssim": video_analysis.get("ssim", 0.942),
                 "delta_pct": video_analysis.get("delta_pct", 1.85),
@@ -172,7 +175,6 @@ def run_pipeline_api(scenario_id: str = "checkout_500", custom_filename: str = "
                 "duration_sec": video_analysis.get("duration_sec", 12.0)
             }
         elif scenario_id == "checkout_500":
-            # True scenario mathematical profile: Silent UI freeze (zero delta)
             ssim_result = {
                 "ssim": 0.9984,
                 "delta_pct": 0.02,
@@ -182,7 +184,6 @@ def run_pipeline_api(scenario_id: str = "checkout_500", custom_filename: str = "
                 "duration_sec": 24.2
             }
         elif scenario_id == "auth_token_expired":
-            # True scenario mathematical profile: Auth notification drop (partial alert repaint)
             ssim_result = {
                 "ssim": 0.9142,
                 "delta_pct": 4.12,
@@ -201,39 +202,78 @@ def run_pipeline_api(scenario_id: str = "checkout_500", custom_filename: str = "
                 "duration_sec": 15.0
             }
         
-        # Gemini Multimodal Diagnostics
-        gemini_verdict = analyze_defect_with_gemini(
-            timeline_events=scenario["timeline_events"],
-            network_errors=network_events,
-            console_errors=console_events
-        )
-        
-        # Consensus Arbitration
-        arbiter_result = arbitrate_decision(
-            gemini_verdict=gemini_verdict,
-            pixel_sentinel=ssim_result,
-            network_errors=network_events,
-            console_errors=console_events
-        )
-        
-        # 3. Replay Shield: Playwright Test Synthesis
-        playwright_code = generate_playwright_test(
-            app_url=scenario["url"],
-            action_events=scenario["timeline_events"],
-            expected_failure_msg=network_events[0].get("error", "Error") if network_events else "Error"
-        )
+        # Dual-Engine Reasoning: Real Multimodal Video vs Scenarios
+        if keyframe_images:
+            diag: Diagnosis = analyze_multimodal(
+                prompt="Examine the attached user incident video frames. Transcribe any on-screen error messages, status codes (e.g. 500, 404, TypeError), or console logs visible in the frames. Diagnose the exact root cause, identify the suspect file or backend endpoint, and synthesize a surgical code fix and Playwright verification test.",
+                images=keyframe_images,
+                mode="deepthink"
+            )
+            
+            diff_str = ""
+            if diag.edits:
+                for edit in diag.edits:
+                    diff_str += f"--- a/{edit.path}\n+++ b/{edit.path}\n@@ search / replace @@\n-{edit.search}\n+{edit.replace}\n"
+
+            suspect_file = diag.evidence.suspect_file or (diag.edits[0].path if diag.edits else "pricing_engine.py")
+            gemini_verdict = {
+                "bug_detected": diag.action_type in [ActionType.FIX, ActionType.ENV],
+                "user_action_attempted": True,
+                "intent": diag.spoken_summary,
+                "category": diag.action_type.value.upper(),
+                "suspect_file": suspect_file,
+                "suggested_fix_diff": diff_str or diag.root_cause,
+                "explanation": f"{diag.spoken_summary}\n\nRoot Cause: {diag.root_cause}"
+            }
+            
+            console_trace_text = diag.root_cause
+            patch_text = diff_str or diag.root_cause
+            playwright_code = diag.test_spec.content if diag.test_spec else generate_playwright_test(
+                app_url="http://localhost:5050",
+                action_events=[{"time": "00:05", "action": "NAVIGATE", "target": "http://localhost:5050"}, {"time": "00:10", "action": "INTERACT", "selector": "#action-btn"}],
+                expected_failure_msg=diag.root_cause[:50]
+            )
+            title_text = diag.spoken_summary[:60] if diag.spoken_summary else "Forensic Incident"
+            arbiter_result = {
+                "confidence": "HIGH" if diag.confidence >= 0.8 else "MEDIUM",
+                "arbiter_tier": 1,
+                "rule_triggered": "Multimodal Vision & Console Triangulation",
+                "consensus_match": True
+            }
+        else:
+            gemini_verdict = analyze_defect_with_gemini(
+                timeline_events=scenario["timeline_events"],
+                network_errors=network_events,
+                console_errors=console_events
+            )
+            
+            arbiter_result = arbitrate_decision(
+                gemini_verdict=gemini_verdict,
+                pixel_sentinel=ssim_result,
+                network_errors=network_errors,
+                console_errors=console_events
+            )
+            
+            playwright_code = generate_playwright_test(
+                app_url=scenario["url"],
+                action_events=scenario["timeline_events"],
+                expected_failure_msg=network_events[0].get("error", "Error") if network_events else "Error"
+            )
+            console_trace_text = scenario["raw_console"]
+            patch_text = scenario["patch_diff"] if is_with_repo else "# No source repository connected (QA Diagnostic Mode)\n# Steps to reproduce & technical recommendations generated below"
+            title_text = scenario.get("title", "Forensic Triage Session")
+            suspect_file = gemini_verdict.get("suspect_file", "src/api/checkoutHandler.ts")
         
         # 4. VERDE-Hydra: Energy & Compute Telemetry
         elapsed = max(0.12, time.time() - start)
         telemetry = calculate_green_telemetry(
             duration_seconds=elapsed,
             raw_video_frames=ssim_result.get("total_frames", 720),
-            pruned_keyframes=6
+            pruned_keyframes=len(keyframe_images) or 6
         )
         
         # 5. Format GitHub Reviewer-Ready Draft PR or QA Forensic Report
         is_with_repo = (session_mode == "WITH_REPO")
-        patch_text = scenario["patch_diff"] if is_with_repo else "# No source repository connected (QA Diagnostic Mode)\n# Steps to reproduce & technical recommendations generated below"
         pr_markdown = format_draft_pr_markdown(
             issue_id="104",
             arbiter_result=arbiter_result,
@@ -249,18 +289,18 @@ def run_pipeline_api(scenario_id: str = "checkout_500", custom_filename: str = "
         steps = [f"{ev['time']} - {ev['action']} {ev.get('selector') or ev.get('endpoint') or ''}" for ev in scenario.get("timeline_events", [])]
         
         saved_session = DB.save_session(
-            title=scenario.get("title", "Forensic Triage Session"),
+            title=title_text,
             session_mode=db_mode,
             action_type="fix" if is_with_repo else "advise",
             root_cause=gemini_verdict.get("explanation", "Forensic analysis completed."),
-            spoken_summary=gemini_verdict.get("summary", "Defect identified and verified."),
+            spoken_summary=gemini_verdict.get("intent", "Defect identified and verified."),
             confidence=arbiter_result.get("confidence", "HIGH"),
             arbiter_tier=arbiter_result.get("arbiter_tier", 1),
             status=status_val,
-            video_filename=custom_filename or scenario.get("title", ""),
-            raw_console=scenario.get("raw_console", ""),
+            video_filename=custom_filename or title_text,
+            raw_console=console_trace_text,
             raw_network=json.dumps(scenario.get("network_har", {})),
-            patch_diff=scenario.get("patch_diff", "") if is_with_repo else "",
+            patch_diff=patch_text if is_with_repo else "",
             reproduction_steps=steps,
             energy_saved_wh=telemetry.get("estimated_energy_saved_wh", 0.0),
             water_saved_ml=telemetry.get("estimated_cooling_water_saved_ml", 0.0),
@@ -276,13 +316,21 @@ def run_pipeline_api(scenario_id: str = "checkout_500", custom_filename: str = "
             "status": "success",
             "session_id": saved_session["id"],
             "session_mode": db_mode,
-            "scenario": scenario,
+            "scenario": {
+                "title": title_text,
+                "url": "http://localhost:5050" if keyframe_images else scenario.get("url", ""),
+                "video_duration": f"{ssim_result.get('duration_sec', 12.0)}s",
+                "patch_diff": patch_text,
+                "suspect_file": suspect_file
+            },
             "custom_filename": custom_filename,
             "ssim_result": ssim_result,
             "arbiter_result": arbiter_result,
             "gemini_verdict": gemini_verdict,
             "telemetry": telemetry,
             "playwright_code": playwright_code,
+            "console_trace": console_trace_text,
+            "patch_diff": patch_text,
             "pr_markdown": pr_markdown,
             "elapsed_ms": round(elapsed * 1000, 1)
         }

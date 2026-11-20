@@ -92,6 +92,27 @@ def extract_and_analyze_video(video_path: str, max_samples: int = 12) -> Dict[st
     # Freeze detection: If any consecutive window has near-zero delta while user expects mutation
     has_freeze = any(d < 0.05 and s > 0.98 for s, d in zip(ssim_scores, delta_scores))
     has_transition = min_ssim < 0.92 or max_delta > 1.5
+
+    # Save keyframes (start, max transition/freeze frame, end) for Gemini multimodal analysis
+    keyframe_paths = []
+    try:
+        keyframes_dir = os.path.join(os.path.dirname(video_path), "keyframes")
+        os.makedirs(keyframes_dir, exist_ok=True)
+        video_stem = os.path.splitext(os.path.basename(video_path))[0]
+
+        indices_to_save = [0]
+        if delta_scores:
+            max_delta_idx = delta_scores.index(max(delta_scores))
+            indices_to_save.append(min(max_delta_idx + 1, len(sampled_frames) - 1))
+        indices_to_save.append(len(sampled_frames) - 1)
+        indices_to_save = sorted(list(set(indices_to_save)))
+
+        for idx in indices_to_save:
+            kf_path = os.path.join(keyframes_dir, f"{video_stem}_kf_{idx}.png")
+            sampled_frames[idx].save(kf_path, "PNG")
+            keyframe_paths.append(kf_path)
+    except Exception as e:
+        print(f"[VideoExtractor] Keyframe save warning: {e}")
     
     return {
         "total_frames": total_frames,
@@ -103,5 +124,6 @@ def extract_and_analyze_video(video_path: str, max_samples: int = 12) -> Dict[st
         "delta_pct": round(avg_delta, 2),
         "max_delta_pct": round(max_delta, 2),
         "has_transition": has_transition,
-        "has_freeze": has_freeze
+        "has_freeze": has_freeze,
+        "keyframe_paths": keyframe_paths
     }

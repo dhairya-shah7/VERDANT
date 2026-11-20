@@ -88,81 +88,123 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
     }
   </style>
 </head>
-<body class="bg-surface font-body text-on-surface antialiased min-h-screen flex flex-col">
+<body class="bg-surface font-body text-on-surface antialiased min-h-screen relative">
 
   <!-- ========================================================================= -->
-  <!-- 1. STITCH TOP NAVIGATION HEADER                                           -->
+  <!-- MOBILE / TABLET TOP HEADER (< lg screens)                                 -->
   <!-- ========================================================================= -->
-  <header class="fixed top-0 w-full z-50 bg-surface-container-lowest/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-b border-surface-container-high">
-    <div class="h-16 w-full px-gutter-desktop flex items-center justify-between gap-space-lg max-w-[1440px] mx-auto">
+  <header class="lg:hidden sticky top-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md border-b border-surface-container-high px-4 py-3 flex items-center justify-between shadow-sm">
+    <div class="flex items-center gap-2.5 cursor-pointer" onclick="navigateTab('home', event)">
+      <div class="w-8 h-8 rounded-xl bg-secondary-fixed/60 flex items-center justify-center text-secondary shadow-sm">
+        <span class="material-symbols-outlined text-[20px]">eco</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="font-bold text-sm text-on-surface leading-tight">V.E.R.D.A.N.T.</span>
+        <span class="text-[10px] text-on-surface-variant leading-tight">Autonomous Bug Runtime</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <button onclick="openGithubModal()" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition" title="GitHub Configuration">
+        <span class="material-symbols-outlined text-[20px]">account_tree</span>
+      </button>
+      <button onclick="toggleMobileSidebar()" class="p-2 rounded-lg text-on-surface hover:bg-surface-container transition" title="Toggle Navigation">
+        <span class="material-symbols-outlined text-[24px]">menu</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div id="sidebar-backdrop" onclick="closeMobileSidebar()" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden hidden transition-opacity"></div>
+
+  <!-- ========================================================================= -->
+  <!-- 1. STITCH RESPONSIVE SIDEBAR NAVIGATION (Desktop: fixed, Mobile: drawer) -->
+  <!-- ========================================================================= -->
+  <aside id="main-sidebar" class="fixed left-0 top-0 bottom-0 h-screen w-64 bg-surface-container-lowest border-r border-surface-container-high z-50 flex flex-col justify-between p-4 shadow-[1px_0_8px_rgba(0,0,0,0.03)] transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out">
+    <div class="flex flex-col gap-6">
       
-      <!-- Brand & Main Tabs -->
-      <div class="flex items-center gap-space-xl flex-shrink-0">
-        <div class="flex items-center gap-space-md cursor-pointer" onclick="navigateTab('home', event)">
-          <div class="w-8 h-8 rounded-lg bg-secondary-fixed/50 flex items-center justify-center text-secondary flex-shrink-0">
-            <span class="material-symbols-outlined text-[20px]">eco</span>
+      <!-- Brand Logo & Header -->
+      <div class="flex items-center justify-between px-2 py-1">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTab('home', event); closeMobileSidebar();">
+          <div class="w-9 h-9 rounded-xl bg-secondary-fixed/60 flex items-center justify-center text-secondary flex-shrink-0 shadow-sm">
+            <span class="material-symbols-outlined text-[22px]">eco</span>
           </div>
-          <div class="flex flex-col">
-            <span class="font-bold text-[15px] text-on-surface tracking-tight leading-none">V.E.R.D.A.N.T.</span>
-            <span class="text-[11px] text-on-surface-variant leading-tight">Autonomous Bug & Forensic Runtime</span>
+          <div class="flex flex-col min-w-0">
+            <span class="font-bold text-base text-on-surface tracking-tight leading-tight">V.E.R.D.A.N.T.</span>
+            <span class="text-[11px] text-on-surface-variant leading-tight truncate">Autonomous Bug Runtime</span>
           </div>
         </div>
-
-        <!-- Stitch Nav Tabs - Always visible and responsive -->
-        <nav class="flex items-center gap-1 sm:gap-2 p-1 overflow-x-auto scrollbar-none" id="main-nav-bar">
-          <a href="/" id="nav-btn-home" onclick="navigateTab('home', event)" class="nav-tab-active px-3 py-1.5 rounded-lg text-xs md:text-sm text-on-surface transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">upload_file</span>
-            <span>Bug Ingestion</span>
-          </a>
-          <a href="/pipeline" id="nav-btn-pipeline" onclick="navigateTab('pipeline', event)" class="px-3 py-1.5 rounded-lg text-xs md:text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">neurology</span>
-            <span>Multi-Layer Pipeline</span>
-          </a>
-          <a href="/results" id="nav-btn-results" onclick="navigateTab('results', event)" class="px-3 py-1.5 rounded-lg text-xs md:text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">terminal</span>
-            <span>Playwright Bench & PR</span>
-          </a>
-          <a href="/sustainability" id="nav-btn-sustainability" onclick="navigateTab('sustainability', event)" class="px-3 py-1.5 rounded-lg text-xs md:text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">water_drop</span>
-            <span>Sustainability (VERDE)</span>
-          </a>
-          <a href="/history" id="nav-btn-history" onclick="navigateTab('history', event)" class="px-3 py-1.5 rounded-lg text-xs md:text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">history</span>
-            <span>Audit History (<span id="nav-history-badge" class="font-bold text-secondary">2</span>)</span>
-          </a>
-        </nav>
+        <button onclick="closeMobileSidebar()" class="lg:hidden p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
       </div>
 
-      <!-- Header Actions -->
-      <div class="flex items-center gap-space-md flex-shrink-0">
-        <a href="/sustainability" onclick="navigateTab('sustainability', event)" class="flex items-center gap-space-xs px-space-md py-1.5 rounded-full bg-secondary-fixed/50 hover:bg-secondary-fixed text-on-secondary-fixed-variant transition-colors text-xs font-semibold cursor-pointer">
-          <span class="material-symbols-outlined text-[16px]">eco</span>
-          <span>See What You Saved</span>
+      <!-- Navigation Links -->
+      <nav class="flex flex-col gap-1.5" id="main-nav-bar">
+        <a href="/" id="nav-btn-home" onclick="navigateTab('home', event); closeMobileSidebar();" class="nav-tab-active px-3.5 py-2.5 rounded-xl text-xs md:text-sm text-on-surface transition-all flex items-center gap-3 font-medium cursor-pointer">
+          <span class="material-symbols-outlined text-[20px]">upload_file</span>
+          <span>Bug Ingestion</span>
         </a>
+        <a href="/pipeline" id="nav-btn-pipeline" onclick="navigateTab('pipeline', event); closeMobileSidebar();" class="px-3.5 py-2.5 rounded-xl text-xs md:text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-3 font-medium cursor-pointer">
+          <span class="material-symbols-outlined text-[20px]">neurology</span>
+          <span>Multi-Layer Pipeline</span>
+        </a>
+        <a href="/results" id="nav-btn-results" onclick="navigateTab('results', event); closeMobileSidebar();" class="px-3.5 py-2.5 rounded-xl text-xs md:text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-3 font-medium cursor-pointer">
+          <span class="material-symbols-outlined text-[20px]">terminal</span>
+          <span>Playwright Bench & PR</span>
+        </a>
+        <a href="/sustainability" id="nav-btn-sustainability" onclick="navigateTab('sustainability', event); closeMobileSidebar();" class="px-3.5 py-2.5 rounded-xl text-xs md:text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-3 font-medium cursor-pointer">
+          <span class="material-symbols-outlined text-[20px]">water_drop</span>
+          <span>Sustainability (VERDE)</span>
+        </a>
+        <a href="/history" id="nav-btn-history" onclick="navigateTab('history', event); closeMobileSidebar();" class="px-3.5 py-2.5 rounded-xl text-xs md:text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-3 font-medium cursor-pointer">
+          <span class="material-symbols-outlined text-[20px]">history</span>
+          <span>Audit History (<span id="nav-history-badge" class="font-bold text-secondary">2</span>)</span>
+        </a>
+      </nav>
 
-        <!-- GitHub Active Indicator -->
-        <button onclick="openGithubModal()" id="header-gh-btn" class="hidden md:flex items-center gap-space-sm px-space-md py-1 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface-variant transition text-xs">
-          <span class="material-symbols-outlined text-[18px]">account_tree</span>
-          <div class="flex items-center gap-space-xs font-code text-[11px]">
-            <span id="gh-status-dot" class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-            <span id="gh-repo-label" class="text-on-surface font-medium">dhairya-shah7/VERDANT</span>
-            <span class="text-outline">(main)</span>
+      <!-- Quick Sustainability Action Card -->
+      <div class="px-1">
+        <a href="/sustainability" onclick="navigateTab('sustainability', event); closeMobileSidebar();" class="block p-3 rounded-xl bg-secondary-fixed/40 hover:bg-secondary-fixed/70 text-on-secondary-fixed-variant transition-all cursor-pointer border border-secondary-fixed">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-[18px] text-secondary">eco</span>
+            <span class="text-xs font-bold">See What You Saved</span>
           </div>
-          <span class="material-symbols-outlined text-[16px] text-on-surface-variant">arrow_drop_down</span>
-        </button>
-
-        <a href="/demo-app" target="_blank" title="Launch Buggy Test Store" class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary hover:opacity-90 transition">
-          <span class="material-symbols-outlined text-[18px]">storefront</span>
+          <p class="text-[11px] text-on-surface-variant leading-tight">82.2% energy & 1.18 L/kWh data center water reduction.</p>
         </a>
       </div>
 
     </div>
-  </header>
+
+    <!-- Bottom Sidebar Controls -->
+    <div class="flex flex-col gap-2 pt-4 border-t border-surface-container-high">
+      <!-- GitHub Connector -->
+      <button onclick="openGithubModal()" id="header-gh-btn" class="w-full flex items-center justify-between p-2.5 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface-variant transition text-xs">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="material-symbols-outlined text-[18px]">account_tree</span>
+          <div class="flex flex-col text-left min-w-0">
+            <div class="flex items-center gap-1 font-code text-[11px] truncate">
+              <span id="gh-status-dot" class="w-2 h-2 rounded-full bg-secondary animate-pulse flex-shrink-0"></span>
+              <span id="gh-repo-label" class="text-on-surface font-medium truncate">dhairya-shah7/VERDANT</span>
+            </div>
+            <span class="text-[10px] text-outline">Branch: main</span>
+          </div>
+        </div>
+        <span class="material-symbols-outlined text-[16px] text-on-surface-variant">settings</span>
+      </button>
+
+      <!-- Buggy Store link -->
+      <a href="/demo-app" target="_blank" class="w-full flex items-center gap-2 p-2 rounded-lg text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition">
+        <span class="material-symbols-outlined text-[16px] text-primary">storefront</span>
+        <span>Launch Buggy Store Demo</span>
+        <span class="material-symbols-outlined text-[14px] ml-auto">open_in_new</span>
+      </a>
+    </div>
+  </aside>
 
   <!-- ========================================================================= -->
   <!-- MAIN WORKSPACE CONTAINERS                                                 -->
   <!-- ========================================================================= -->
-  <main class="w-full pt-16 bg-surface flex-1">
+  <main class="w-full lg:pl-64 min-h-screen bg-surface flex flex-col flex-1">
 
     <!-- ======================================================================= -->
     <!-- SCREEN 1: HOME VIDEO UPLOAD & INGESTION                                 -->
@@ -171,77 +213,43 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
       <div class="relative w-full overflow-hidden">
         <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-[780px] h-[340px] bg-gradient-to-b from-primary/10 via-secondary/5 to-transparent rounded-full blur-3xl pointer-events-none"></div>
         
-        <div class="max-w-[1240px] mx-auto px-gutter-desktop py-space-xl flex flex-col gap-space-xl relative z-10">
+        <div class="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 flex flex-col gap-6 relative z-10">
           
           <!-- Hero Header -->
-          <section class="flex flex-col items-center text-center max-w-3xl mx-auto pt-space-md">
-            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-fixed/50 text-on-secondary-fixed-variant text-xs font-semibold mb-3">
-              <span class="material-symbols-outlined text-[14px]">award_star</span> Google Cloud & DeepMind Startup Buildathon
-            </div>
-            <h1 class="text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-2">
+          <section class="w-full flex flex-col items-center text-center max-w-3xl mx-auto pt-2">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-2">
               Turn Bug Videos Into Verified Fixes.
             </h1>
-            <p class="text-base text-on-surface-variant max-w-2xl">
+            <p class="text-xs sm:text-sm md:text-base text-on-surface-variant max-w-2xl px-2">
               Drop any bug recording or console log. V.E.R.D.A.N.T. extracts the defect locus with Google Gemini 3.5 & Mathematical SSIM, then returns a verified Playwright reproduction proof and surgical GitHub PR.
             </p>
           </section>
 
-          <!-- Repository Status Bar with With/Without Repo Notice -->
-          <section class="w-full max-w-4xl mx-auto">
-            <div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-space-md border border-surface-container-high">
-              <div class="flex items-center gap-space-md">
-                <div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface flex-shrink-0">
-                  <span class="material-symbols-outlined text-[20px]">account_tree</span>
-                </div>
-                <div class="flex flex-col min-w-0">
-                  <div class="flex items-center gap-space-xs flex-wrap">
-                    <span class="text-xs text-on-surface font-semibold">Repository access enabled:</span>
-                    <span class="font-code text-[11px] text-primary font-medium px-1.5 py-0.5 rounded bg-surface-container-low" id="repo-banner-name">dhairya-shah7/VERDANT</span>
-                    <span class="font-code text-[11px] text-outline">(branch: main)</span>
-                  </div>
-                  <p class="text-xs text-on-surface-variant mt-0.5" id="repo-banner-note">
-                    <strong>Tip:</strong> You can still analyze videos without repo access — synthesis automatically falls back to heuristic DOM trace & forensic report.
-                  </p>
-                </div>
-              </div>
-
-              <!-- Workflow Mode Switcher -->
-              <div class="flex items-center gap-1 bg-surface-container p-1 rounded-lg flex-shrink-0 self-end sm:self-center">
-                <button onclick="setWorkflowMode('WITH_REPO')" id="mode-pill-repo" class="px-3 py-1 rounded text-xs font-bold transition bg-surface-container-lowest text-primary shadow-sm flex items-center gap-1">
-                  <span class="material-symbols-outlined text-[14px]">code</span> With Codebase
-                </button>
-                <button onclick="setWorkflowMode('WITHOUT_REPO')" id="mode-pill-norepo" class="px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface transition flex items-center gap-1">
-                  <span class="material-symbols-outlined text-[14px]">description</span> QA Report Only
-                </button>
-              </div>
-            </div>
-          </section>
-
           <!-- Video Dropzone & Preview Section -->
-          <section class="w-full max-w-4xl mx-auto flex flex-col gap-space-md">
+          <section class="w-full max-w-4xl mx-auto flex flex-col gap-4">
             
-            <!-- Toggle Tabs: Pre-loaded Demo vs Fresh File Dropzone -->
-            <div class="flex items-center justify-between px-space-xs">
-              <div class="flex items-center gap-space-xs bg-surface-container-low p-1 rounded-lg">
-                <button class="px-space-md py-1 rounded text-xs bg-surface-container-lowest text-primary shadow-sm font-semibold transition-all" id="btn-tab-preview" onclick="switchDropState('filled')">
-                  Pre-loaded Session (Active)
-                </button>
-                <button class="px-space-md py-1 rounded text-xs text-on-surface-variant hover:text-on-surface transition-all" id="btn-tab-upload" onclick="switchDropState('empty')">
+            <!-- Toggle Tabs: Fresh File Dropzone vs Pre-loaded Demo -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-1">
+              <div class="flex items-center gap-1.5 bg-surface-container-low p-1 rounded-xl w-full sm:w-auto">
+                <button class="flex-1 sm:flex-initial px-4 py-1.5 rounded-lg text-xs bg-surface-container-lowest text-primary shadow-sm font-semibold transition-all cursor-pointer" id="btn-tab-upload" onclick="switchDropState('empty')">
                   Fresh File Dropzone
+                </button>
+                <button class="flex-1 sm:flex-initial px-4 py-1.5 rounded-lg text-xs text-on-surface-variant hover:text-on-surface transition-all cursor-pointer" id="btn-tab-preview" onclick="switchDropState('filled')">
+                  Pre-loaded Session (Active)
                 </button>
               </div>
               <span class="text-xs text-outline flex items-center gap-1">
-                <span class="material-symbols-outlined text-[14px] text-secondary">verified</span> Google Gemini 3.5 & SSIM Consensus
+                <span class="material-symbols-outlined text-[15px] text-secondary">verified</span> Google Gemini 3.5 & SSIM Consensus
               </span>
             </div>
 
-            <!-- STATE A: Pre-loaded / Filled Preview Card -->
-            <div class="w-full bg-surface-container-lowest rounded-xl shadow-md p-space-lg flex flex-col md:flex-row gap-space-xl items-center transition-all border border-surface-container-high" id="state-filled">
+            <!-- STATE A: Pre-loaded / Filled Preview Card (Hidden by default) -->
+            <div class="w-full bg-surface-container-lowest rounded-2xl shadow-sm p-4 sm:p-6 flex flex-col md:flex-row gap-6 items-center transition-all border border-surface-container-high hidden" id="state-filled">
               <!-- Video Preview Thumbnail / Live Video -->
-              <div class="relative w-full md:w-80 h-52 rounded-lg overflow-hidden bg-surface-container-highest flex-shrink-0 group shadow-inner">
+              <div class="relative w-full md:w-80 h-48 sm:h-52 rounded-xl overflow-hidden bg-surface-container-highest flex-shrink-0 group shadow-inner">
                 <video id="live-video-player" class="w-full h-full object-cover hidden" controls></video>
                 <img id="static-video-thumb" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtgG0dzA9PiKrAt8unHFrKp0r-aOjcLquhlIrvfr6cQ3bistPLMWfOkAR9JWW_ChQdJQbvld9OjWlaGRLq0WmvsfdH6elr2izwwXdgL-6Z9lQZapS0KWQAAsRXKcR_uNbGdVDGdE1bTd-kdEyS1KmqWQ_-we1VetVJo9uUnNLqPmRARl4sOwI-RsPkMQinDyP6BUHRcz40V649EjB2u20knEX7jkurqiJhsMqx5qI" alt="Checkout session preview">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-between p-space-md pointer-events-none">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-between p-3 pointer-events-none">
                   <div class="flex items-center justify-between">
                     <span class="px-2 py-0.5 rounded-full bg-surface-container-lowest/90 font-code text-[11px] text-on-surface font-semibold flex items-center gap-1 shadow-sm">
                       <span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span> 1080p 60fps
@@ -259,10 +267,10 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
               <!-- Video Details and Keyframe Metrics -->
               <div class="flex flex-col justify-between w-full h-full min-w-0">
                 <div>
-                  <div class="flex items-start justify-between gap-space-sm mb-space-xs">
+                  <div class="flex items-start justify-between gap-2 mb-2">
                     <div>
-                      <div class="flex items-center gap-space-sm flex-wrap">
-                        <h3 class="font-bold text-base text-on-surface truncate" id="hero-session-name">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <h3 class="font-bold text-sm sm:text-base text-on-surface truncate" id="hero-session-name">
                           checkout_unresponsive_submit_freeze.mp4
                         </h3>
                         <span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant text-[11px] font-semibold" id="hero-file-size">
@@ -276,27 +284,27 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
                   </div>
 
                   <!-- Keyframe Indicators -->
-                  <div class="grid grid-cols-4 gap-2 my-space-md">
-                    <div class="bg-surface-container-low p-2 rounded-lg flex flex-col">
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 my-3">
+                    <div class="bg-surface-container-low p-2 rounded-xl flex flex-col">
                       <span class="text-[10px] text-outline uppercase font-semibold">SSIM Index</span>
                       <span class="text-sm text-on-surface font-bold" id="hero-ssim">0.9984 <span class="text-[10px] text-error font-normal">(Frozen)</span></span>
                     </div>
-                    <div class="bg-surface-container-low p-2 rounded-lg flex flex-col">
+                    <div class="bg-surface-container-low p-2 rounded-xl flex flex-col">
                       <span class="text-[10px] text-outline uppercase font-semibold">Pixel Delta</span>
                       <span class="text-sm text-on-surface font-bold" id="hero-delta">0.02% <span class="text-[10px] text-secondary font-normal">(Zero Drift)</span></span>
                     </div>
-                    <div class="bg-surface-container-low p-2 rounded-lg flex flex-col">
+                    <div class="bg-surface-container-low p-2 rounded-xl flex flex-col">
                       <span class="text-[10px] text-outline uppercase font-semibold">Network API</span>
                       <span class="text-sm text-error font-bold" id="hero-network">500 Fail</span>
                     </div>
-                    <div class="bg-surface-container-low p-2 rounded-lg flex flex-col">
+                    <div class="bg-surface-container-low p-2 rounded-xl flex flex-col">
                       <span class="text-[10px] text-outline uppercase font-semibold">Target DOM</span>
                       <span class="font-code text-xs text-primary font-bold truncate">button#checkout-btn</span>
                     </div>
                   </div>
 
                   <!-- Extraction Progress -->
-                  <div class="flex flex-col gap-1 mt-space-sm">
+                  <div class="flex flex-col gap-1 mt-2">
                     <div class="flex items-center justify-between text-xs">
                       <span class="flex items-center gap-1 text-secondary font-semibold">
                         <span class="material-symbols-outlined text-[16px]">check_circle</span>
@@ -311,13 +319,13 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
                 </div>
 
                 <!-- Scenario Switcher Buttons -->
-                <div class="flex items-center justify-between pt-space-md mt-space-md border-t border-surface-container">
-                  <div class="flex items-center gap-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-3 mt-3 border-t border-surface-container">
+                  <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-xs text-outline font-semibold">Pre-set Scenarios:</span>
-                    <button onclick="selectPreset('checkout_500')" id="btn-preset-checkout" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-primary text-on-primary shadow-sm transition">
+                    <button onclick="selectPreset('checkout_500')" id="btn-preset-checkout" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary text-on-primary shadow-sm transition cursor-pointer">
                       Checkout 500 Freeze
                     </button>
-                    <button onclick="selectPreset('auth_token_expired')" id="btn-preset-auth" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition">
+                    <button onclick="selectPreset('auth_token_expired')" id="btn-preset-auth" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition cursor-pointer">
                       Auth 401 Expiry
                     </button>
                   </div>
@@ -326,20 +334,20 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
               </div>
             </div>
 
-            <!-- STATE B: Empty Drag-and-Drop Zone -->
-            <div class="w-full bg-primary-fixed/20 transition-all rounded-xl p-space-lg flex flex-col items-center justify-center text-center cursor-pointer shadow-md group min-h-[280px] relative overflow-hidden hidden" id="state-empty"
+            <!-- STATE B: Empty Drag-and-Drop Zone (Visible by default) -->
+            <div class="w-full bg-primary/5 hover:bg-primary/10 border-2 border-dashed border-primary/30 hover:border-primary/60 transition-all rounded-2xl p-6 sm:p-10 flex flex-col items-center justify-center text-center cursor-pointer shadow-sm group min-h-[260px] sm:min-h-[300px] relative overflow-hidden" id="state-empty"
                  ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" onclick="document.getElementById('file-input-real').click()">
               <input type="file" id="file-input-real" class="hidden" accept="video/mp4,video/webm,image/png,image/jpeg" onchange="handleFileSelect(event)">
-              <div class="w-full py-space-xl px-space-lg flex flex-col items-center justify-center text-center relative pointer-events-none">
-                <div class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-on-primary shadow-lg mb-space-md animate-bounce">
+              <div class="w-full py-4 flex flex-col items-center justify-center text-center relative pointer-events-none">
+                <div class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-on-primary shadow-lg mb-4 animate-bounce">
                   <span class="material-symbols-outlined text-[32px]">file_download</span>
                 </div>
-                <h2 class="text-xl font-bold text-primary mb-1" id="drop-header-text">Drop Your Bug Video or Logs Here</h2>
-                <p class="text-xs text-on-surface-variant max-w-md mb-space-md">
+                <h2 class="text-xl sm:text-2xl font-bold text-primary mb-1.5" id="drop-header-text">Drop Your Bug Video or Logs Here</h2>
+                <p class="text-xs sm:text-sm text-on-surface-variant max-w-md mb-4 px-2">
                   Supports MP4, WebM, and HAR/Console log archives. ContextPrism automatically isolates critical transition frames within ±1.5s.
                 </p>
                 <div class="flex items-center gap-2 text-xs">
-                  <span class="px-3 py-1 rounded-full bg-surface-container-lowest text-primary font-medium shadow-sm">
+                  <span class="px-3.5 py-1.5 rounded-full bg-surface-container-lowest text-primary font-semibold shadow-sm border border-surface-container-high">
                     Browse or Drop File
                   </span>
                   <span class="text-outline">• Up to 50MB</span>
@@ -350,19 +358,19 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
           </section>
 
           <!-- Primary Run Action Buttons -->
-          <section class="w-full max-w-4xl mx-auto flex flex-col items-center gap-space-sm pt-space-xs">
-            <div class="flex flex-col sm:flex-row items-center gap-3">
-              <button onclick="startAnalysisRun(false)" id="main-analyze-btn" class="inline-flex items-center justify-center gap-space-sm px-8 py-3.5 rounded-full bg-primary hover:bg-primary-container text-on-primary shadow-md hover:shadow-lg text-base font-semibold tracking-wide transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer">
+          <section class="w-full max-w-4xl mx-auto flex flex-col items-center gap-3 pt-2">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 w-full sm:w-auto">
+              <button onclick="startAnalysisRun(false)" id="main-analyze-btn" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-full bg-primary hover:bg-primary-container text-on-primary shadow-md hover:shadow-lg text-sm sm:text-base font-semibold tracking-wide transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer text-center">
                 <span class="material-symbols-outlined text-[20px]">auto_fix_high</span>
                 <span id="analyze-btn-text">Analyze Video (Instant Repro • 1.5s)</span>
                 <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
               </button>
-              <button onclick="startAnalysisRun(true)" id="cloud-analyze-btn" class="inline-flex items-center justify-center gap-space-sm px-6 py-3.5 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface border border-surface-container-high shadow-sm text-sm font-semibold tracking-wide transition-all cursor-pointer">
+              <button onclick="startAnalysisRun(true)" id="cloud-analyze-btn" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3.5 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface border border-surface-container-high shadow-sm text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer text-center">
                 <span class="material-symbols-outlined text-[18px] text-secondary">cloud_sync</span>
                 <span>Run Live Gemini 3.5 API (~50s)</span>
               </button>
             </div>
-            <p class="text-[11px] text-outline text-center">Instant Repro animates the optical flow pipeline & results immediately. Cloud mode connects live to Google Gemini 3.5.</p>
+            <p class="text-[11px] text-outline text-center px-4">Instant Repro animates the optical flow pipeline & results immediately. Cloud mode connects live to Google Gemini 3.5.</p>
           </section>
 
         </div>
@@ -373,20 +381,20 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
     <!-- SCREEN 2: MULTI-LAYER PROCESSING PIPELINE                               -->
     <!-- ======================================================================= -->
     <div id="screen-pipeline" class="w-full hidden">
-      <div class="max-w-[1440px] mx-auto px-gutter-desktop py-space-xl flex flex-col gap-space-xl">
+      <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col gap-6">
         
         <!-- Pipeline Header -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md pb-space-sm border-b border-surface-container-high">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-surface-container-high">
           <div>
             <div class="flex items-center gap-2 mb-1">
               <span class="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold uppercase tracking-wider">Multi-Layer Runtime</span>
               <span class="text-outline">•</span>
               <span class="text-xs font-code text-secondary font-semibold" id="pipeline-status-text">Optical Flow & Verification Active</span>
             </div>
-            <h1 class="text-2xl font-bold text-on-surface">Forensic Processing Pipeline</h1>
-            <p class="text-xs text-on-surface-variant">Real-time state distillation across ContextPrism, ApexTrace, and Replay Shield</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-on-surface">Forensic Processing Pipeline</h1>
+            <p class="text-xs sm:text-sm text-on-surface-variant">Real-time state distillation across ContextPrism, ApexTrace, and Replay Shield</p>
           </div>
-          <div class="flex items-center gap-2 self-start md:self-auto">
+          <div class="flex items-center gap-2 self-start md:self-auto flex-wrap">
             <button onclick="navigateTab('home', event)" class="px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold transition shadow-sm flex items-center gap-1.5 cursor-pointer">
               <span class="material-symbols-outlined text-[16px]">arrow_back</span>
               <span>Back to Ingestion</span>
@@ -399,10 +407,10 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
 
         <!-- Upper Grid: Dial Gauge + Frame Inspector Carousel -->
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter-desktop">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          <!-- Circular Progress Dial (4 Cols) -->
-          <div class="xl:col-span-4 bg-surface-container-lowest p-space-xl rounded-xl shadow-sm flex flex-col justify-between border border-surface-container-high">
+          <!-- Circular Progress Dial (4 Cols on xl, 5 on lg) -->
+          <div class="lg:col-span-5 xl:col-span-4 bg-surface-container-lowest p-5 sm:p-6 rounded-2xl shadow-sm flex flex-col justify-between border border-surface-container-high">
             <div>
               <div class="flex items-center justify-between mb-space-sm">
                 <h2 class="text-base font-bold text-on-surface">Synthesis Progress</h2>
@@ -450,9 +458,9 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
             </div>
           </div>
 
-          <!-- Live Frame Inspector & Optical Vectors (8 Cols) -->
-          <div class="xl:col-span-8 bg-surface-container-lowest p-space-xl rounded-xl shadow-sm flex flex-col justify-between border border-surface-container-high">
-            <div class="flex items-center justify-between pb-space-sm border-b border-surface-container">
+          <!-- Live Frame Inspector & Optical Vectors (7 Cols on lg, 8 Cols on xl) -->
+          <div class="lg:col-span-7 xl:col-span-8 bg-surface-container-lowest p-5 sm:p-6 rounded-2xl shadow-sm flex flex-col justify-between border border-surface-container-high">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-surface-container">
               <div class="flex items-center gap-2">
                 <span class="material-symbols-outlined text-secondary text-[22px]">video_search</span>
                 <div>
@@ -460,14 +468,14 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
                   <p class="text-xs text-on-surface-variant">Temporal sampling around user interaction locus</p>
                 </div>
               </div>
-              <span class="inline-flex items-center gap-1 font-code text-xs text-error bg-error-container/60 px-3 py-1 rounded-full font-semibold">
+              <span class="inline-flex items-center gap-1 font-code text-xs text-error bg-error-container/60 px-3 py-1 rounded-full font-semibold self-start sm:self-auto">
                 <span class="material-symbols-outlined text-[15px]">warning</span>
                 Defect Locus at T+00:12.4s
               </span>
             </div>
 
             <!-- 5-Frame Carousel Grid (Clickable) -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-space-md my-space-md">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 my-4">
               <!-- Frame 1 -->
               <div id="carousel-frame-1" onclick="selectFrame(1)" class="flex flex-col gap-1 cursor-pointer hover:ring-2 hover:ring-primary rounded-lg p-0.5 transition">
                 <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-surface-container-high shadow-inner">
@@ -553,59 +561,6 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
 
         </div>
 
-        <!-- Lower Grid: 3 Real Architectural Layers -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter-desktop">
-          
-          <!-- Layer 1 -->
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <span class="px-2 py-0.5 rounded bg-surface-container text-[11px] font-bold text-on-surface">LAYER 01</span>
-                <span class="text-secondary font-bold text-xs flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">check_circle</span> Distilled</span>
-              </div>
-              <h3 class="font-bold text-sm text-on-surface">ContextPrism: AST & PII</h3>
-              <p class="text-xs text-on-surface-variant mt-1">Masks passwords and Bearer tokens; prunes 84.9% redundant context before model ingestion.</p>
-            </div>
-            <div class="mt-4 p-2.5 rounded bg-surface-container-low font-code text-[11px] text-secondary flex items-center justify-between">
-              <span>Token Bloat Saved:</span>
-              <span class="font-bold">-84.9% (2.4s TTFT)</span>
-            </div>
-          </div>
-
-          <!-- Layer 2 -->
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <span class="px-2 py-0.5 rounded bg-surface-container text-[11px] font-bold text-on-surface">LAYER 02</span>
-                <span class="text-secondary font-bold text-xs flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">check_circle</span> Consensus Locked</span>
-              </div>
-              <h3 class="font-bold text-sm text-on-surface">ApexTrace: Dual-Engine</h3>
-              <p class="text-xs text-on-surface-variant mt-1">Arbitrates between Gemini 3.5 reasoning and deterministic SSIM math with zero false alarms.</p>
-            </div>
-            <div class="mt-4 p-2.5 rounded bg-surface-container-low font-code text-[11px] text-primary flex items-center justify-between">
-              <span>Consensus Agreement:</span>
-              <span class="font-bold">100% (Tier 1 Precedence)</span>
-            </div>
-          </div>
-
-          <!-- Layer 3 -->
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <span class="px-2 py-0.5 rounded bg-surface-container text-[11px] font-bold text-on-surface">LAYER 03</span>
-                <span class="text-secondary font-bold text-xs flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">check_circle</span> Verified Passed</span>
-              </div>
-              <h3 class="font-bold text-sm text-on-surface">Replay Shield: Playwright</h3>
-              <p class="text-xs text-on-surface-variant mt-1">Synthesizes reproduction test; validates failure on raw code (RED) and pass post-patch (GREEN).</p>
-            </div>
-            <div class="mt-4 p-2.5 rounded bg-surface-container-low font-code text-[11px] text-secondary flex items-center justify-between">
-              <span>ProofLoop Status:</span>
-              <span class="font-bold">RED ❌ → GREEN ✅</span>
-            </div>
-          </div>
-
-        </div>
-
       </div>
     </div>
 
@@ -613,26 +568,26 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
     <!-- SCREEN 3: RESULTS & VERIFICATION DASHBOARD                              -->
     <!-- ======================================================================= -->
     <div id="screen-results" class="w-full hidden">
-      <div class="max-w-[1440px] mx-auto px-gutter-desktop py-space-xl flex flex-col gap-space-xl">
+      <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col gap-6">
         
         <!-- Header & Action Row -->
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-sm border-b border-surface-container-high">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-surface-container-high">
           <div>
-            <div class="flex items-center gap-space-sm mb-1">
+            <div class="flex items-center gap-2 mb-1">
               <span class="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold uppercase tracking-wider">Autonomous Post-Mortem</span>
               <span class="text-outline-variant">•</span>
               <span class="font-code text-xs text-outline">Engine: ApexTrace v3.2 · Gemini 3.5</span>
             </div>
-            <h1 class="text-3xl font-bold text-on-surface tracking-tight">Analysis Complete</h1>
-            <p class="text-sm text-on-surface-variant">Here is what V.E.R.D.A.N.T. discovered and verified in your recording.</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">Analysis Complete</h1>
+            <p class="text-xs sm:text-sm text-on-surface-variant">Here is what V.E.R.D.A.N.T. discovered and verified in your recording.</p>
           </div>
           
-          <div class="flex items-center gap-space-sm shrink-0">
-            <button onclick="copyForensicReportMarkdown()" class="px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-xs font-semibold text-on-surface transition flex items-center gap-1 shadow-sm">
+          <div class="flex items-center gap-2 shrink-0 flex-wrap">
+            <button onclick="copyForensicReportMarkdown()" class="px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-xs font-semibold text-on-surface transition flex items-center gap-1 shadow-sm cursor-pointer">
               <span class="material-symbols-outlined text-[18px]">share</span>
               <span>Copy Report</span>
             </button>
-            <button onclick="document.getElementById('fixDrawer').classList.remove('hidden')" class="px-5 py-2 rounded-full bg-primary hover:bg-primary-container text-on-primary text-xs font-bold shadow-sm transition flex items-center gap-1.5">
+            <button onclick="document.getElementById('fixDrawer').classList.remove('hidden')" class="px-5 py-2 rounded-full bg-primary hover:bg-primary-container text-on-primary text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
               <span class="material-symbols-outlined text-[18px]">auto_fix_high</span>
               <span>Resolution Actions</span>
             </button>
@@ -640,47 +595,47 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
 
         <!-- 4 Compact Summary KPI Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter-desktop">
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high flex flex-col justify-between">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border border-surface-container-high flex flex-col justify-between">
             <div class="flex items-center justify-between text-on-surface-variant">
               <span class="text-xs font-semibold">Total Faults</span>
               <span class="w-6 h-6 rounded-full bg-error-container text-on-error-container flex items-center justify-center">
                 <span class="material-symbols-outlined text-[16px]">bug_report</span>
               </span>
             </div>
-            <div class="mt-space-md flex items-baseline justify-between">
+            <div class="mt-4 flex items-baseline justify-between">
               <div class="text-2xl font-bold text-on-surface">1</div>
               <span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container text-[11px] font-semibold">Critical Fault</span>
             </div>
           </div>
 
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high flex flex-col justify-between">
+          <div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border border-surface-container-high flex flex-col justify-between">
             <div class="flex items-center justify-between text-on-surface-variant">
               <span class="text-xs font-semibold">Severity</span>
               <span class="w-6 h-6 rounded-full bg-error-container text-on-error-container flex items-center justify-center">
                 <span class="material-symbols-outlined text-[16px]">warning</span>
               </span>
             </div>
-            <div class="mt-space-md flex items-baseline justify-between">
+            <div class="mt-4 flex items-baseline justify-between">
               <div class="text-2xl font-bold text-error">Critical</div>
               <span class="text-xs text-outline">UI Freeze</span>
             </div>
           </div>
 
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high flex flex-col justify-between">
+          <div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border border-surface-container-high flex flex-col justify-between">
             <div class="flex items-center justify-between text-on-surface-variant">
               <span class="text-xs font-semibold">Duration</span>
               <span class="w-6 h-6 rounded-full bg-surface-container text-primary flex items-center justify-center">
                 <span class="material-symbols-outlined text-[16px]">timer</span>
               </span>
             </div>
-            <div class="mt-space-md flex items-baseline justify-between">
+            <div class="mt-4 flex items-baseline justify-between">
               <div class="text-2xl font-bold text-on-surface" id="res-duration">24.2s</div>
               <span class="text-xs text-outline">720 frames</span>
             </div>
           </div>
 
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high flex flex-col justify-between">
+          <div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border border-surface-container-high flex flex-col justify-between">
             <div class="flex items-center justify-between text-on-surface-variant">
               <span class="text-xs font-semibold">Verification</span>
               <span class="w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center">
@@ -812,15 +767,15 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
                   </div>
                 </div>
 
-                <p class="text-xs text-on-surface font-medium">
-                  Applied atomic search/replace patch injecting fallback safety to <code class="font-code text-[11px] bg-surface-container px-1 py-0.5 rounded text-secondary font-semibold">src/api/checkoutHandler.ts</code>.
+                <p class="text-xs text-on-surface font-medium" id="res-patch-desc">
+                  Applied atomic search/replace patch injecting fallback safety to <code class="font-code text-[11px] bg-surface-container px-1 py-0.5 rounded text-secondary font-semibold" id="res-patch-target">src/api/checkoutHandler.ts</code>.
                 </p>
 
                 <!-- Diff Block -->
                 <div class="bg-surface-container p-space-md rounded-lg flex flex-col gap-1 overflow-x-auto shadow-inner">
                   <div class="flex items-center justify-between text-xs text-outline pb-1">
                     <span class="font-semibold uppercase tracking-wider text-[10px]">ATOMIC DIFF INSPECTOR</span>
-                    <span class="font-code text-[11px]">src/api/checkoutHandler.ts</span>
+                    <span class="font-code text-[11px]" id="diff-file-label">src/api/checkoutHandler.ts</span>
                   </div>
                   <pre class="font-code text-xs leading-5 whitespace-pre" id="res-patch-diff-view"><span class="text-error bg-error-container/40 block px-1">- if (!req.body.cartId) throw new Error();</span><span class="text-secondary bg-secondary-container/40 block px-1 font-semibold">+ const cartId = req.body?.cartId ?? req.session?.cartId;</span><span class="text-secondary bg-secondary-container/40 block px-1 font-semibold">+ if (!cartId) return res.status(400).json({ error: 'Missing cartId' });</span></pre>
                 </div>
@@ -939,7 +894,7 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
                   <span class="font-code text-primary font-semibold">96.4% confidence</span>
                 </div>
                 <p class="text-on-surface-variant" id="deep-gemini-desc">Detected static loading spinner halting UI state across 40 frames without resolution.</p>
-                <span class="font-code text-[11px] text-outline">Target: src/api/checkoutHandler.ts</span>
+                <span class="font-code text-[11px] text-outline" id="deep-target-label">Target: src/api/checkoutHandler.ts</span>
               </div>
               <div class="bg-surface-container-low p-space-md rounded-lg flex flex-col justify-between gap-space-sm">
                 <div class="flex items-center justify-between">
@@ -959,37 +914,12 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
               <p class="text-xs text-on-surface-variant">Synthesized reproduction test executed in isolated container environment</p>
             </div>
 
-            <!-- 3 Sequential Steps -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md text-xs">
-              <div class="bg-error-container/40 p-space-sm rounded-lg flex items-center justify-between">
-                <div>
-                  <span class="text-[10px] text-error font-semibold uppercase block">1. Original Run</span>
-                  <span class="font-bold text-error">RED ❌ (Timeout)</span>
-                </div>
-                <span class="w-2.5 h-2.5 rounded-full bg-error"></span>
-              </div>
-              <div class="bg-surface-container p-space-sm rounded-lg flex items-center justify-between">
-                <div>
-                  <span class="text-[10px] text-on-surface font-semibold uppercase block">2. Patch Applied</span>
-                  <span class="font-bold text-primary">Atomic Diff</span>
-                </div>
-                <span class="material-symbols-outlined text-[18px] text-primary">sync</span>
-              </div>
-              <div class="bg-secondary-container/40 p-space-sm rounded-lg flex items-center justify-between">
-                <div>
-                  <span class="text-[10px] text-secondary font-semibold uppercase block">3. Replay Test</span>
-                  <span class="font-bold text-secondary">GREEN ✅ (Passed)</span>
-                </div>
-                <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
-              </div>
-            </div>
-
             <!-- Playwright Code Viewer -->
             <div class="bg-surface-container-high rounded-lg overflow-hidden shadow-inner">
               <div class="bg-surface-container px-space-md py-2 flex items-center justify-between text-on-surface-variant text-xs">
                 <div class="flex items-center gap-space-sm">
                   <span class="material-symbols-outlined text-[16px] text-primary">code</span>
-                  <span class="font-code text-on-surface font-medium">tests/synthetic/checkout-repro.spec.ts</span>
+                  <span class="font-code text-on-surface font-medium" id="res-playwright-filename">tests/synthetic/checkout-repro.spec.ts</span>
                 </div>
                 <span class="text-[10px] font-semibold bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full">Passed in Replay</span>
               </div>
@@ -1014,47 +944,47 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
     <!-- SCREEN 4: VERDE-HYDRA SUSTAINABILITY DASHBOARD                           -->
     <!-- ======================================================================= -->
     <div id="screen-sustainability" class="w-full hidden">
-      <div class="max-w-[1440px] mx-auto px-gutter-desktop py-space-xl flex flex-col gap-space-xl">
+      <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col gap-6">
         
         <!-- Header -->
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-sm border-b border-surface-container-high">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-surface-container-high">
           <div>
             <div class="flex items-center gap-2 mb-1">
               <span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant text-[11px] font-semibold uppercase tracking-wider">Green Computing Standard</span>
               <span class="text-outline">•</span>
               <span class="text-xs font-code text-secondary font-semibold">ASHRAE TC 9.9 · Google Cloud Baseline</span>
             </div>
-            <h1 class="text-3xl font-bold text-on-surface tracking-tight">VERDE-Hydra Telemetry</h1>
-            <p class="text-sm text-on-surface-variant">Real data center resource reduction metrics certified against published Google Cloud PUE and WUE.</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">VERDE-Hydra Telemetry</h1>
+            <p class="text-xs sm:text-sm text-on-surface-variant">Real data center resource reduction metrics certified against published Google Cloud PUE and WUE.</p>
           </div>
         </div>
 
         <!-- 4 Bento KPI Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter-desktop">
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border border-surface-container-high">
             <span class="text-xs text-outline block">Net Energy Saved</span>
-            <div class="text-3xl font-bold text-secondary mt-1" id="eco-saved-wh">584 Wh</div>
+            <div class="text-2xl sm:text-3xl font-bold text-secondary mt-1" id="eco-saved-wh">584 Wh</div>
             <span class="text-[11px] text-secondary font-semibold mt-1 block">82.2% reduction vs manual CI</span>
           </div>
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high">
+          <div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border border-surface-container-high">
             <span class="text-xs text-outline block">Cooling Water Conserved</span>
-            <div class="text-3xl font-bold text-primary mt-1" id="eco-water-ml">2.35 L</div>
+            <div class="text-2xl sm:text-3xl font-bold text-primary mt-1" id="eco-water-ml">2.35 L</div>
             <span class="text-[11px] text-primary font-semibold mt-1 block">Google Cloud WUE 1.18 L/kWh</span>
           </div>
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high">
+          <div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border border-surface-container-high">
             <span class="text-xs text-outline block">Token Bloat Reduction</span>
-            <div class="text-3xl font-bold text-tertiary mt-1" id="eco-token-pct">-84.9%</div>
+            <div class="text-2xl sm:text-3xl font-bold text-tertiary mt-1" id="eco-token-pct">-84.9%</div>
             <span class="text-[11px] text-outline font-semibold mt-1 block">ContextPrism AST compression</span>
           </div>
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high">
+          <div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border border-surface-container-high">
             <span class="text-xs text-outline block">Operating Cloud PUE</span>
-            <div class="text-3xl font-bold text-on-surface mt-1">1.10</div>
+            <div class="text-2xl sm:text-3xl font-bold text-on-surface mt-1">1.10</div>
             <span class="text-[11px] text-secondary font-semibold mt-1 block">Google Cloud Run Certified</span>
           </div>
         </div>
 
         <!-- Comparative Comparison Bars -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           <!-- Energy Bars (7 Cols) -->
           <div class="lg:col-span-7 bg-surface-container-lowest p-space-xl rounded-xl shadow-sm border border-surface-container-high flex flex-col justify-between">
@@ -1181,67 +1111,67 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
     <!-- SCREEN 5: AUDIT HISTORY & PERSISTENT DATABASE                           -->
     <!-- ======================================================================= -->
     <div id="screen-history" class="w-full hidden">
-      <div class="max-w-[1440px] mx-auto px-gutter-desktop py-space-xl flex flex-col gap-space-xl">
+      <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col gap-6">
         
         <!-- Header -->
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-sm border-b border-surface-container-high">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-surface-container-high">
           <div>
             <div class="flex items-center gap-2 mb-1">
               <span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant text-[11px] font-semibold uppercase tracking-wider">Persistent Audit Trail</span>
               <span class="text-outline">•</span>
               <span class="text-xs font-code text-secondary font-semibold">SQLite WAL · AES-256 Encrypted</span>
             </div>
-            <h1 class="text-3xl font-bold text-on-surface tracking-tight">Incident History & Audit Log</h1>
-            <p class="text-sm text-on-surface-variant">Every bug video, scrubbed log, Playwright proof, and dispatched PR is recorded permanently.</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">Incident History & Audit Log</h1>
+            <p class="text-xs sm:text-sm text-on-surface-variant">Every bug video, scrubbed log, Playwright proof, and dispatched PR is recorded permanently.</p>
           </div>
           
           <div class="flex items-center gap-2">
-            <button onclick="loadHistoryData()" class="px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-xs font-semibold text-on-surface transition flex items-center gap-1">
+            <button onclick="loadHistoryData()" class="px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high text-xs font-semibold text-on-surface transition flex items-center gap-1 cursor-pointer">
               <span class="material-symbols-outlined text-[16px]">refresh</span> Refresh
             </button>
           </div>
         </div>
 
         <!-- 4 History KPI Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter-desktop">
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border border-surface-container-high">
             <span class="text-xs text-outline block">Total Incidents Triaged</span>
-            <div class="text-3xl font-bold text-on-surface mt-1" id="hist-stat-total">0</div>
+            <div class="text-2xl sm:text-3xl font-bold text-on-surface mt-1" id="hist-stat-total">0</div>
             <span class="text-[11px] text-secondary font-semibold mt-1 block">Full forensic records saved</span>
           </div>
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high">
+          <div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border border-surface-container-high">
             <span class="text-xs text-outline block">With Repo vs QA Reports</span>
-            <div class="text-3xl font-bold text-primary mt-1">
+            <div class="text-2xl sm:text-3xl font-bold text-primary mt-1">
               <span id="hist-stat-with-repo" class="text-secondary">0</span> <span class="text-sm text-outline">/</span> <span id="hist-stat-no-repo" class="text-tertiary">0</span>
             </div>
             <span class="text-[11px] text-outline font-semibold mt-1 block">Code patches vs Diagnostics</span>
           </div>
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high">
+          <div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border border-surface-container-high">
             <span class="text-xs text-outline block">Verified GitHub PRs</span>
-            <div class="text-3xl font-bold text-primary mt-1" id="hist-stat-prs">0</div>
+            <div class="text-2xl sm:text-3xl font-bold text-primary mt-1" id="hist-stat-prs">0</div>
             <span class="text-[11px] text-primary font-semibold mt-1 block">Dispatched to remote origin</span>
           </div>
-          <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-surface-container-high">
+          <div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border border-surface-container-high">
             <span class="text-xs text-outline block">Cumulative Energy Saved</span>
-            <div class="text-3xl font-bold text-secondary mt-1"><span id="hist-stat-energy">0.0</span> <span class="text-xs font-normal">Wh</span></div>
+            <div class="text-2xl sm:text-3xl font-bold text-secondary mt-1"><span id="hist-stat-energy">0.0</span> <span class="text-xs font-normal">Wh</span></div>
             <span class="text-[11px] text-secondary font-semibold mt-1 block"><span id="hist-stat-water">0.0</span> mL water conserved</span>
           </div>
         </div>
 
         <!-- History Filter Bar & Table -->
-        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high p-space-lg">
-          <div class="flex items-center justify-between pb-space-md border-b border-surface-container flex-wrap gap-2">
-            <div class="flex items-center gap-2">
+        <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-container-high p-4 sm:p-6">
+          <div class="flex items-center justify-between pb-4 border-b border-surface-container flex-wrap gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs font-semibold text-on-surface">Filter Records:</span>
-              <button onclick="filterHistory('ALL')" id="hfilter-all" class="px-3 py-1 rounded-full text-xs font-bold bg-primary text-on-primary">All</button>
-              <button onclick="filterHistory('WITH_REPO')" id="hfilter-repo" class="px-3 py-1 rounded-full text-xs font-medium text-on-surface-variant hover:bg-surface-container">With Repo</button>
-              <button onclick="filterHistory('WITHOUT_REPO')" id="hfilter-norepo" class="px-3 py-1 rounded-full text-xs font-medium text-on-surface-variant hover:bg-surface-container">QA Reports</button>
+              <button onclick="filterHistory('ALL')" id="hfilter-all" class="px-3 py-1 rounded-full text-xs font-bold bg-primary text-on-primary cursor-pointer">All</button>
+              <button onclick="filterHistory('WITH_REPO')" id="hfilter-repo" class="px-3 py-1 rounded-full text-xs font-medium text-on-surface-variant hover:bg-surface-container cursor-pointer">With Repo</button>
+              <button onclick="filterHistory('WITHOUT_REPO')" id="hfilter-norepo" class="px-3 py-1 rounded-full text-xs font-medium text-on-surface-variant hover:bg-surface-container cursor-pointer">QA Reports</button>
             </div>
             <span class="font-code text-[11px] text-outline">Encrypted in SQLite DB</span>
           </div>
 
-          <div class="overflow-x-auto mt-4">
-            <table class="w-full text-left text-xs text-on-surface">
+          <div class="overflow-x-auto mt-4 rounded-xl border border-surface-container-high">
+            <table class="min-w-[760px] w-full text-left text-xs text-on-surface">
               <thead class="bg-surface-container-low text-on-surface-variant uppercase text-[10px] tracking-wider border-b border-surface-container">
                 <tr>
                   <th class="p-3">Session ID / Date</th>
@@ -1480,26 +1410,6 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
   </div>
 
   <!-- ========================================================================= -->
-  <!-- STITCH FOOTER                                                             -->
-  <!-- ========================================================================= -->
-  <footer class="w-full bg-surface-container-lowest py-space-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-t border-surface-container-high mt-auto">
-    <div class="w-full px-gutter-desktop max-w-[1440px] mx-auto flex flex-col md:flex-row items-center justify-between gap-space-md text-xs text-on-surface-variant">
-      <div class="flex items-center gap-space-sm flex-wrap">
-        <span class="font-medium text-on-surface">V.E.R.D.A.N.T. Autonomous Bug Analysis</span>
-        <span class="text-outline-variant">•</span>
-        <span class="text-secondary font-medium">Debug Smarter. Build Greener. 🌱</span>
-        <span class="text-outline-variant">•</span>
-        <span>Google Cloud & DeepMind Startup Buildathon India 2026</span>
-      </div>
-      <div class="flex items-center gap-space-lg font-code text-[11px]">
-        <a class="hover:text-on-surface transition" href="https://github.com/dhairya-shah7/VERDANT" target="_blank">GitHub</a>
-        <a class="hover:text-on-surface transition" href="/demo-app" target="_blank">Buggy Store</a>
-        <span class="text-outline">v2.1-stitch-live</span>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ========================================================================= -->
   <!-- CLIENT JAVASCRIPT: STITCH NAVIGATION, LIVE APIS & DATABASE WORKFLOWS      -->
   <!-- ========================================================================= -->
   <script>
@@ -1512,6 +1422,31 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
     let cachedHistory = [];
     let activeHistoryFilter = 'ALL';
     let activeDetailSession = null;
+
+    // ── Mobile Sidebar Drawer Controls ─────────────────────────────────────
+    function toggleMobileSidebar() {
+      const sidebar = document.getElementById('main-sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (sidebar && backdrop) {
+        const isClosed = sidebar.classList.contains('-translate-x-full');
+        if (isClosed) {
+          sidebar.classList.remove('-translate-x-full');
+          backdrop.classList.remove('hidden');
+        } else {
+          sidebar.classList.add('-translate-x-full');
+          backdrop.classList.add('hidden');
+        }
+      }
+    }
+
+    function closeMobileSidebar() {
+      const sidebar = document.getElementById('main-sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (sidebar && backdrop) {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
 
     // ── Main Tab Switching & URL Routing ───────────────────────────────────
     function switchMainTab(tab) {
@@ -1526,9 +1461,9 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
         }
         if (btn) {
           if (s === tab) {
-            btn.className = "nav-tab-active px-3 py-1.5 rounded-lg text-xs md:text-sm text-on-surface transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer";
+            btn.className = "nav-tab-active px-3.5 py-2.5 rounded-xl text-xs md:text-sm text-on-surface transition-all flex items-center gap-3 font-semibold cursor-pointer";
           } else {
-            btn.className = "px-3 py-1.5 rounded-lg text-xs md:text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer";
+            btn.className = "px-3.5 py-2.5 rounded-xl text-xs md:text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-3 font-medium cursor-pointer";
           }
         }
       });
@@ -1578,14 +1513,14 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
       const bannerNote = document.getElementById('repo-banner-note');
 
       if (mode === 'WITH_REPO') {
-        pillRepo.className = "px-3 py-1 rounded text-xs font-bold transition bg-surface-container-lowest text-primary shadow-sm flex items-center gap-1";
-        pillNoRepo.className = "px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface transition flex items-center gap-1";
-        bannerNote.innerHTML = "<strong>Repository mode active:</strong> Full AST Narrowing, surgical patch diff, Playwright RED/GREEN verification & GitHub PR enabled.";
+        if (pillRepo) pillRepo.className = "px-3 py-1 rounded text-xs font-bold transition bg-surface-container-lowest text-primary shadow-sm flex items-center gap-1";
+        if (pillNoRepo) pillNoRepo.className = "px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface transition flex items-center gap-1";
+        if (bannerNote) bannerNote.innerHTML = "<strong>Repository mode active:</strong> Full AST Narrowing, surgical patch diff, Playwright RED/GREEN verification & GitHub PR enabled.";
         selectModalOption(1);
       } else {
-        pillNoRepo.className = "px-3 py-1 rounded text-xs font-bold transition bg-surface-container-lowest text-tertiary shadow-sm flex items-center gap-1";
-        pillRepo.className = "px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface transition flex items-center gap-1";
-        bannerNote.innerHTML = "<strong>QA Triage mode active:</strong> Code diffs suppressed. Focuses purely on root-cause analysis, timeline steps, and Jira ticket export.";
+        if (pillNoRepo) pillNoRepo.className = "px-3 py-1 rounded text-xs font-bold transition bg-surface-container-lowest text-tertiary shadow-sm flex items-center gap-1";
+        if (pillRepo) pillRepo.className = "px-3 py-1 rounded text-xs font-medium text-on-surface-variant hover:text-on-surface transition flex items-center gap-1";
+        if (bannerNote) bannerNote.innerHTML = "<strong>QA Triage mode active:</strong> Code diffs suppressed. Focuses purely on root-cause analysis, timeline steps, and Jira ticket export.";
         selectModalOption(2);
       }
     }
@@ -1684,171 +1619,103 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
     }
 
     // ── Main Pipeline Execution ────────────────────────────────────────────
-    async function startAnalysisRun(isLiveApi = false) {
+    async function startAnalysisRun() {
       const btn = document.getElementById('main-analyze-btn');
       const originalText = btn ? btn.innerHTML : '';
 
-      if (!isLiveApi) {
-        // Fast Instant Demo Repro (1.5 seconds)
-        if (btn) {
-          btn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">refresh</span><span>Synthesizing Repro (1.5s)...</span>';
-          btn.disabled = true;
-        }
-
-        navigateTab('pipeline');
-        animatePipelineDial(15);
-        setTimeout(() => animatePipelineDial(52), 400);
-        setTimeout(() => animatePipelineDial(96), 900);
-
-        setTimeout(() => {
-          // Bind rich triage data
-          const demoData = {
-            session_id: '82FA-99C1',
-            session_mode: currentWorkflowMode,
-            scenario: {
-              title: currentScenario === 'checkout_500' ? 'E-Commerce Checkout 500 Drop (Silent UI Freeze)' : 'Auth Token Expiry Failure (401 Drop)',
-              video_duration: '24.2s',
-              patch_diff: `--- a/src/services/checkoutHandler.ts\n+++ b/src/services/checkoutHandler.ts\n@@ -40,3 +40,5 @@\n-  const cartId = paymentSession.cartId;\n+  if (!paymentSession || !paymentSession.cartId) {\n+    throw new CheckoutError("INVALID_CART_SESSION");\n+  }\n+  const cartId = paymentSession.cartId;`
-            },
-            gemini_verdict: {
-              explanation: currentScenario === 'checkout_500' 
-                ? 'A 500 server error on /api/v1/checkout triggered an unhandled TypeError in checkoutHandler.ts line 42 when reading "cartId" from an undefined object.'
-                : 'Auth token expired before token refresh completed, causing unhandled 401 Unauthorized.'
-            },
-            ssim_result: {
-              ssim: 0.9984,
-              delta_pct: 0.02
-            },
-            arbiter_result: {
-              confidence: 'HIGH',
-              arbiter_tier: 1
-            },
-            playwright_code: `// Playwright RED-to-GREEN verification proof\nimport { test, expect } from "@playwright/test";\n\ntest("Verify checkout error feedback post-patch", async ({ page }) => {\n  await page.goto("/checkout");\n  await page.click("button#checkout-btn");\n  // Verifies graceful error toast rather than silent lockup\n  await expect(page.locator(".error-toast")).toBeVisible();\n});`
-          };
-
-          latestRunData = demoData;
-          currentSessionId = demoData.session_id;
-          bindResultsData(demoData);
-          updateHistoryCount();
-
-          if (btn) {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-          }
-
-          navigateTab('results');
-        }, 1400);
-        return;
-      }
-
-      // Live Cloud Gemini 3.5 API Run (~50s)
       if (btn) {
-        btn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">refresh</span><span>Gemini & SSIM Analyzing (Live)...</span>';
+        btn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">refresh</span><span>Gemini Multimodal Reasoning in Progress...</span>';
         btn.disabled = true;
       }
 
       navigateTab('pipeline');
-      animatePipelineDial(10);
+      animatePipelineDial(15);
+      setTimeout(() => animatePipelineDial(45), 800);
+      setTimeout(() => animatePipelineDial(78), 2000);
 
       try {
         const res = await fetch(`/api/run-pipeline?scenario_id=${currentScenario}&custom_filename=${encodeURIComponent(uploadedFileName)}&session_mode=${currentWorkflowMode}`, { method: 'POST' });
         const data = await res.json();
-        latestRunData = data;
-        currentSessionId = data.session_id;
-
-        animatePipelineDial(100);
-        bindResultsData(data);
-        updateHistoryCount();
-
-        setTimeout(() => {
-          navigateTab('results');
-        }, 800);
-
-      } catch (e) {
-        alert('Analysis error: ' + e.message);
-      } finally {
-        if (btn) {
-          btn.innerHTML = originalText;
-          btn.disabled = false;
+        
+        if (data.status === 'success') {
+          animatePipelineDial(100);
+          setTimeout(() => {
+            latestRunData = data;
+            currentSessionId = data.session_id;
+            bindResultsData(data);
+            updateHistoryCount();
+            if (btn) {
+              btn.innerHTML = originalText;
+              btn.disabled = false;
+            }
+            navigateTab('results');
+          }, 400);
+        } else {
+          alert('Analysis Error: ' + (data.message || 'Pipeline failed'));
+          if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
+          navigateTab('home');
         }
-      }
-    }
-
-    // ── Frame Inspector Selection ───────────────────────────────────────────
-    function selectFrame(num) {
-      for (let i = 1; i <= 5; i++) {
-        const el = document.getElementById('carousel-frame-' + i);
-        if (el) {
-          if (i === num) {
-            el.className = "flex flex-col gap-1 cursor-pointer ring-2 ring-primary rounded-lg p-0.5 bg-primary/10 transition";
-          } else {
-            el.className = "flex flex-col gap-1 cursor-pointer hover:ring-1 hover:ring-outline-variant rounded-lg p-0.5 transition";
-          }
-        }
-      }
-    }
-
-    // ── Download QA Forensic Report ─────────────────────────────────────────
-    function downloadQAReport() {
-      const sid = currentSessionId || '82FA-99C1';
-      const rootCause = latestRunData ? latestRunData.gemini_verdict.explanation : "A 500 network error on /api/v1/checkout triggered an uncaught TypeError in checkoutHandler.ts line 42.";
-      const pwCode = latestRunData && latestRunData.playwright_code ? latestRunData.playwright_code : "// Playwright test reproduction...";
-
-      const mdContent = "# V.E.R.D.A.N.T. Forensic Bug Triage Report\\n" +
-        "Session ID: #" + sid + "\\n" +
-        "Mode: " + currentWorkflowMode + "\\n" +
-        "Generated: " + (new Date().toISOString()) + "\\n\\n" +
-        "## Root Cause Summary\\n" + rootCause + "\\n\\n" +
-        "## Visual Locus\\n- Frame @ 00:12.42\\n- SSIM Delta: 0.02% (Silent UI Lockup)\\n- Target DOM Element: button#checkout-btn\\n\\n" +
-        "## Chronological Reproduction Steps\\n" +
-        "1. Navigate to /checkout\\n" +
-        "2. Add items and fill billing address\\n" +
-        "3. Click button#checkout-btn (T+00:11.20)\\n" +
-        "4. Network Failure: POST /api/v1/checkout HTTP 500\\n" +
-        "5. Silent UI Lockup: Button disabled with zero repaint (T+00:12.45)\\n\\n" +
-        "## Reproduction Playwright Spec\\n```typescript\\n" + pwCode + "\\n```\\n\\n" +
-        "## Scrubbed Console Logs (PII Sanitized)\\n" +
-        "[00:11.20] User clicked button#checkout-btn\\n" +
-        "[00:12.45] Uncaught TypeError: Cannot read properties of undefined (reading 'cartId') at checkoutHandler.ts:42\\n" +
-        "[00:12.46] Authorization: Bearer [REDACTED_JWT]\\n";
-
-      const blob = new Blob([mdContent], { type: 'text/markdown' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = "verdant_triage_report_" + sid + ".md";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function animatePipelineDial(targetPct) {
-      const circle = document.getElementById('pipeline-svg-circle');
-      const label = document.getElementById('pipeline-pct-label');
-      if (circle && label) {
-        const offset = 264 - (264 * (targetPct / 100));
-        circle.style.strokeDashoffset = offset;
-        label.innerText = `${targetPct}%`;
+      } catch (err) {
+        alert('Network failure reaching analysis engine: ' + err.message);
+        if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
+        navigateTab('home');
       }
     }
 
     function bindResultsData(data) {
       if (!data) return;
-      document.getElementById('res-duration').innerText = `${data.scenario.video_duration || '24.2s'}`;
-      document.getElementById('res-confidence-tag').innerText = `Triage Confidence: ${data.arbiter_result.confidence || 'HIGH'}`;
-      document.getElementById('res-session-id-label').innerText = `ID: #${data.session_id || '82FA-99C1'}`;
-      document.getElementById('res-root-cause-text').innerHTML = `<strong class="text-on-surface">Gemini Diagnosis:</strong> ${data.gemini_verdict.explanation}`;
-      document.getElementById('deep-gemini-desc').innerText = data.gemini_verdict.explanation;
-      document.getElementById('deep-ssim-desc').innerText = `SSIM: ${data.ssim_result.ssim} · Delta: ${data.ssim_result.delta_pct}% · Tier ${data.arbiter_result.arbiter_tier} Arbiter Precedence`;
+      const scenario = data.scenario || {};
+      const verdict = data.gemini_verdict || {};
+      const ssim = data.ssim_result || {};
+      const arbiter = data.arbiter_result || {};
+      const suspectFile = verdict.suspect_file || scenario.suspect_file || 'pricing_engine.py';
 
+      document.getElementById('res-duration').innerText = `${scenario.video_duration || '12.0s'}`;
+      document.getElementById('res-confidence-tag').innerText = `Triage Confidence: ${arbiter.confidence || 'HIGH'}`;
+      document.getElementById('res-session-id-label').innerText = `ID: #${data.session_id || '82FA-99C1'}`;
+      
+      const explanationText = verdict.explanation || verdict.intent || 'Anomaly diagnosed by Gemini 3.5.';
+      document.getElementById('res-root-cause-text').innerHTML = `<strong class="text-on-surface">Gemini Diagnosis:</strong> ${escapeHtml(explanationText)}`;
+      document.getElementById('deep-gemini-desc').innerText = explanationText;
+      document.getElementById('deep-ssim-desc').innerText = `SSIM: ${ssim.ssim || '0.942'} · Delta: ${ssim.delta_pct || '1.85'}% · Tier ${arbiter.arbiter_tier || 1} Arbiter Precedence`;
+
+      // Console trace update
+      const traceEl = document.getElementById('res-console-trace');
+      if (traceEl) {
+        traceEl.innerText = data.console_trace || explanationText;
+      }
+      const traceFileEl = document.getElementById('trace-file-label');
+      if (traceFileEl) {
+        traceFileEl.innerText = suspectFile;
+      }
+
+      // Target file labels
+      const patchTargetEl = document.getElementById('res-patch-target');
+      if (patchTargetEl) patchTargetEl.innerText = suspectFile;
+      const diffFileLabelEl = document.getElementById('diff-file-label');
+      if (diffFileLabelEl) diffFileLabelEl.innerText = suspectFile;
+      const deepTargetLabelEl = document.getElementById('deep-target-label');
+      if (deepTargetLabelEl) deepTargetLabelEl.innerText = 'Target: ' + suspectFile;
+
+      // Diff view
+      const diffViewEl = document.getElementById('res-patch-diff-view');
+      const patchDiff = data.patch_diff || scenario.patch_diff || '# No diff required';
       if (data.session_mode === 'WITH_REPO') {
-        document.getElementById('res-patch-diff-view').innerText = data.scenario.patch_diff || '# No diff needed';
+        if (diffViewEl) diffViewEl.innerText = patchDiff;
         document.getElementById('res-playwright-code').innerHTML = `<code>${escapeHtml(data.playwright_code || '')}</code>`;
       } else {
-        document.getElementById('res-patch-diff-view').innerText = `# Mode: QA Triage Only (No source repo connected)\n# Diagnostic cause: ${data.gemini_verdict.explanation}`;
+        if (diffViewEl) diffViewEl.innerText = `# Mode: QA Triage Only (No source repo connected)\n# Suspect Component: ${suspectFile}\n# Diagnostic Root Cause:\n${explanationText}`;
         document.getElementById('res-playwright-code').innerHTML = `<code>// Playwright synthetic draft created for QA export\n${escapeHtml(data.playwright_code || '')}</code>`;
       }
 
-      // Sustainability sync
+      // Playwright test filename
+      const pwFilenameEl = document.getElementById('res-playwright-filename');
+      if (pwFilenameEl) {
+        const cleanBase = suspectFile.split('/').pop().replace(/\.[^/.]+$/, "");
+        pwFilenameEl.innerText = `tests/synthetic/${cleanBase}-repro.spec.ts`;
+      }
+
+      // Telemetry
       if (data.telemetry) {
         document.getElementById('eco-saved-wh').innerText = `${data.telemetry.estimated_energy_saved_wh} Wh`;
         document.getElementById('eco-water-ml').innerText = `${data.telemetry.estimated_cooling_water_saved_ml} mL`;
@@ -1857,7 +1724,7 @@ test('reproduce and verify checkout lockup fix', async ({ page }) => {
     }
 
     function escapeHtml(str) {
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     // ── Deep-Dive Tabs (Results Screen) ────────────────────────────────────
