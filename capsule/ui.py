@@ -1,12 +1,12 @@
 """
 V.E.R.D.A.N.T. Desktop Floating Capsule UI
-Pixel-perfect desktop pill inspired by the reference design:
-- Sleek dark theme (#0D111A) with neon glow border (#3B82F6 / #A855F7)
+Always-on-top, responsive desktop sentinel:
+- Sleek dark aesthetic (#0D111A) with neon accent border (#3B82F6 / #A855F7)
+- Guaranteed Taskbar presence & stay-on-top floating behavior
 - Text input with '| Ask anything...' placeholder
-- Controls: [+] attach screen, [Normal / DeepThink] mode toggles, [🎙️ Voice] push-to-talk, [➤] submit
-- Minimize [-] and Close [x] window controls
+- Controls: [+] attach screen, [🌿 Normal / 💡 DeepThink] mode toggles, [🎙️ Voice] push-to-talk, [➤] submit
+- Toggleable Frameless / Titlebar mode
 - Expandable slide-out diff drawer for surgical patches with 1-click apply and proof verification
-- Always-on-top, draggable, frameless window
 """
 import threading
 from pathlib import Path
@@ -24,7 +24,7 @@ ctk.set_default_color_theme("blue")
 
 
 class FloatingCapsule(ctk.CTk):
-    def __init__(self):
+    def __init__(self, frameless: bool = False):
         super().__init__()
 
         self.bridge = CapsuleBridge()
@@ -39,17 +39,20 @@ class FloatingCapsule(ctk.CTk):
         self.latest_diagnosis = None
         self.is_drawer_open = False
         self.is_visible = True
+        self.is_frameless = frameless
 
-        # Configure Frameless & Draggable Window
-        self.overrideredirect(True)
+        # Window Title & Attributes (Guaranteed Taskbar Presence)
+        self.title("🌿 V.E.R.D.A.N.T. Floating Capsule")
         self.attributes("-topmost", True)
+        if self.is_frameless:
+            self.overrideredirect(True)
 
         # Initial Dimensions & Center on Top of Screen
         screen_w = self.winfo_screenwidth()
-        self.capsule_width = 700
+        self.capsule_width = 720
         self.capsule_height = 115
         self.drawer_height = 360
-        init_x = max(40, int((screen_w - self.capsule_width) / 2))
+        init_x = max(30, int((screen_w - self.capsule_width) / 2))
         init_y = 60
         self.geometry(f"{self.capsule_width}x{self.capsule_height}+{init_x}+{init_y}")
 
@@ -60,7 +63,7 @@ class FloatingCapsule(ctk.CTk):
         self._bind_drag(self.glow_border)
         self._bind_drag(self.main_pill)
 
-        # Guarantee Immediate Visibility
+        # Ensure Immediate Visibility
         self.deiconify()
         self.lift()
         self.focus_force()
@@ -78,6 +81,13 @@ class FloatingCapsule(ctk.CTk):
         y = self.winfo_y() + (event.y - self._drag_data["y"])
         self.geometry(f"+{x}+{y}")
 
+    def toggle_frameless(self):
+        """Toggles between standard titlebar and frameless pill."""
+        self.is_frameless = not self.is_frameless
+        self.overrideredirect(self.is_frameless)
+        self.deiconify()
+        self.lift()
+
     def toggle_visibility(self):
         """Toggles show/hide safely on main thread."""
         if self.is_visible:
@@ -94,24 +104,24 @@ class FloatingCapsule(ctk.CTk):
         self.glow_border = ctk.CTkFrame(
             self,
             fg_color="#090D16",
-            corner_radius=28,
+            corner_radius=20,
             border_width=2,
             border_color="#3B82F6"
         )
-        self.glow_border.pack(fill="both", expand=True, padx=2, pady=2)
+        self.glow_border.pack(fill="both", expand=True, padx=4, pady=4)
 
         # Main Capsule Pill Body
         self.main_pill = ctk.CTkFrame(
             self.glow_border,
             fg_color="#0D111A",
-            corner_radius=26,
+            corner_radius=18,
             border_width=0
         )
         self.main_pill.pack(fill="both", expand=True, padx=2, pady=2)
 
-        # ---------------- TOP ROW: Prompt Input & Window Controls ----------------
+        # ---------------- TOP ROW: Prompt Input & Snapped Badge ----------------
         self.top_row = ctk.CTkFrame(self.main_pill, fg_color="transparent")
-        self.top_row.pack(fill="x", padx=16, pady=(10, 4))
+        self.top_row.pack(fill="x", padx=14, pady=(10, 4))
 
         self.input_entry = ctk.CTkEntry(
             self.top_row,
@@ -119,9 +129,9 @@ class FloatingCapsule(ctk.CTk):
             placeholder_text_color="#64748B",
             fg_color="transparent",
             text_color="#F1F5F9",
-            font=ctk.CTkFont(family="Segoe UI", size=15),
+            font=ctk.CTkFont(family="Segoe UI", size=14),
             border_width=0,
-            height=36
+            height=34
         )
         self.input_entry.pack(side="left", fill="x", expand=True)
         self.input_entry.bind("<Return>", lambda e: self.on_submit())
@@ -141,7 +151,7 @@ class FloatingCapsule(ctk.CTk):
 
         # Window Controls: Minimize [-] and Close [x]
         self.win_controls = ctk.CTkFrame(self.top_row, fg_color="transparent")
-        self.win_controls.pack(side="right", padx=(8, 0))
+        self.win_controls.pack(side="right", padx=(6, 0))
 
         self.min_btn = ctk.CTkButton(
             self.win_controls,
@@ -173,7 +183,7 @@ class FloatingCapsule(ctk.CTk):
 
         # ---------------- BOTTOM ROW: Mode, Attachment, Voice, Submit ----------------
         self.bot_row = ctk.CTkFrame(self.main_pill, fg_color="transparent")
-        self.bot_row.pack(fill="x", padx=16, pady=(4, 10))
+        self.bot_row.pack(fill="x", padx=14, pady=(4, 10))
 
         # Left Group
         self.left_group = ctk.CTkFrame(self.bot_row, fg_color="transparent")
@@ -183,13 +193,13 @@ class FloatingCapsule(ctk.CTk):
         self.snap_btn = ctk.CTkButton(
             self.left_group,
             text="+",
-            width=32,
-            height=32,
-            corner_radius=16,
+            width=30,
+            height=30,
+            corner_radius=15,
             fg_color="#1E293B",
             hover_color="#334155",
             text_color="#94A3B8",
-            font=ctk.CTkFont(size=18, weight="bold"),
+            font=ctk.CTkFont(size=17, weight="bold"),
             command=self.snap_active_window
         )
         self.snap_btn.pack(side="left", padx=(0, 8))
@@ -198,13 +208,13 @@ class FloatingCapsule(ctk.CTk):
         self.normal_btn = ctk.CTkButton(
             self.left_group,
             text="🌿 Normal",
-            width=88,
-            height=30,
-            corner_radius=15,
+            width=85,
+            height=28,
+            corner_radius=14,
             fg_color="#1E293B",
             hover_color="#334155",
             text_color="#F8FAFC",
-            font=ctk.CTkFont(size=12, weight="bold"),
+            font=ctk.CTkFont(size=11, weight="bold"),
             command=lambda: self.set_mode("Normal")
         )
         self.normal_btn.pack(side="left", padx=(0, 6))
@@ -213,13 +223,13 @@ class FloatingCapsule(ctk.CTk):
         self.deepthink_btn = ctk.CTkButton(
             self.left_group,
             text="💡 DeepThink",
-            width=105,
-            height=30,
-            corner_radius=15,
+            width=100,
+            height=28,
+            corner_radius=14,
             fg_color="transparent",
             hover_color="#1E293B",
             text_color="#94A3B8",
-            font=ctk.CTkFont(size=12, weight="bold"),
+            font=ctk.CTkFont(size=11, weight="bold"),
             command=lambda: self.set_mode("DeepThink")
         )
         self.deepthink_btn.pack(side="left", padx=(0, 6))
@@ -241,13 +251,13 @@ class FloatingCapsule(ctk.CTk):
         self.voice_btn = ctk.CTkButton(
             self.right_group,
             text="🎙️ Voice",
-            width=78,
-            height=30,
-            corner_radius=15,
+            width=75,
+            height=28,
+            corner_radius=14,
             fg_color="#1E293B",
             hover_color="#334155",
             text_color="#E2E8F0",
-            font=ctk.CTkFont(size=12),
+            font=ctk.CTkFont(size=11),
             command=self.toggle_voice
         )
         self.voice_btn.pack(side="left", padx=(0, 8))
@@ -256,13 +266,13 @@ class FloatingCapsule(ctk.CTk):
         self.submit_btn = ctk.CTkButton(
             self.right_group,
             text="➤",
-            width=36,
-            height=36,
-            corner_radius=18,
+            width=32,
+            height=32,
+            corner_radius=16,
             fg_color="#8B5CF6",
             hover_color="#A855F7",
             text_color="#FFFFFF",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(size=13, weight="bold"),
             command=self.on_submit
         )
         self.submit_btn.pack(side="left")
@@ -271,20 +281,20 @@ class FloatingCapsule(ctk.CTk):
         self.drawer_frame = ctk.CTkFrame(
             self.main_pill,
             fg_color="#0A0E17",
-            corner_radius=18,
+            corner_radius=14,
             border_width=1,
             border_color="#334155"
         )
 
         # Drawer Header
         self.drawer_header = ctk.CTkFrame(self.drawer_frame, fg_color="transparent")
-        self.drawer_header.pack(fill="x", padx=16, pady=(12, 6))
+        self.drawer_header.pack(fill="x", padx=14, pady=(10, 4))
 
         self.drawer_title = ctk.CTkLabel(
             self.drawer_header,
             text="Surgical Patch Preview",
             text_color="#F8FAFC",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=13, weight="bold")
         )
         self.drawer_title.pack(side="left")
 
@@ -292,35 +302,35 @@ class FloatingCapsule(ctk.CTk):
             self.drawer_header,
             text="Confidence: 98%",
             text_color="#10B981",
-            font=ctk.CTkFont(size=12, weight="bold")
+            font=ctk.CTkFont(size=11, weight="bold")
         )
-        self.drawer_badge.pack(side="left", padx=12)
+        self.drawer_badge.pack(side="left", padx=10)
 
         # Drawer Spoken Brief
         self.drawer_summary = ctk.CTkLabel(
             self.drawer_frame,
             text="",
             text_color="#94A3B8",
-            wraplength=640,
+            wraplength=660,
             justify="left",
-            font=ctk.CTkFont(size=12)
+            font=ctk.CTkFont(size=11)
         )
-        self.drawer_summary.pack(fill="x", padx=16, pady=(0, 8))
+        self.drawer_summary.pack(fill="x", padx=14, pady=(0, 6))
 
         # Unified Diff TextBox
         self.diff_text = ctk.CTkTextbox(
             self.drawer_frame,
             fg_color="#030712",
             text_color="#E2E8F0",
-            font=ctk.CTkFont(family="Consolas", size=12),
+            font=ctk.CTkFont(family="Consolas", size=11),
             height=160,
-            corner_radius=10
+            corner_radius=8
         )
-        self.diff_text.pack(fill="both", expand=True, padx=16, pady=(0, 10))
+        self.diff_text.pack(fill="both", expand=True, padx=14, pady=(0, 8))
 
         # Drawer Action Buttons
         self.drawer_actions = ctk.CTkFrame(self.drawer_frame, fg_color="transparent")
-        self.drawer_actions.pack(fill="x", padx=16, pady=(0, 14))
+        self.drawer_actions.pack(fill="x", padx=14, pady=(0, 10))
 
         self.apply_btn = ctk.CTkButton(
             self.drawer_actions,
@@ -328,11 +338,11 @@ class FloatingCapsule(ctk.CTk):
             fg_color="#10B981",
             hover_color="#059669",
             text_color="#FFFFFF",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            height=32,
+            font=ctk.CTkFont(size=11, weight="bold"),
+            height=30,
             command=self.on_apply_patch
         )
-        self.apply_btn.pack(side="left", padx=(0, 10))
+        self.apply_btn.pack(side="left", padx=(0, 8))
 
         self.dismiss_btn = ctk.CTkButton(
             self.drawer_actions,
@@ -340,8 +350,8 @@ class FloatingCapsule(ctk.CTk):
             fg_color="#334155",
             hover_color="#475569",
             text_color="#E2E8F0",
-            font=ctk.CTkFont(size=12),
-            height=32,
+            font=ctk.CTkFont(size=11),
+            height=30,
             command=self.close_drawer
         )
         self.dismiss_btn.pack(side="left")
@@ -359,21 +369,23 @@ class FloatingCapsule(ctk.CTk):
 
     def snap_active_window(self):
         """Temporarily hides capsule, captures focused window, and attaches thumbnail."""
-        self.withdraw()  # Hide capsule momentarily to prevent self-capture
+        self.withdraw()
         self.after(200, self._do_snap)
 
     def _do_snap(self):
         saved_path, win_title = WindowSnapper.capture_active_window()
-        self.deiconify()  # Restore capsule
+        self.deiconify()
         self.lift()
 
-        self.attached_screenshot = saved_path
-        self.attached_screenshot_title = win_title
-
-        short_title = (win_title[:16] + "..") if len(win_title) > 18 else win_title
-        self.snap_badge.configure(text=f"📷 {short_title} ✕")
-        self.snap_badge.pack(side="right", padx=(6, 0))
-        self.status_lbl.configure(text=f"Attached: {short_title}")
+        if saved_path:
+            self.attached_screenshot = saved_path
+            self.attached_screenshot_title = win_title
+            short_title = (win_title[:16] + "..") if len(win_title) > 18 else win_title
+            self.snap_badge.configure(text=f"📷 {short_title} ✕")
+            self.snap_badge.pack(side="right", padx=(6, 0))
+            self.status_lbl.configure(text=f"Attached: {short_title}")
+        else:
+            self.status_lbl.configure(text="Snap failed.")
 
     def clear_attached_screen(self):
         self.attached_screenshot = None
@@ -451,7 +463,7 @@ class FloatingCapsule(ctk.CTk):
         self.diff_text.delete("1.0", "end")
         self.diff_text.insert("1.0", result["diff_preview"])
 
-        self.drawer_frame.pack(fill="both", expand=True, padx=16, pady=(0, 14))
+        self.drawer_frame.pack(fill="both", expand=True, padx=14, pady=(0, 10))
 
     def close_drawer(self):
         self.is_drawer_open = False
