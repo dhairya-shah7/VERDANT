@@ -82,27 +82,36 @@ if (!window.__verdant_isolated_hooked) {
 }
 
 // 4. Message Dispatcher for Toolbar Popup
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'START_INSPECTION') {
-    if (window.Verdant && window.Verdant.startInspectionMode) {
-      window.Verdant.startInspectionMode();
-      sendResponse({ ok: true });
-    } else {
-      sendResponse({ ok: false, error: 'Inspection module not initialized' });
-    }
-    return true;
-  }
+if (!window.__verdant_listener_registered) {
+  window.__verdant_listener_registered = true;
 
-  if (request.action === 'TRIGGER_ANALYSIS') {
-    if (window.Verdant && window.Verdant.triggerFullTabAnalysis) {
-      window.Verdant.triggerFullTabAnalysis();
-      sendResponse({ ok: true });
-    } else {
-      sendResponse({ ok: false, error: 'Analysis module not initialized' });
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'PING') {
+      sendResponse({ ok: true, version: '2.5.0' });
+      return true;
     }
-    return true;
-  }
-});
+
+    if (request.action === 'START_INSPECTION') {
+      if (window.Verdant && window.Verdant.startInspectionMode) {
+        window.Verdant.startInspectionMode();
+        sendResponse({ ok: true });
+      } else {
+        sendResponse({ ok: false, error: 'Inspection module not initialized' });
+      }
+      return true;
+    }
+
+    if (request.action === 'TRIGGER_ANALYSIS') {
+      if (window.Verdant && window.Verdant.triggerFullTabAnalysis) {
+        window.Verdant.triggerFullTabAnalysis();
+        sendResponse({ ok: true });
+      } else {
+        sendResponse({ ok: false, error: 'Analysis module not initialized' });
+      }
+      return true;
+    }
+  });
+}
 
 // 5. Initialize Drawer UI
 function bootDrawer() {

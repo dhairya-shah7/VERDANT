@@ -309,6 +309,10 @@ window.Verdant = window.Verdant || {};
     }, (response) => {
       if (response && response.diagnosis) {
         displayDiagnosis(response.diagnosis);
+      } else {
+        if (statusText) {
+          statusText.innerHTML = `<span style="color:#ef4444; font-weight:700;">Analysis Error:</span> ${response?.error || 'Failed to complete diagnosis. Check your network or server connection.'}`;
+        }
       }
     });
   }
@@ -334,6 +338,10 @@ window.Verdant = window.Verdant || {};
     }, (response) => {
       if (response && response.diagnosis) {
         displayDiagnosis(response.diagnosis);
+      } else {
+        if (statusText) {
+          statusText.innerHTML = `<span style="color:#ef4444; font-weight:700;">Analysis Error:</span> ${response?.error || 'Failed to complete diagnosis. Check your network or server connection.'}`;
+        }
       }
     });
   }
