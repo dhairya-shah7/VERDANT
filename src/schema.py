@@ -60,9 +60,9 @@ class EcoAudit(BaseModel):
     """
     Formula-backed thermodynamic telemetry based on Google Cloud PUE 1.10 / WUE 1.18 L/kWh.
     """
-    energy_wh: float = Field(..., description="Total electrical energy consumed in Watt-hours")
-    water_ml: float = Field(..., description="Total cooling water consumed in milliliters")
-    tokens_used: int = Field(..., description="Active token count evaluated")
+    energy_wh: float = Field(default=0.0, description="Total electrical energy consumed in Watt-hours")
+    water_ml: float = Field(default=0.0, description="Total cooling water consumed in milliliters")
+    tokens_used: int = Field(default=0, description="Active token count evaluated")
     tokens_saved: int = Field(default=0, description="Tokens eliminated via AST pruning")
     compression_ratio_pct: float = Field(default=0.0, description="Percentage of tokens pruned prior to inference")
     energy_saved_wh: float = Field(default=0.0, description="Calculated energy saved through pruning")
