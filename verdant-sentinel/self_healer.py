@@ -103,7 +103,10 @@ class DeterministicSelfHealer:
                         ],
                         css_patch=resp_data.get("css_patch") or f"{defect.get('selector')} {{ overflow: hidden !important; text-overflow: ellipsis !important; }}",
                         eco_audit=EcoAudit(
-                            tokens_used=resp_data.get("eco_audit", {}).get("tokens_used", 350),
+                            energy_wh=float(resp_data.get("eco_audit", {}).get("energy_wh", 0.1)),
+                            water_ml=float(resp_data.get("eco_audit", {}).get("water_ml", 0.15)),
+                            tokens_used=int(resp_data.get("eco_audit", {}).get("tokens_used", 350)),
+                            tokens_saved=int(resp_data.get("eco_audit", {}).get("tokens_saved", 800)),
                             energy_saved_wh=float(resp_data.get("eco_audit", {}).get("energy_saved_wh", 0.8)),
                             water_saved_ml=float(resp_data.get("eco_audit", {}).get("water_saved_ml", 0.6)),
                             compression_ratio_pct=float(resp_data.get("eco_audit", {}).get("compression_ratio_pct", 75.0))
@@ -124,7 +127,10 @@ class DeterministicSelfHealer:
                     edits=[],
                     css_patch=css_fix,
                     eco_audit=EcoAudit(
+                        energy_wh=0.08,
+                        water_ml=0.12,
                         tokens_used=280,
+                        tokens_saved=700,
                         energy_saved_wh=0.5,
                         water_saved_ml=0.4,
                         compression_ratio_pct=72.0

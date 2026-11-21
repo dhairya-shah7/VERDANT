@@ -8,7 +8,7 @@ from playwright.sync_api import Page, expect
 
 def test_verify_layout_overflow(page: Page):
     # 1. Navigate to target URL
-    page.goto("https://verdant-server-1042112525098.us-central1.run.app/")
+    page.goto("https://verdant-server-1042112525098.us-central1.run.app")
     page.wait_for_timeout(1000)
 
     # 2. Locate target element
