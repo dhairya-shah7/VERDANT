@@ -13,8 +13,9 @@ let statusBarItem = null;
 let currentDiagnosis = null;
 let reconnectTimer = null;
 
-const DAEMON_WS = 'ws://localhost:8000/ws/ide';
-const DAEMON_HTTP = 'http://localhost:8000';
+const CLOUD_WS = 'wss://verdant-server-1042112525098.us-central1.run.app/ws/ide';
+const LOCAL_WS = 'ws://localhost:8000/ws/ide';
+let activeWsUrl = CLOUD_WS;
 
 function activate(context) {
   console.log('[V.E.R.D.A.N.T. IDE] Activating Autonomous Bridge...');
@@ -23,7 +24,7 @@ function activate(context) {
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBarItem.command = 'verdant.connect';
   statusBarItem.text = '$(sync~spin) V.E.R.D.A.N.T.: Connecting...';
-  statusBarItem.tooltip = 'Click to reconnect to V.E.R.D.A.N.T. Daemon (:8000)';
+  statusBarItem.tooltip = 'Click to reconnect to V.E.R.D.A.N.T. Cloud Run Daemon';
   statusBarItem.show();
   context.subscriptions.push(statusBarItem);
 
@@ -50,8 +51,8 @@ function connectToDaemon() {
   try {
     const WS = globalThis.WebSocket || (typeof WebSocket !== 'undefined' ? WebSocket : null);
     if (!WS) {
-      statusBarItem.text = '$(plug) V.E.R.D.A.N.T.: Ready (HTTP)';
-      statusBarItem.tooltip = 'WebSocket not natively bundled; running HTTP polling';
+      statusBarItem.text = '$(plug) V.E.R.D.A.N.T.: Ready';
+      statusBarItem.tooltip = 'WebSocket not natively bundled in current environment';
       return;
     }
 
@@ -59,13 +60,16 @@ function connectToDaemon() {
       try { wsClient.close(); } catch(e) {}
     }
 
-    wsClient = new WS(DAEMON_WS);
+    // Try connecting to Cloud Run or Local
+    wsClient = new WS(activeWsUrl);
 
     wsClient.onopen = () => {
-      console.log('[V.E.R.D.A.N.T. IDE] Connected to daemon at ' + DAEMON_WS);
-      statusBarItem.text = '$(beaker) V.E.R.D.A.N.T.: Connected (:8000)';
-      statusBarItem.tooltip = 'Listening for incoming Chrome bugs & visual defects';
-      vscode.window.showInformationMessage('🌱 V.E.R.D.A.N.T. Autonomous IDE Bridge Connected (:8000)');
+      const isCloud = activeWsUrl.includes('run.app');
+      const label = isCloud ? 'Cloud Run' : ':8000';
+      console.log('[V.E.R.D.A.N.T. IDE] Connected to daemon at ' + activeWsUrl);
+      statusBarItem.text = `$(beaker) V.E.R.D.A.N.T.: Connected (${label})`;
+      statusBarItem.tooltip = `Listening for incoming Chrome bugs & visual defects via ${label}`;
+      vscode.window.showInformationMessage(`🌱 V.E.R.D.A.N.T. Autonomous IDE Bridge Connected (${label})`);
     };
 
     wsClient.onmessage = (event) => {
@@ -78,8 +82,10 @@ function connectToDaemon() {
     };
 
     wsClient.onclose = () => {
-      statusBarItem.text = '$(circle-slash) V.E.R.D.A.N.T.: Disconnected';
-      statusBarItem.tooltip = 'Daemon offline. Will auto-retry in 5 seconds.';
+      statusBarItem.text = '$(circle-slash) V.E.R.D.A.N.T.: Reconnecting...';
+      statusBarItem.tooltip = 'Daemon connection closed. Reconnecting in 5 seconds...';
+      // Toggle between Cloud Run and Local on reconnect
+      activeWsUrl = (activeWsUrl === CLOUD_WS) ? LOCAL_WS : CLOUD_WS;
       reconnectTimer = setTimeout(connectToDaemon, 5000);
     };
 
