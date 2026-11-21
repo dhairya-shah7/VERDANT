@@ -69,28 +69,85 @@ window.Verdant = window.Verdant || {};
     };
   }
 
+  function getElementSelector(el) {
+    if (!el || !(el instanceof Element)) return '';
+    if (el.id) return `#${el.id}`;
+    let sel = el.tagName.toLowerCase();
+    if (el.classList && el.classList.length > 0) {
+      const validClasses = Array.from(el.classList)
+        .filter(c => typeof c === 'string' && !c.startsWith('verdant-') && !c.includes(':'))
+        .slice(0, 2);
+      if (validClasses.length > 0) {
+        sel += '.' + validClasses.join('.');
+      }
+    }
+    return sel;
+  }
+
   function findActiveLayoutAnomalies() {
     const anomalies = [];
     const allElements = document.querySelectorAll('*');
+    const docWidth = document.documentElement.clientWidth || window.innerWidth;
+    const docHeight = window.innerHeight || document.documentElement.clientHeight;
     
     for (const el of allElements) {
-      if (el.id === 'verdant-drawer-container' || (el.closest && el.closest('#verdant-drawer-container'))) continue;
-      if (el.offsetWidth > 0 && el.offsetHeight > 0) {
-        if (el.scrollWidth > el.clientWidth + 2 && el.clientWidth > 40) {
-          const computed = window.getComputedStyle(el);
-          if (computed.overflowX !== 'scroll' && computed.overflowX !== 'auto') {
-            anomalies.push({
-              type: 'LAYOUT_OVERFLOW',
-              selector: el.tagName.toLowerCase() + (el.id ? '#' + el.id : (el.className ? '.' + el.className.toString().split(' ')[0] : '')),
-              scrollWidth: el.scrollWidth,
-              clientWidth: el.clientWidth,
-              overflowPx: el.scrollWidth - el.clientWidth,
-              message: `Element overflows container horizontally by ${el.scrollWidth - el.clientWidth}px.`
-            });
-          }
+      if (el.id === 'verdant-drawer-container' || (el.closest && el.closest('#verdant-drawer-container')) || el.id === 'verdant-inspect-toast') continue;
+      
+      const rect = el.getBoundingClientRect();
+      const isVisible = rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < docHeight * 2;
+      const selector = getElementSelector(el);
+      const tag = el.tagName.toLowerCase();
+
+      // 1. Horizontal Container Overflow (Scroll blowout)
+      if (el.offsetWidth > 0 && el.offsetHeight > 0 && el.scrollWidth > el.clientWidth + 3 && el.clientWidth > 40) {
+        const computed = window.getComputedStyle(el);
+        if (computed.overflowX !== 'scroll' && computed.overflowX !== 'auto') {
+          anomalies.push({
+            type: 'LAYOUT_OVERFLOW',
+            selector: selector,
+            scrollWidth: el.scrollWidth,
+            clientWidth: el.clientWidth,
+            overflowPx: el.scrollWidth - el.clientWidth,
+            message: `Element '${selector}' overflows container horizontally by ${el.scrollWidth - el.clientWidth}px.`
+          });
         }
       }
-      if (anomalies.length >= 6) break;
+
+      // 2. Viewport Bleed (Right-edge spill beyond viewport boundary)
+      if (isVisible && rect.right > docWidth + 4 && rect.left < docWidth) {
+        anomalies.push({
+          type: 'VIEWPORT_SPILL',
+          selector: selector,
+          spillPx: Math.round(rect.right - docWidth),
+          message: `Element '${selector}' extends ${Math.round(rect.right - docWidth)}px beyond viewport boundary.`
+        });
+      }
+
+      // 3. Touch Target Deficiencies on Interactive Elements (WCAG guidelines: min 28px)
+      if ((tag === 'button' || (tag === 'a' && el.hasAttribute('href')) || el.getAttribute('role') === 'button') && isVisible) {
+        if ((rect.width > 0 && rect.width < 28) || (rect.height > 0 && rect.height < 28)) {
+          anomalies.push({
+            type: 'TOUCH_TARGET_DEFECT',
+            selector: selector,
+            dimensions: `${Math.round(rect.width)}x${Math.round(rect.height)}px`,
+            message: `Interactive target '${selector}' is undersized (${Math.round(rect.width)}x${Math.round(rect.height)}px). Minimum recommended is 40x40px for touch ergonomics.`
+          });
+        }
+      }
+
+      // 4. Missing Alt Accessibility on Image Assets
+      if (tag === 'img' && isVisible) {
+        if (!el.hasAttribute('alt') || (el.getAttribute('alt') === '' && el.parentElement?.tagName.toLowerCase() === 'a')) {
+          anomalies.push({
+            type: 'A11Y_DEFECT',
+            selector: selector,
+            src: el.src ? el.src.slice(0, 60) : '',
+            message: `Image '${selector}' missing informative alt attribute for accessibility.`
+          });
+        }
+      }
+
+      if (anomalies.length >= 8) break;
     }
     return anomalies;
   }

@@ -2681,28 +2681,33 @@ async def api_extension_ingest(request: Request):
     elif has_real_errors:
         # Genuine runtime / network / layout defects detected
         prompt_sections.append(
-            f"REAL DEFECTS DETECTED ON {url}:\n"
+            f"REAL DEFECTS DETECTED ON {url} ('{page_title}'):\n"
             f"- Console Errors: {json.dumps(logs[:8], indent=2) if logs else 'None'}\n"
             f"- Network 4xx/5xx Errors: {json.dumps(network_events[:6], indent=2) if network_events else 'None'}\n"
-            f"- Layout Anomalies: {json.dumps(layout_anomalies[:4], indent=2) if layout_anomalies else 'None'}\n"
+            f"- Layout & Ergonomic Anomalies: {json.dumps(layout_anomalies[:6], indent=2) if layout_anomalies else 'None'}\n"
             f"REQUIREMENT: Diagnose the genuine defect above, identify suspect component/CSS selector, provide atomic fix in 'edits' or 'css_patch', and Playwright reproducer in 'test_spec'."
         )
         raw_tokens_estimate = int(len("\n\n".join(prompt_sections)) / 2.8) + 650
 
     else:
-        # Entire page is clean and healthy - DO NOT HALLUCINATE BUGS
+        # Dynamic Multimodal Frontend & Architecture Audit
+        total_nodes = dom_summary.get('totalNodes', 0) if dom_summary else 'Dynamic'
         prompt_sections.append(
-            f"HEALTH CHECK FOR ACTIVE TAB: {url} ({page_title})\n"
-            f"- Console Errors: 0 detected (clean)\n"
-            f"- Network Dropouts: 0 detected (clean)\n"
-            f"- Layout Anomalies: 0 detected (clean)\n"
-            f"AUDIT DIRECTIVE: The page runtime, console, and DOM geometry are completely healthy.\n"
-            f"Route to action_type 'advise' with confidence 1.0.\n"
-            f"Set spoken_summary to: 'All systems healthy. Zero runtime errors or layout defects detected on this page.'\n"
-            f"Set root_cause to: 'Clean inspection on {url}. Zero unhandled exceptions, zero network drops, and all layout elements conform to viewport constraints.'\n"
-            f"Do NOT invent or hallucinate any code fixes, CSS patches, or fictional source files."
+            f"LIVE FRONTEND & UX FORENSIC AUDIT FOR ACTIVE TAB: {url} ('{page_title}')\n"
+            f"- Total DOM Nodes: {total_nodes}\n"
+            f"- Console Status: 0 unhandled exceptions detected\n"
+            f"- Network Status: 0 HTTP 4xx/5xx failures detected\n"
+            f"AUDIT DIRECTIVE: Conduct a genuine, dynamic visual, architectural, and UX inspection of THIS specific page based on the attached visual screenshot and DOM structure.\n"
+            f"1. Spoken Summary ('spoken_summary'): Give a crisp 1-2 sentence executive assessment mentioning '{page_title}' or the domain '{url}'. Evaluate the visual hierarchy, layout coherence, and page ergonomics.\n"
+            f"2. Technical Audit ('root_cause'): Provide a structured, multi-point technical breakdown analyzing:\n"
+            f"   • Visual Layout & Typography Hierarchy (hero banner, typography scale, white space distribution)\n"
+            f"   • Responsive & Mobile Readiness (viewport adaptation, touch target accessibility)\n"
+            f"   • Frontend Performance & DOM Density (tree size: {total_nodes} nodes, asset weight, rendering efficiency)\n"
+            f"3. Enhancement / Hot-Patch ('css_patch'): Synthesize a high-value CSS enhancement rule specifically beneficial for this page (e.g. font-smoothing improvements, responsive touch target sizing, interactive hover polish, or scroll behavior) so the user can test the enhancement live in the tab.\n"
+            f"4. Route to action_type 'advise' (or 'fix' if you identify a visual flaw in the screenshot) with confidence 0.95.\n"
+            f"CRITICAL: Do NOT return boilerplate or canned text. Tailor all feedback uniquely to '{page_title}' and '{url}'."
         )
-        raw_tokens_estimate = 450
+        raw_tokens_estimate = 520
         
     full_prompt = "\n\n".join(prompt_sections)
     
