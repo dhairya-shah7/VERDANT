@@ -26,15 +26,11 @@ steps:
     args: [
       'build',
       '--cache-from', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/verdant-server:latest',
-      '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/verdant-server:$COMMIT_SHA',
       '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/verdant-server:latest',
       '.'
     ]
 
   # 3. Push Container Images to Google Artifact Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/verdant-server:$COMMIT_SHA']
-
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/verdant-server:latest']
 
@@ -45,7 +41,7 @@ steps:
       - 'run'
       - 'deploy'
       - 'verdant-server'
-      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/verdant-server:$COMMIT_SHA'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/verdant-server:latest'
       - '--region=${_REGION}'
       - '--platform=managed'
       - '--allow-unauthenticated'
@@ -58,13 +54,11 @@ steps:
       - '--update-env-vars=GCP_PROJECT=$PROJECT_ID,GCP_REGION=${_REGION},ENVIRONMENT=production,VERTEX_AI_ENABLED=true'
 
 images:
-  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/verdant-server:$COMMIT_SHA'
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO_NAME}/verdant-server:latest'
 
 substitutions:
   _REGION: 'us-central1'
   _REPO_NAME: 'verdant-repo'
-  COMMIT_SHA: 'manual'
 
 options:
   logging: CLOUD_LOGGING_ONLY
