@@ -71,14 +71,14 @@ window.Verdant = window.Verdant || {};
           <div id="verdant-diag-title" style="font-size:15px; font-weight:800; color:#0f172a; margin-bottom:8px; line-height:1.4;">
             Root Cause Identified
           </div>
-          <div id="verdant-diag-cause" style="font-size:14px; color:#334155; line-height:1.6; margin-bottom:16px; background:#f8fafc; padding:14px; border-radius:10px; border:1px solid #e2e8f0; white-space:pre-wrap; word-break:break-word;">
+          <div id="verdant-diag-cause" style="font-size:14px; color:#334155; line-height:1.6; margin-bottom:16px; background:#f8fafc; padding:14px; border-radius:10px; border:1px solid #e2e8f0;">
             -
           </div>
 
-          <!-- Proposed Fix / Recommendation Preview -->
-          <div id="verdant-diag-code-container" style="margin-bottom:16px;">
-            <div id="verdant-diag-code-label" style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; letter-spacing:0.03em;">PROPOSED SURGICAL FIX:</div>
-            <pre id="verdant-diag-code" style="font-size:13px; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; background:#0f172a; color:#34d399; padding:14px; border-radius:10px; overflow-x:auto; margin:0; line-height:1.5; white-space:pre-wrap; word-break:break-word;">-</pre>
+          <!-- Proposed Fix Preview -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; letter-spacing:0.03em;">PROPOSED SURGICAL FIX:</div>
+            <pre id="verdant-diag-code" style="font-size:13px; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; background:#0f172a; color:#34d399; padding:14px; border-radius:10px; overflow-x:auto; margin:0; line-height:1.5;">-</pre>
           </div>
 
           <!-- Dynamic Eco-Pruning Meter -->
@@ -194,11 +194,8 @@ window.Verdant = window.Verdant || {};
     const titleEl = document.getElementById('verdant-diag-title');
     const causeEl = document.getElementById('verdant-diag-cause');
     const codeEl = document.getElementById('verdant-diag-code');
-    const codeLabel = document.getElementById('verdant-diag-code-label');
     const latencyEl = document.getElementById('verdant-latency-badge');
     const modelEl = document.getElementById('verdant-model-badge');
-    const testLiveBtn = document.getElementById('verdant-btn-test-live');
-    const sendIdeBtn = document.getElementById('verdant-btn-send-ide');
 
     resultsCard.style.display = 'block';
     if (modelEl && diag.model_used) {
@@ -206,35 +203,13 @@ window.Verdant = window.Verdant || {};
     }
     titleEl.innerText = diag.spoken_summary || 'Diagnosis Ready';
     causeEl.innerText = diag.root_cause || 'Defect analyzed.';
-    causeEl.style.whiteSpace = 'pre-wrap';
     
-    const hasEdits = Boolean(diag.edits && diag.edits.length > 0);
-    const hasCssPatch = Boolean(diag.css_patch && diag.css_patch.trim());
-
-    if (hasEdits) {
-      if (codeLabel) codeLabel.innerText = 'PROPOSED SURGICAL CODE FIX:';
-      codeEl.innerText = `${diag.edits[0].path || 'Source Component'}:\n${diag.edits[0].replace || diag.edits[0].patch || ''}`;
-      if (testLiveBtn) testLiveBtn.style.display = hasCssPatch ? 'block' : 'none';
-      if (sendIdeBtn) sendIdeBtn.style.display = 'block';
-    } else if (hasCssPatch) {
-      if (codeLabel) codeLabel.innerText = diag.action_type === 'fix' ? 'PROPOSED CSS SURGICAL HOT-PATCH:' : 'RECOMMENDED CSS ENHANCEMENT (HOT-PATCHABLE):';
+    if (diag.edits && diag.edits.length > 0) {
+      codeEl.innerText = `${diag.edits[0].path || 'Source Patch'}:\n${diag.edits[0].replace || diag.edits[0].patch || ''}`;
+    } else if (diag.css_patch) {
       codeEl.innerText = diag.css_patch;
-      if (testLiveBtn) {
-        testLiveBtn.style.display = 'block';
-        testLiveBtn.innerText = '🧪 Test Fix Live in Tab';
-      }
-      if (sendIdeBtn) sendIdeBtn.style.display = 'block';
     } else {
-      if (codeLabel) codeLabel.innerText = 'ARCHITECTURAL TELEMETRY:';
-      const cleanMetrics = {
-        audit_scope: diag.action_type || 'advise',
-        confidence: `${Math.round((diag.confidence || 0.95) * 100)}%`,
-        runtime_integrity: 'PASS',
-        recommendation: 'Visual hierarchy and layout constraints verified.'
-      };
-      codeEl.innerText = JSON.stringify(cleanMetrics, null, 2);
-      if (testLiveBtn) testLiveBtn.style.display = 'none';
-      if (sendIdeBtn) sendIdeBtn.style.display = 'none';
+      codeEl.innerText = JSON.stringify(diag.evidence || {}, null, 2);
     }
 
     if (diag.latency_seconds) {

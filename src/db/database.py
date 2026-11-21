@@ -111,6 +111,51 @@ class VerdantDatabase:
             );
             """)
             conn.commit()
+        self._seed_if_empty()
+
+    def _seed_if_empty(self):
+        """Automatically seeds initial audit history and users if the database is newly initialized."""
+        try:
+            with self._get_conn() as conn:
+                cur = conn.execute("SELECT count(*) FROM incident_sessions")
+                count = cur.fetchone()[0]
+                if count == 0:
+                    seed_file = Path(__file__).resolve().parent / "seed_history.json"
+                    if seed_file.exists():
+                        with open(seed_file, "r", encoding="utf-8") as f:
+                            seed_data = json.load(f)
+                        for u in seed_data.get("users", []):
+                            conn.execute("""
+                                INSERT OR IGNORE INTO users (id, email, github_username, encrypted_github_token, created_at, updated_at)
+                                VALUES (?, ?, ?, ?, ?, ?)
+                            """, (u["id"], u.get("email"), u.get("github_username"), u.get("encrypted_github_token"), u.get("created_at"), u.get("updated_at")))
+                        for s in seed_data.get("sessions", []):
+                            conn.execute("""
+                                INSERT OR IGNORE INTO incident_sessions (
+                                    id, user_id, title, session_mode, action_type, video_filename,
+                                    scrubbed_console, scrubbed_network, root_cause, spoken_summary,
+                                    patch_diff, reproduction_steps, confidence, arbiter_tier, status,
+                                    branch_name, commit_hash, pr_url, energy_saved_wh, water_saved_ml, created_at
+                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            """, (
+                                s["id"], s.get("user_id"), s.get("title"), s.get("session_mode"), s.get("action_type"), s.get("video_filename"),
+                                s.get("scrubbed_console"), s.get("scrubbed_network"), s.get("root_cause"), s.get("spoken_summary"),
+                                s.get("patch_diff"), s.get("reproduction_steps"), s.get("confidence"), s.get("arbiter_tier"), s.get("status"),
+                                s.get("branch_name"), s.get("commit_hash"), s.get("pr_url"), s.get("energy_saved_wh", 0.0), s.get("water_saved_ml", 0.0), s.get("created_at")
+                            ))
+                        for p in seed_data.get("proofs", []):
+                            conn.execute("""
+                                INSERT OR IGNORE INTO proof_records (
+                                    id, session_id, red_phase_failed, green_phase_passed,
+                                    execution_time_seconds, reproducer_code, created_at
+                                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                            """, (
+                                p["id"], p.get("session_id"), p.get("red_phase_failed"), p.get("green_phase_passed"),
+                                p.get("execution_time_seconds"), p.get("reproducer_code"), p.get("created_at")
+                            ))
+                        conn.commit()
+        except Exception as e:
+            print(f"[V.E.R.D.A.N.T. DB] Notice during auto-seed: {e}")
 
     # User Management
     def save_user(self, email: str, github_username: str, github_token: Optional[str] = None, user_id: str = "default_user") -> Dict[str, Any]:

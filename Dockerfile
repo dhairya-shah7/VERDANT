@@ -54,9 +54,10 @@ RUN python -m playwright install --with-deps chromium
 # Copy application source code
 COPY . .
 
-# Ensure storage directories exist with write permissions
-RUN mkdir -p uploads/assets uploads/captures tests && \
-    chmod -R 777 uploads
+# Ensure storage directories exist with write permissions and copy assets
+RUN mkdir -p uploads/assets uploads/captures tests static/assets && \
+    cp -r static/assets/* uploads/assets/ 2>/dev/null || true && \
+    chmod -R 777 uploads static
 
 # Create non-root system user for security compliance (SOC2 / GCP best practices)
 RUN useradd -m -u 1001 verdantuser && \

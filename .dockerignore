@@ -10,7 +10,6 @@ __pycache__/
 .pytest_cache/
 .test_edge/
 .verde/
-verdant_history.db*
 capsule_debug.log
 venv/
 .venv/

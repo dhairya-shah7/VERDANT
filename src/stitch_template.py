@@ -211,7 +211,7 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
             <!-- Card 1: Autonomous CI/CD Sentinel -->
             <div class="bg-surface-container-lowest rounded-2xl p-4 border border-surface-container-high shadow-sm hover:shadow-md transition-all flex flex-col">
               <div class="w-full h-44 rounded-xl overflow-hidden mb-3 bg-surface-container-high border border-surface-container-high/60">
-                <img src="/uploads/assets/overview_ci_cd_sentinel.jpg" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="Autonomous CI/CD Sentinel">
+                <img src="/static/assets/overview_ci_cd_sentinel.jpg" onerror="this.onerror=null;this.src='/uploads/assets/overview_ci_cd_sentinel.jpg'" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="Autonomous CI/CD Sentinel">
               </div>
               <div class="flex items-center gap-1.5 mb-1.5">
                 <span class="px-2 py-0.5 rounded-full bg-secondary-fixed/50 text-secondary text-[11px] font-bold">🤖 CI/CD Sentinel</span>
@@ -225,7 +225,7 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
             <!-- Card 2: Multi-Surface Trinity Architecture -->
             <div class="bg-surface-container-lowest rounded-2xl p-4 border border-surface-container-high shadow-sm hover:shadow-md transition-all flex flex-col">
               <div class="w-full h-44 rounded-xl overflow-hidden mb-3 bg-surface-container-high border border-surface-container-high/60">
-                <img src="/uploads/assets/overview_trinity_architecture.jpg" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="Trinity Architecture">
+                <img src="/static/assets/overview_trinity_architecture.jpg" onerror="this.onerror=null;this.src='/uploads/assets/overview_trinity_architecture.jpg'" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="Trinity Architecture">
               </div>
               <div class="flex items-center gap-1.5 mb-1.5">
                 <span class="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold">🌐 The Trinity Ecosystem</span>
@@ -239,7 +239,7 @@ STITCH_HTML_TEMPLATE = """<!DOCTYPE html>
             <!-- Card 3: Google Cloud Certified Eco Ledger -->
             <div class="bg-surface-container-lowest rounded-2xl p-4 border border-surface-container-high shadow-sm hover:shadow-md transition-all flex flex-col">
               <div class="w-full h-44 rounded-xl overflow-hidden mb-3 bg-surface-container-high border border-surface-container-high/60">
-                <img src="/uploads/assets/overview_eco_ledger.jpg" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="Certified Eco Ledger">
+                <img src="/static/assets/overview_eco_ledger.jpg" onerror="this.onerror=null;this.src='/uploads/assets/overview_eco_ledger.jpg'" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="Certified Eco Ledger">
               </div>
               <div class="flex items-center gap-1.5 mb-1.5">
                 <span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant text-[11px] font-bold">💧 Google Cloud PUE 1.10 / WUE 1.18</span>
