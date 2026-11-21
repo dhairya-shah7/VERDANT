@@ -8,7 +8,7 @@ on:
       target_url:
         description: 'URL to audit'
         required: false
-        default: 'http://localhost:8000'
+        default: 'https://verdant-server-1042112525098.us-central1.run.app'
 
 jobs:
   autonomous-sentinel:
@@ -33,7 +33,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          python verdant-sentinel/cli.py --url ${{ github.event.inputs.target_url || 'http://localhost:8000' }}
+          python verdant-sentinel/cli.py --url ${{ github.event.inputs.target_url || 'https://verdant-server-1042112525098.us-central1.run.app' }}
 
       - name: Commit Self-Healed Fixes & Reproducer Tests
         if: success()

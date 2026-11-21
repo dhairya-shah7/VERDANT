@@ -68,7 +68,7 @@ async def run_sentinel(url: str, viewports: list, auto_heal: bool):
 
 def main():
     parser = argparse.ArgumentParser(description="V.E.R.D.A.N.T. Autonomous CI/CD Sentinel")
-    parser.add_argument("--url", default="http://localhost:8000", help="Base URL of the application to audit")
+    parser.add_argument("--url", default="https://verdant-server-1042112525098.us-central1.run.app", help="Base URL of the application to audit (default: live Cloud Run deployment)")
     parser.add_argument("--viewports", default="desktop,mobile", help="Comma-separated viewports: desktop,tablet,mobile")
     parser.add_argument("--no-heal", action="store_true", help="Audit only without auto-applying fixes")
     args = parser.parse_args()
