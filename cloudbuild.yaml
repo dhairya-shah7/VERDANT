@@ -64,6 +64,7 @@ images:
 substitutions:
   _REGION: 'us-central1'
   _REPO_NAME: 'verdant-repo'
+  COMMIT_SHA: 'manual'
 
 options:
   logging: CLOUD_LOGGING_ONLY
